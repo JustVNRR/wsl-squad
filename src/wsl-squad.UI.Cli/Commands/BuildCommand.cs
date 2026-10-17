@@ -48,6 +48,10 @@ public sealed class BuildSettings : CommandSettings
     [CommandOption("--keep-image")]
     [Description("Save the built image in the catalog before removing the tag.")]
     public bool KeepImage { get; init; }
+
+    [CommandOption("--pack <PACKS>")]
+    [Description("Comma-separated packs to install after the build.")]
+    public string? Packs { get; init; }
 }
 
 /// <summary>Builds a new WSL instance from an image source.</summary>
@@ -132,6 +136,9 @@ public sealed class BuildCommand : AsyncCommand<BuildSettings>
             Context = settings.Context,
             OnboardingPath = settings.Onboarding,
             KeepImage = settings.KeepImage,
+            Packs = string.IsNullOrWhiteSpace(settings.Packs)
+                ? []
+                : [.. settings.Packs.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
         });
     }
 

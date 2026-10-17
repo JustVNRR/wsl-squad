@@ -25,4 +25,6 @@ public sealed record BuildRequest
     public string? OnboardingPath { get; init; }
 
     public bool KeepImage { get; init; }
+
+    public IReadOnlyList<string> Packs { get; init; } = [];
 }

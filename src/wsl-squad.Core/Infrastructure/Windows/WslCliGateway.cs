@@ -5,7 +5,7 @@ using wsl_squad.Core.Infrastructure.Storage;
 namespace wsl_squad.Core.Infrastructure.Windows;
 
 /// <summary>Manages WSL distributions through <c>wsl.exe</c>.</summary>
-public sealed class WslCliGateway : IWslGateway
+public sealed class WslCliGateway : IWslGateway, IWslPackGateway
 {
     private readonly IProcessRunner _processRunner;
 
@@ -81,6 +81,101 @@ public sealed class WslCliGateway : IWslGateway
     public Task StartDistributionAsync(string name, CancellationToken cancellationToken = default)
     {
         return RunAsync(WslCommandBuilder.Start(name), cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<string>> GetInstalledPackNamesAsync(
+        string instanceName,
+        CancellationToken cancellationToken = default)
+    {
+        ProcessResult result = await RunAsync(PackCommandBuilder.InstalledPacks(instanceName), cancellationToken)
+            .ConfigureAwait(false);
+
+        return WslPackOutputParser.ParseInstalledPackNames(result.StandardOutput);
+    }
+
+    public async Task<IReadOnlyList<string>> GetDistributionFamilyTokensAsync(
+        string instanceName,
+        CancellationToken cancellationToken = default)
+    {
+        ProcessResult result = await RunAsync(PackCommandBuilder.OsRelease(instanceName), cancellationToken)
+            .ConfigureAwait(false);
+
+        return WslPackOutputParser.ParseFamilyTokens(result.StandardOutput);
+    }
+
+    public async Task<string> GetUserHomeAsync(
+        string instanceName,
+        string user,
+        CancellationToken cancellationToken = default)
+    {
+        ProcessResult result = await RunAsync(PackCommandBuilder.UserHome(instanceName, user), cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.StandardOutput.Trim();
+    }
+
+    public Task CopyPackIntoDistributionAsync(
+        string instanceName,
+        string user,
+        string windowsSourceDirectory,
+        string packName,
+        CancellationToken cancellationToken = default)
+    {
+        string wslSourceDirectory = PathHelper.ToWslMountPath(windowsSourceDirectory)
+            ?? throw new ArgumentException(
+                $"'{windowsSourceDirectory}' cannot be translated to a WSL mount path.",
+                nameof(windowsSourceDirectory));
+
+        return RunAsync(
+            PackCommandBuilder.CopyPack(instanceName, user, wslSourceDirectory, packName),
+            cancellationToken);
+    }
+
+    public Task OpenPackSudoAsync(
+        string instanceName,
+        string user,
+        CancellationToken cancellationToken = default)
+    {
+        return RunAsync(PackCommandBuilder.OpenSudo(instanceName, user), cancellationToken);
+    }
+
+    public Task ClosePackSudoAsync(string instanceName, CancellationToken cancellationToken = default)
+    {
+        return RunAsync(PackCommandBuilder.CloseSudo(instanceName), cancellationToken);
+    }
+
+    public Task RunScriptAsync(
+        string instanceName,
+        string user,
+        string? homeDirectory,
+        string linuxScriptPath,
+        IReadOnlyList<string> arguments,
+        CancellationToken cancellationToken = default)
+    {
+        return RunAsync(
+            PackCommandBuilder.RunScript(instanceName, user, homeDirectory, linuxScriptPath, arguments),
+            cancellationToken);
+    }
+
+    public Task RemovePackFolderAsync(
+        string instanceName,
+        string linuxHome,
+        string packName,
+        CancellationToken cancellationToken = default)
+    {
+        return RunAsync(
+            PackCommandBuilder.RemovePackFolder(instanceName, linuxHome, packName),
+            cancellationToken);
+    }
+
+    public Task RunCleanupOrphansAsync(
+        string instanceName,
+        string linuxScriptPath,
+        CancellationToken cancellationToken = default)
+    {
+        return RunAsync(
+            PackCommandBuilder.CleanupOrphans(instanceName, linuxScriptPath),
+            cancellationToken);
     }
 
     private async Task<ProcessResult> RunAsync(ProcessInvocation invocation, CancellationToken cancellationToken)

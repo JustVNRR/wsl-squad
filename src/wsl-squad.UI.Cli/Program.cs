@@ -36,6 +36,24 @@ app.Configure(config =>
         _ = archives.AddCommand<DeleteArchiveCommand>("delete")
             .WithDescription("Delete an archive.");
     });
+    _ = config.AddBranch("packs", packs =>
+    {
+        _ = packs.AddCommand<PacksStatusCommand>("status")
+            .WithDescription("Show installed and available packs.");
+        _ = packs.AddCommand<PacksApplyCommand>("apply")
+            .WithDescription("Install or remove packs.");
+        _ = packs.AddBranch("catalog", catalog =>
+        {
+            _ = catalog.AddCommand<PacksCatalogListCommand>("list")
+                .WithDescription("List catalog packs.");
+            _ = catalog.AddCommand<PacksCatalogEditCommand>("edit")
+                .WithDescription("Print a catalog pack folder.");
+            _ = catalog.AddCommand<PacksCatalogDuplicateCommand>("duplicate")
+                .WithDescription("Duplicate a catalog pack.");
+            _ = catalog.AddCommand<PacksCatalogDeleteCommand>("delete")
+                .WithDescription("Delete a catalog pack.");
+        });
+    });
 });
 
 return await app.RunAsync(args).ConfigureAwait(false);

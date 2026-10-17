@@ -5,10 +5,12 @@ using wsl_squad.Core.Application.Catalog;
 using wsl_squad.Core.Application.Common;
 using wsl_squad.Core.Application.Fleet;
 using wsl_squad.Core.Application.Lifecycle;
+using wsl_squad.Core.Application.Packs;
 using wsl_squad.Core.Domain.Build;
 using wsl_squad.Core.Domain.Common;
 using wsl_squad.Core.Domain.Fleet;
 using wsl_squad.Core.Domain.Lifecycle;
+using wsl_squad.Core.Domain.Packs;
 using wsl_squad.Core.Infrastructure.Build;
 using wsl_squad.Core.Infrastructure.Docker;
 using wsl_squad.Core.Infrastructure.Environment;
@@ -96,18 +98,187 @@ internal static class CliComposition
             };
         }
 
+        WslCliGateway wsl = new(processRunner);
+        InstanceMetadataStore metadataStore = new(fileSystem, clock);
         BuildInstanceHandler handler = new(
             fileSystem,
-            new WslCliGateway(processRunner),
+            wsl,
             new DockerCliGateway(processRunner, fileSystem),
             markers,
-            new InstanceMetadataStore(fileSystem, clock),
+            metadataStore,
             new BuildPlanFactory(fileSystem, registry, new TimestampBuildIdGenerator(clock)),
             clock);
 
-        return await handler.BuildAsync(root.Value, catalogRoot, request, cancellationToken)
+        OperationResult<BuildSummary> built = await handler
+            .BuildAsync(root.Value, catalogRoot, request, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!built.IsSuccess || request.Packs.Count == 0)
+        {
+            return built;
+        }
+
+        PackManager packManager = new(
+            fileSystem,
+            wsl,
+            new InstanceStateService(fileSystem, markers, wsl),
+            metadataStore,
+            new PackCatalogRepository(fileSystem));
+
+        OperationResult<PackManageOutcome> packs = await packManager
+            .ManageAsync(root.Value, catalogRoot, built.Value.Name, request.Packs, [], cancellationToken)
+            .ConfigureAwait(false);
+
+        List<string> warnings = [.. built.Warnings];
+
+        if (!packs.IsSuccess)
+        {
+            warnings.Add($"packs: {packs.Error!.Message}");
+        }
+        else
+        {
+            foreach (string warning in packs.Warnings)
+            {
+                warnings.Add(warning);
+            }
+
+            foreach (PackOperationFailure failure in packs.Value.Failed)
+            {
+                warnings.Add($"pack {failure.PackName} ({failure.Step}): {failure.Message}");
+            }
+        }
+
+        return warnings.Count == 0
+            ? built
+            : OperationResult<BuildSummary>.Warn(built.Value, [.. warnings]);
+    }
+
+    public static async Task<OperationResult<PackStatus>> PackStatusAsync(
+        string instanceName,
+        CancellationToken cancellationToken)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<CliRoots> roots = ResolveRoots(context);
+
+        if (!roots.IsSuccess)
+        {
+            return OperationFailure.From<PackStatus>(roots.Error!);
+        }
+
+        return await CreatePackManager(context)
+            .GetStatusAsync(roots.Value.FleetRoot, roots.Value.CatalogRoot, instanceName, cancellationToken)
             .ConfigureAwait(false);
     }
+
+    public static async Task<OperationResult<PackManageOutcome>> PackManageAsync(
+        string instanceName,
+        IReadOnlyList<string> add,
+        IReadOnlyList<string> remove,
+        CancellationToken cancellationToken)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<CliRoots> roots = ResolveRoots(context);
+
+        if (!roots.IsSuccess)
+        {
+            return OperationFailure.From<PackManageOutcome>(roots.Error!);
+        }
+
+        return await CreatePackManager(context)
+            .ManageAsync(roots.Value.FleetRoot, roots.Value.CatalogRoot, instanceName, add, remove, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public static OperationResult<IReadOnlyList<WslPack>> PackCatalogList()
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<CliRoots> roots = ResolveRoots(context);
+
+        return roots.IsSuccess
+            ? CreatePackCatalogService(context).List(roots.Value.CatalogRoot)
+            : OperationFailure.From<IReadOnlyList<WslPack>>(roots.Error!);
+    }
+
+    public static OperationResult<string> PackCatalogDirectory(string packName)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<CliRoots> roots = ResolveRoots(context);
+
+        return roots.IsSuccess
+            ? CreatePackCatalogService(context).GetDirectory(roots.Value.CatalogRoot, packName)
+            : OperationFailure.From<string>(roots.Error!);
+    }
+
+    public static OperationResult<string> PackCatalogDuplicate(string sourceName, string targetName)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<CliRoots> roots = ResolveRoots(context);
+
+        return roots.IsSuccess
+            ? CreatePackCatalogService(context).Duplicate(roots.Value.CatalogRoot, sourceName, targetName)
+            : OperationFailure.From<string>(roots.Error!);
+    }
+
+    public static OperationResult PackCatalogDelete(string packName)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<CliRoots> roots = ResolveRoots(context);
+
+        if (!roots.IsSuccess)
+        {
+            OperationError error = roots.Error!;
+
+            return OperationResult.Fail(error.Code, error.Message, error.Detail);
+        }
+
+        return CreatePackCatalogService(context).Delete(roots.Value.CatalogRoot, packName);
+    }
+
+    private static PackManager CreatePackManager(CliContext context)
+    {
+        return new PackManager(
+            context.FileSystem,
+            context.Wsl,
+            context.Instances,
+            context.Metadata,
+            new PackCatalogRepository(context.FileSystem));
+    }
+
+    private static PackCatalogService CreatePackCatalogService(CliContext context)
+    {
+        return new PackCatalogService(context.FileSystem, new PackCatalogRepository(context.FileSystem));
+    }
+
+    private static OperationResult<CliRoots> ResolveRoots(CliContext context)
+    {
+        OperationResult<string> root = context.ResolveRoot();
+
+        if (!root.IsSuccess)
+        {
+            return OperationFailure.From<CliRoots>(root.Error!);
+        }
+
+        OperationResult<FleetConfig?> config = context.ConfigStore.Load();
+
+        if (!config.IsSuccess)
+        {
+            return OperationFailure.From<CliRoots>(config.Error!);
+        }
+
+        string catalogRoot = config.Value?.CatalogRoot
+            ?? Path.Combine(AppPaths.GetConfigDirectory(context.Platform), "catalog");
+
+        CatalogSeeder seeder = new(
+            context.FileSystem,
+            new AssemblyEmbeddedResourceCatalog(typeof(FleetConfig).Assembly));
+        OperationResult<CatalogSeedResult> seed = seeder.Seed(catalogRoot);
+
+        return seed.IsSuccess
+            ? OperationResult<CliRoots>.Ok(new CliRoots(root.Value, catalogRoot))
+            : OperationFailure.From<CliRoots>(seed.Error!);
+    }
+
+    private sealed record CliRoots(string FleetRoot, string CatalogRoot);
 
     public static OperationResult<string> InitializeFleetRoot(string? requestedRoot)
     {
