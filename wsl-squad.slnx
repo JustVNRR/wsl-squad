@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/wsl-squad.Core/wsl-squad.Core.csproj" />
+    <Project Path="src/wsl-squad.Presentation/wsl-squad.Presentation.csproj" />
+    <Project Path="src/wsl-squad.UI.Cli/wsl-squad.UI.Cli.csproj" />
+    <Project Path="src/wsl-squad.UI.Wpf/wsl-squad.UI.Wpf.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/wsl-squad.Tests/wsl-squad.Tests.csproj" />
+  </Folder>
+</Solution>
