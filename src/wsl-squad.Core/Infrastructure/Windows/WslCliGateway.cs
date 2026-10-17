@@ -64,6 +64,25 @@ public sealed class WslCliGateway : IWslGateway
         return RunAsync(WslCommandBuilder.RunOnboarding(name, linuxScriptPath, user), cancellationToken);
     }
 
+    public Task ExportDistributionAsync(
+        string name,
+        string tarPath,
+        string format,
+        CancellationToken cancellationToken = default)
+    {
+        return RunAsync(WslCommandBuilder.Export(name, tarPath, format), cancellationToken);
+    }
+
+    public Task CompactDistributionAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return RunAsync(WslCommandBuilder.Compact(name), cancellationToken);
+    }
+
+    public Task StartDistributionAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return RunAsync(WslCommandBuilder.Start(name), cancellationToken);
+    }
+
     private async Task<ProcessResult> RunAsync(ProcessInvocation invocation, CancellationToken cancellationToken)
     {
         ProcessResult result = await _processRunner.RunAsync(invocation, cancellationToken).ConfigureAwait(false);

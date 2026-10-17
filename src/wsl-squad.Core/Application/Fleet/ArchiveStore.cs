@@ -4,6 +4,7 @@ using System.Text.Json;
 using wsl_squad.Core.Domain.Common;
 using wsl_squad.Core.Domain.Fleet;
 using wsl_squad.Core.Infrastructure.Json;
+using wsl_squad.Core.Infrastructure.Storage;
 
 namespace wsl_squad.Core.Application.Fleet;
 
@@ -22,6 +23,79 @@ public sealed class ArchiveStore
     public string GetArchivesRoot(string fleetRoot)
     {
         return _fileSystem.Path.Combine(fleetRoot, ArchivesFolderName);
+    }
+
+    public string GetArchiveDirectory(string fleetRoot, string archiveName)
+    {
+        return _fileSystem.Path.Combine(GetArchivesRoot(fleetRoot), archiveName);
+    }
+
+    public OperationResult<ArchiveMetadata> Read(string archiveDirectory)
+    {
+        string metadataPath = _fileSystem.Path.Combine(archiveDirectory, ArchiveMetadata.FileName);
+
+        if (!_fileSystem.File.Exists(metadataPath))
+        {
+            return OperationResult<ArchiveMetadata>.Fail(
+                ErrorCode.NotFound,
+                $"Archive metadata '{metadataPath}' does not exist.");
+        }
+
+        try
+        {
+            ArchiveMetadata? metadata = JsonSerializer.Deserialize<ArchiveMetadata>(
+                _fileSystem.File.ReadAllText(metadataPath),
+                JsonDefaults.Options);
+
+            return metadata is null
+                ? OperationResult<ArchiveMetadata>.Fail(
+                    ErrorCode.CorruptState,
+                    $"Archive metadata '{metadataPath}' is empty.")
+                : OperationResult<ArchiveMetadata>.Ok(metadata);
+        }
+        catch (JsonException exception)
+        {
+            return OperationResult<ArchiveMetadata>.Fail(
+                ErrorCode.CorruptState,
+                $"Archive metadata '{metadataPath}' is not valid JSON.",
+                exception.Message);
+        }
+        catch (IOException exception)
+        {
+            return OperationResult<ArchiveMetadata>.Fail(
+                ErrorCode.IoError,
+                $"Archive metadata '{metadataPath}' could not be read.",
+                exception.Message);
+        }
+    }
+
+    public OperationResult Write(string archiveDirectory, ArchiveMetadata metadata)
+    {
+        string metadataPath = _fileSystem.Path.Combine(archiveDirectory, ArchiveMetadata.FileName);
+
+        try
+        {
+            AtomicFileWriter.WriteAllText(
+                _fileSystem,
+                metadataPath,
+                JsonSerializer.Serialize(metadata, JsonDefaults.Options));
+
+            return OperationResult.Ok();
+        }
+        catch (IOException exception)
+        {
+            return OperationResult.Fail(
+                ErrorCode.IoError,
+                $"Archive metadata '{metadataPath}' could not be written.",
+                exception.Message);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return OperationResult.Fail(
+                ErrorCode.PermissionDenied,
+                $"Archive metadata '{metadataPath}' could not be written.",
+                exception.Message);
+        }
     }
 
     public OperationResult<ArchiveListing> List(string fleetRoot)

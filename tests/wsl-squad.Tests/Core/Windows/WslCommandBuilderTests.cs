@@ -49,4 +49,21 @@ public class WslCommandBuilderTests
         WslCommandBuilder.RunOnboarding("demo", "/root/onboarding.sh", null).Arguments
             .Should().Equal("-d", "demo", "-u", "root", "--", "env", "LANG=C", "/bin/bash", "/root/onboarding.sh");
     }
+
+    [Fact]
+    public void Export_and_compact_use_expected_arguments()
+    {
+        WslCommandBuilder.Export("demo", "C:\\tar\\demo.tar.gz", "tar.gz").Arguments
+            .Should().Equal("--export", "demo", "C:\\tar\\demo.tar.gz", "--format", "tar.gz");
+
+        WslCommandBuilder.Compact("demo").Arguments
+            .Should().Equal("--manage", "demo", "--compact");
+    }
+
+    [Fact]
+    public void Start_boots_the_distribution_without_a_shell()
+    {
+        WslCommandBuilder.Start("demo").Arguments
+            .Should().Equal("-d", "demo", "--exec", "/bin/true");
+    }
 }

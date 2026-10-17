@@ -42,6 +42,30 @@ public static class WslCommandBuilder
             environment: _utf8Environment);
     }
 
+    public static ProcessInvocation Export(string name, string tarPath, string format)
+    {
+        return new ProcessInvocation(
+            "wsl.exe",
+            ["--export", name, tarPath, "--format", format],
+            environment: _utf8Environment);
+    }
+
+    public static ProcessInvocation Compact(string name)
+    {
+        return new ProcessInvocation(
+            "wsl.exe",
+            ["--manage", name, "--compact"],
+            environment: _utf8Environment);
+    }
+
+    public static ProcessInvocation Start(string name)
+    {
+        return new ProcessInvocation(
+            "wsl.exe",
+            ["-d", name, "--exec", "/bin/true"],
+            environment: _utf8Environment);
+    }
+
     public static ProcessInvocation RunOnboarding(string distribution, string linuxScriptPath, string? user)
     {
         List<string> arguments = ["-d", distribution, "-u", "root", "--", "env", "LANG=C", "/bin/bash", linuxScriptPath];

@@ -27,4 +27,14 @@ public interface IWslGateway
         string linuxScriptPath,
         string? user,
         CancellationToken cancellationToken = default);
+
+    public Task ExportDistributionAsync(
+        string name,
+        string tarPath,
+        string format,
+        CancellationToken cancellationToken = default);
+
+    public Task CompactDistributionAsync(string name, CancellationToken cancellationToken = default);
+
+    public Task StartDistributionAsync(string name, CancellationToken cancellationToken = default);
 }

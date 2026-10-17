@@ -10,12 +10,31 @@ public sealed class FakeWslGateway : IWslGateway
     private readonly List<string> _terminatedNames = [];
     private readonly List<string> _copiedFiles = [];
     private readonly List<string> _onboardedNames = [];
+    private readonly List<string> _exports = [];
+    private readonly List<string> _compacts = [];
+    private readonly List<string> _starts = [];
 
     public Exception? Failure { get; set; }
 
     public Exception? ImportFailure { get; set; }
 
     public Exception? OnboardingFailure { get; set; }
+
+    public Exception? ExportFailure { get; set; }
+
+    public Exception? CompactFailure { get; set; }
+
+    public Exception? StartFailure { get; set; }
+
+    public Action<string, string, string>? ExportAction { get; set; }
+
+    public Action<string>? CompactAction { get; set; }
+
+    public IReadOnlyList<string> Exports => _exports;
+
+    public IReadOnlyList<string> Compacts => _compacts;
+
+    public IReadOnlyList<string> Starts => _starts;
 
     public IReadOnlyList<string> ImportedNames => _importedNames;
 
@@ -103,6 +122,51 @@ public sealed class FakeWslGateway : IWslGateway
         if (OnboardingFailure is not null)
         {
             throw OnboardingFailure;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task ExportDistributionAsync(
+        string name,
+        string tarPath,
+        string format,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _exports.Add($"{name}:{tarPath}:{format}");
+        ExportAction?.Invoke(name, tarPath, format);
+
+        if (ExportFailure is not null)
+        {
+            throw ExportFailure;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task CompactDistributionAsync(string name, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _compacts.Add(name);
+        CompactAction?.Invoke(name);
+
+        if (CompactFailure is not null)
+        {
+            throw CompactFailure;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task StartDistributionAsync(string name, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _starts.Add(name);
+
+        if (StartFailure is not null)
+        {
+            throw StartFailure;
         }
 
         return Task.CompletedTask;
