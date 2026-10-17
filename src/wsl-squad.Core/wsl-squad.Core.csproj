@@ -13,4 +13,8 @@
     <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf" LogicalName="fonts/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.IO.Abstractions" Version="22.3.0" />
+  </ItemGroup>
+
 </Project>
