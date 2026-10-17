@@ -480,3 +480,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Claude Code
+.claude/
+
+# Local scaffolding script
+scaffold-sln.ps1
