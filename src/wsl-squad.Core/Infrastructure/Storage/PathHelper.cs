@@ -69,6 +69,24 @@ public static partial class PathHelper
         return normalized.TrimEnd('\\', '/');
     }
 
+    public static string? ToWslMountPath(string windowsPath)
+    {
+        Match match = DrivePathPattern().Match(NormalizeSeparators(windowsPath));
+
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        string drive = match.Groups["drive"].Value.ToLowerInvariant();
+        string rest = match.Groups["rest"].Value.TrimStart('/');
+
+        return rest.Length == 0 ? $"/mnt/{drive}" : $"/mnt/{drive}/{rest}";
+    }
+
     [GeneratedRegex("^[A-Za-z]:[\\\\/]", RegexOptions.CultureInvariant)]
     private static partial Regex DriveLetterPattern();
+
+    [GeneratedRegex("^(?<drive>[A-Za-z]):/(?<rest>.*)$", RegexOptions.CultureInvariant)]
+    private static partial Regex DrivePathPattern();
 }

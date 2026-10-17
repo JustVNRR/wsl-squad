@@ -51,4 +51,15 @@ public class PathHelperTests
     {
         PathHelper.NormalizeRegistryBasePath(input).Should().Be(expected);
     }
+
+    [Theory]
+    [InlineData(@"C:\Users\me\onboarding.sh", "/mnt/c/Users/me/onboarding.sh")]
+    [InlineData(@"D:/scripts/onboarding.sh", "/mnt/d/scripts/onboarding.sh")]
+    [InlineData(@"C:\", "/mnt/c")]
+    [InlineData("/tmp/onboarding.sh", null)]
+    [InlineData(@"\\server\share\file.sh", null)]
+    public void Converts_windows_paths_to_wsl_mount_paths(string input, string? expected)
+    {
+        PathHelper.ToWslMountPath(input).Should().Be(expected);
+    }
 }

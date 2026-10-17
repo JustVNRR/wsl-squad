@@ -17,4 +17,36 @@ public class WslCommandBuilderTests
         invocation.Environment.Should().ContainKey("WSL_UTF8").WhoseValue.Should().Be("1");
         invocation.WorkingDirectory.Should().BeNull();
     }
+
+    [Fact]
+    public void Import_uses_version_two()
+    {
+        WslCommandBuilder.Import("demo", "C:\\fleet\\demo", "C:\\staging\\rootfs.tar").Arguments
+            .Should().Equal("--import", "demo", "C:\\fleet\\demo", "C:\\staging\\rootfs.tar", "--version", "2");
+    }
+
+    [Fact]
+    public void Unregister_and_terminate_target_the_distribution()
+    {
+        WslCommandBuilder.Unregister("demo").Arguments.Should().Equal("--unregister", "demo");
+        WslCommandBuilder.Terminate("demo").Arguments.Should().Equal("--terminate", "demo");
+    }
+
+    [Fact]
+    public void Copy_file_runs_cp_as_root_in_the_distribution()
+    {
+        WslCommandBuilder.CopyFile("demo", "/mnt/c/onboarding.sh", "/root/onboarding.sh").Arguments
+            .Should().Equal("-d", "demo", "-u", "root", "--", "cp", "/mnt/c/onboarding.sh", "/root/onboarding.sh");
+    }
+
+    [Fact]
+    public void Onboarding_runs_bash_with_lang_c_and_optional_user()
+    {
+        WslCommandBuilder.RunOnboarding("demo", "/root/onboarding.sh", "jane").Arguments
+            .Should().Equal(
+                "-d", "demo", "-u", "root", "--", "env", "LANG=C", "/bin/bash", "/root/onboarding.sh", "jane");
+
+        WslCommandBuilder.RunOnboarding("demo", "/root/onboarding.sh", null).Arguments
+            .Should().Equal("-d", "demo", "-u", "root", "--", "env", "LANG=C", "/bin/bash", "/root/onboarding.sh");
+    }
 }

@@ -20,4 +20,20 @@ public static class AtomicFileWriter
         fileSystem.File.WriteAllText(temporaryPath, content);
         fileSystem.File.Move(temporaryPath, path, overwrite: true);
     }
+
+    public static void WriteAllBytes(IFileSystem fileSystem, string path, byte[] content)
+    {
+        string? directory = fileSystem.Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            _ = fileSystem.Directory.CreateDirectory(directory);
+        }
+
+        string temporaryPath = fileSystem.Path.Combine(
+            directory ?? string.Empty,
+            $".{fileSystem.Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+
+        fileSystem.File.WriteAllBytes(temporaryPath, content);
+        fileSystem.File.Move(temporaryPath, path, overwrite: true);
+    }
 }
