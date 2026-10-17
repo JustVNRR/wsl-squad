@@ -7,6 +7,9 @@
     <AnalysisMode>Recommended</AnalysisMode>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591 : ne pas exiger de commentaires XML sur chaque membre public -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
   </PropertyGroup>
 
