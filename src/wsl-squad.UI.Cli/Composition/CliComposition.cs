@@ -1,11 +1,14 @@
 using System.IO.Abstractions;
 
+using wsl_squad.Core.Application.Appearance;
 using wsl_squad.Core.Application.Build;
 using wsl_squad.Core.Application.Catalog;
+using wsl_squad.Core.Application.Docker;
 using wsl_squad.Core.Application.Common;
 using wsl_squad.Core.Application.Fleet;
 using wsl_squad.Core.Application.Lifecycle;
 using wsl_squad.Core.Application.Packs;
+using wsl_squad.Core.Domain.Appearance;
 using wsl_squad.Core.Domain.Build;
 using wsl_squad.Core.Domain.Common;
 using wsl_squad.Core.Domain.Fleet;
@@ -113,44 +116,128 @@ internal static class CliComposition
             .BuildAsync(root.Value, catalogRoot, request, cancellationToken)
             .ConfigureAwait(false);
 
-        if (!built.IsSuccess || request.Packs.Count == 0)
+        if (!built.IsSuccess)
         {
             return built;
         }
 
-        PackManager packManager = new(
-            fileSystem,
-            wsl,
-            new InstanceStateService(fileSystem, markers, wsl),
-            metadataStore,
-            new PackCatalogRepository(fileSystem));
-
-        OperationResult<PackManageOutcome> packs = await packManager
-            .ManageAsync(root.Value, catalogRoot, built.Value.Name, request.Packs, [], cancellationToken)
-            .ConfigureAwait(false);
-
         List<string> warnings = [.. built.Warnings];
 
-        if (!packs.IsSuccess)
+        if (request.Packs.Count > 0)
         {
-            warnings.Add($"packs: {packs.Error!.Message}");
-        }
-        else
-        {
-            foreach (string warning in packs.Warnings)
-            {
-                warnings.Add(warning);
-            }
+            PackManager packManager = new(
+                fileSystem,
+                wsl,
+                new InstanceStateService(fileSystem, markers, wsl),
+                metadataStore,
+                new PackCatalogRepository(fileSystem));
 
-            foreach (PackOperationFailure failure in packs.Value.Failed)
+            OperationResult<PackManageOutcome> packs = await packManager
+                .ManageAsync(root.Value, catalogRoot, built.Value.Name, request.Packs, [], cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!packs.IsSuccess)
             {
-                warnings.Add($"pack {failure.PackName} ({failure.Step}): {failure.Message}");
+                warnings.Add($"packs: {packs.Error!.Message}");
+            }
+            else
+            {
+                foreach (string warning in packs.Warnings)
+                {
+                    warnings.Add(warning);
+                }
+
+                foreach (PackOperationFailure failure in packs.Value.Failed)
+                {
+                    warnings.Add($"pack {failure.PackName} ({failure.Step}): {failure.Message}");
+                }
+            }
+        }
+
+        if (request.RegisterDocker)
+        {
+            DockerDesktopService dockerService = new(
+                new DockerDesktopStore(fileSystem, platform),
+                new InstanceStateService(fileSystem, markers, wsl),
+                processRunner);
+
+            OperationResult<DockerIntegrationOutcome> integration = await dockerService
+                .RegisterAsync(root.Value, built.Value.Name, restart: true, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!integration.IsSuccess)
+            {
+                warnings.Add($"docker: {integration.Error!.Message}");
+            }
+            else
+            {
+                foreach (string warning in integration.Warnings)
+                {
+                    warnings.Add(warning);
+                }
             }
         }
 
         return warnings.Count == 0
             ? built
             : OperationResult<BuildSummary>.Warn(built.Value, [.. warnings]);
+    }
+
+    public static OperationResult<AppearanceOutcome> AppearanceGet(string instanceName)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<string> root = context.ResolveRoot();
+
+        return root.IsSuccess
+            ? CreateAppearanceService(context).Get(root.Value, instanceName)
+            : OperationFailure.From<AppearanceOutcome>(root.Error!);
+    }
+
+    public static OperationResult<AppearanceOutcome> AppearanceSet(
+        string instanceName,
+        AppearanceRequest request)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<string> root = context.ResolveRoot();
+
+        return root.IsSuccess
+            ? CreateAppearanceService(context).Set(root.Value, instanceName, request)
+            : OperationFailure.From<AppearanceOutcome>(root.Error!);
+    }
+
+    private static AppearanceService CreateAppearanceService(CliContext context)
+    {
+        return new AppearanceService(
+            context.FileSystem,
+            context.Instances,
+            context.Metadata,
+            new WindowsTerminalStore(context.FileSystem, context.Platform),
+            new GdiIconRenderer(),
+            context.Clock);
+    }
+
+    public static async Task<OperationResult<DockerIntegrationOutcome>> DockerSetAsync(
+        string instanceName,
+        bool integrated,
+        bool restart,
+        CancellationToken cancellationToken)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<string> root = context.ResolveRoot();
+
+        if (!root.IsSuccess)
+        {
+            return OperationFailure.From<DockerIntegrationOutcome>(root.Error!);
+        }
+
+        DockerDesktopService service = new(
+            new DockerDesktopStore(context.FileSystem, context.Platform),
+            context.Instances,
+            context.ProcessRunner);
+
+        return integrated
+            ? await service.RegisterAsync(root.Value, instanceName, restart, cancellationToken).ConfigureAwait(false)
+            : await service.UnregisterAsync(root.Value, instanceName, restart, cancellationToken).ConfigureAwait(false);
     }
 
     public static async Task<OperationResult<PackStatus>> PackStatusAsync(

@@ -7,6 +7,8 @@ public interface IPlatformEnvironment
 
     public string LocalApplicationData { get; }
 
+    public string RoamingApplicationData { get; }
+
     public string UserProfile { get; }
 
     public string? GetEnvironmentVariable(string name);

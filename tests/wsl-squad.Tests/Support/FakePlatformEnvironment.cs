@@ -10,6 +10,8 @@ public sealed class FakePlatformEnvironment : IPlatformEnvironment
 
     public string LocalApplicationData { get; set; } = "/home/test/.local/share";
 
+    public string RoamingApplicationData { get; set; } = "/home/test/.config";
+
     public string UserProfile { get; set; } = "/home/test";
 
     public void SetVariable(string name, string? value)

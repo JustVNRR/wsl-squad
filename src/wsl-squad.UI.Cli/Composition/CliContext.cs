@@ -25,6 +25,7 @@ internal sealed class CliContext
         Markers = new FleetMarkerStore(FileSystem);
         Registry = new WindowsRegistryGateway();
         ProcessRunner processRunner = new();
+        ProcessRunner = processRunner;
         Wsl = new WslCliGateway(processRunner);
         Archives = new ArchiveStore(FileSystem);
         Metadata = new InstanceMetadataStore(FileSystem, Clock);
@@ -46,6 +47,8 @@ internal sealed class CliContext
     public FleetMarkerStore Markers { get; }
 
     public WindowsRegistryGateway Registry { get; }
+
+    public ProcessRunner ProcessRunner { get; }
 
     public WslCliGateway Wsl { get; }
 

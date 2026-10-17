@@ -52,6 +52,10 @@ public sealed class BuildSettings : CommandSettings
     [CommandOption("--pack <PACKS>")]
     [Description("Comma-separated packs to install after the build.")]
     public string? Packs { get; init; }
+
+    [CommandOption("--register-docker")]
+    [Description("Register the instance with Docker Desktop after the build.")]
+    public bool RegisterDocker { get; init; }
 }
 
 /// <summary>Builds a new WSL instance from an image source.</summary>
@@ -139,6 +143,7 @@ public sealed class BuildCommand : AsyncCommand<BuildSettings>
             Packs = string.IsNullOrWhiteSpace(settings.Packs)
                 ? []
                 : [.. settings.Packs.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
+            RegisterDocker = settings.RegisterDocker,
         });
     }
 

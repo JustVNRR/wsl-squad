@@ -36,6 +36,15 @@ app.Configure(config =>
         _ = archives.AddCommand<DeleteArchiveCommand>("delete")
             .WithDescription("Delete an archive.");
     });
+    _ = config.AddCommand<AppearanceCommand>("appearance")
+        .WithDescription("Show or change an instance's terminal appearance.");
+    _ = config.AddBranch("docker", docker =>
+    {
+        _ = docker.AddCommand<DockerRegisterCommand>("register")
+            .WithDescription("Register an instance with Docker Desktop.");
+        _ = docker.AddCommand<DockerUnregisterCommand>("unregister")
+            .WithDescription("Remove an instance from Docker Desktop.");
+    });
     _ = config.AddBranch("packs", packs =>
     {
         _ = packs.AddCommand<PacksStatusCommand>("status")

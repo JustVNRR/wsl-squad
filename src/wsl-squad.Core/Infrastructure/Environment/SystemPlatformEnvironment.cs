@@ -10,6 +10,9 @@ public sealed class SystemPlatformEnvironment : IPlatformEnvironment
     public string LocalApplicationData =>
         System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
 
+    public string RoamingApplicationData =>
+        System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
+
     public string UserProfile =>
         System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
 

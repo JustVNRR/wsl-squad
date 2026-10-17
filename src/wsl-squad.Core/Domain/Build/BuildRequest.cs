@@ -27,4 +27,6 @@ public sealed record BuildRequest
     public bool KeepImage { get; init; }
 
     public IReadOnlyList<string> Packs { get; init; } = [];
+
+    public bool RegisterDocker { get; init; }
 }

@@ -46,4 +46,9 @@ public static class DockerCommandBuilder
     {
         return new ProcessInvocation("docker", ["rmi", "-f", imageTag]);
     }
+
+    public static ProcessInvocation RestartDesktop()
+    {
+        return new ProcessInvocation("docker", ["desktop", "restart"]);
+    }
 }
