@@ -7,10 +7,10 @@
 
   <ItemGroup>
     <!-- Scripts Linux embarqués dans la DLL -->
-    <EmbeddedResource Include="Resources\Linux\**\*.*" />
-    <EmbeddedResource Include="Resources\recipes\**\*" />
+    <EmbeddedResource Include="Resources\Linux\**\*.*" LogicalName="linux/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Resources\recipes\**\*" LogicalName="recipes/%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- Polices partagées depuis /Assets, également embarquées dans la DLL de Core -->
-    <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf" Link="Resources\Fonts\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf" LogicalName="fonts/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

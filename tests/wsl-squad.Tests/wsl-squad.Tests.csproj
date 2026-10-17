@@ -22,7 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\wsl-squad.Core\wsl-squad.Core.csproj" />
     <ProjectReference Include="..\..\src\wsl-squad.Presentation\wsl-squad.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\wsl-squad.UI.Cli\wsl-squad.UI.Cli.csproj" />
   </ItemGroup>
 
 </Project>
