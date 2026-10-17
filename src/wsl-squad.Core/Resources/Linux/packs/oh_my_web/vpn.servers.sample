@@ -1,0 +1,17 @@
+{
+  "note": "One entry per server.",
+  "servers": [
+    {
+      "id": "server-1",
+      "note": "a name you pick; the menus show it",
+      "address": "PASTE-SERVER-ADDRESS-HERE",
+      "private_key": "PASTE-YOUR-PRIVATE-KEY-HERE",
+      "DNS": "PASTE-DNS-HERE",
+      "peer": {
+        "public_key": "PASTE-THE-SERVER-PUBLIC-KEY-HERE",
+        "endpoint": "PASTE-THE-ENDPOINT-HERE",
+        "allowed_ips": "PASTE-THE-ALLOWED-IP-RANGE-HERE"
+      }
+    }
+  ]
+}

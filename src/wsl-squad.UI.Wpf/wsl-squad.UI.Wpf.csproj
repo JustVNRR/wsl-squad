@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\wsl-squad.Presentation\wsl-squad.Presentation.csproj" />
+    <Resource Include="..\..\Assets\fonts\**\*.ttf" Link="Assets\Fonts\%(Filename)%(Extension)" />
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -12,5 +14,4 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-
 </Project>

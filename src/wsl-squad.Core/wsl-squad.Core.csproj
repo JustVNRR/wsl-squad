@@ -3,8 +3,14 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>wsl_squad.Core</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Scripts Linux embarqués dans la DLL -->
+    <EmbeddedResource Include="Resources\Linux\**\*.*" />
+    <EmbeddedResource Include="Resources\recipes\**\*" />
+    <!-- Polices partagées depuis /Assets, également embarquées dans la DLL de Core -->
+    <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf" Link="Resources\Fonts\%(Filename)%(Extension)" />
+  </ItemGroup>
 
 </Project>
