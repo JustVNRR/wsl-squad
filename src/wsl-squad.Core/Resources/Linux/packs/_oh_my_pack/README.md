@@ -1,6 +1,6 @@
 # _oh_my_pack
 
-[← Back to the README](../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#optional-tooling-packs)
 
 The pack template.
 

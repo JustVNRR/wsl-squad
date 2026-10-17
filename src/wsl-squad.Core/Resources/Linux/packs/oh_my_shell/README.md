@@ -1,6 +1,6 @@
 # oh_my_shell: oh-my-zsh, Starship and daily CLI tools
 
-[← Back to the README](../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#optional-tooling-packs)
 
 **Type:** installable
 

@@ -1,6 +1,6 @@
 # oh_my_web: Firefox and a WireGuard tunnel
 
-[← Back to the README](../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#optional-tooling-packs)
 
 `fox`/`pfox` launch the browser with the light or the strict privacy profile; the `vpn_*` targets bring the tunnel up, down, and around profiles.
 

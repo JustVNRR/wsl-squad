@@ -7,12 +7,14 @@ using wsl_squad.Core.Application.Docker;
 using wsl_squad.Core.Application.Common;
 using wsl_squad.Core.Application.Fleet;
 using wsl_squad.Core.Application.Lifecycle;
+using wsl_squad.Core.Application.Migration;
 using wsl_squad.Core.Application.Packs;
 using wsl_squad.Core.Domain.Appearance;
 using wsl_squad.Core.Domain.Build;
 using wsl_squad.Core.Domain.Common;
 using wsl_squad.Core.Domain.Fleet;
 using wsl_squad.Core.Domain.Lifecycle;
+using wsl_squad.Core.Domain.Migration;
 using wsl_squad.Core.Domain.Packs;
 using wsl_squad.Core.Infrastructure.Build;
 using wsl_squad.Core.Infrastructure.Docker;
@@ -22,6 +24,7 @@ using wsl_squad.Core.Infrastructure.Resources;
 using wsl_squad.Core.Infrastructure.Storage;
 using wsl_squad.Core.Infrastructure.Time;
 using wsl_squad.Core.Infrastructure.Windows;
+using wsl_squad.Presentation.Dtos.Fleet;
 using wsl_squad.Presentation.Presenters.Fleet;
 
 namespace wsl_squad.UI.Cli.Composition;
@@ -29,6 +32,48 @@ namespace wsl_squad.UI.Cli.Composition;
 /// <summary>Builds the CLI object graph.</summary>
 internal static class CliComposition
 {
+    public static async Task<OperationResult<FleetSnapshotDto>> FleetSnapshotAsync(
+        bool includeArchives,
+        CancellationToken cancellationToken)
+    {
+        FleetListPresenter presenter = CreateListPresenter();
+
+        return await presenter.LoadAsync(includeArchives, cancellationToken).ConfigureAwait(false);
+    }
+
+    public static OperationResult<string> EnsureWslConfig()
+    {
+        CliContext context = CliContext.Create();
+        string path = Path.Combine(context.Platform.UserProfile, ".wslconfig");
+
+        try
+        {
+            if (!context.FileSystem.File.Exists(path))
+            {
+                AtomicFileWriter.WriteAllText(
+                    context.FileSystem,
+                    path,
+                    "# WSL global configuration.\n# See https://learn.microsoft.com/windows/wsl/wsl-config\n");
+            }
+
+            return OperationResult<string>.Ok(path);
+        }
+        catch (IOException exception)
+        {
+            return OperationResult<string>.Fail(
+                ErrorCode.IoError,
+                $"'{path}' could not be created.",
+                exception.Message);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return OperationResult<string>.Fail(
+                ErrorCode.PermissionDenied,
+                $"'{path}' could not be created.",
+                exception.Message);
+        }
+    }
+
     public static FleetListPresenter CreateListPresenter()
     {
         FileSystem fileSystem = new();
@@ -181,6 +226,69 @@ internal static class CliComposition
         return warnings.Count == 0
             ? built
             : OperationResult<BuildSummary>.Warn(built.Value, [.. warnings]);
+    }
+
+    public static async Task<OperationResult<RootMoveOutcome>> MoveRootAsync(
+        string targetRoot,
+        CancellationToken cancellationToken)
+    {
+        CliContext context = CliContext.Create();
+        OperationResult<string> root = context.ResolveRoot();
+
+        if (!root.IsSuccess)
+        {
+            return OperationFailure.From<RootMoveOutcome>(root.Error!);
+        }
+
+        RemoveInstanceHandler remove = new(
+            context.FileSystem,
+            context.Instances,
+            context.Wsl,
+            context.Registry,
+            context.ArchiveService);
+        RootMoveService service = new(
+            context.FileSystem,
+            context.Markers,
+            context.ArchiveService,
+            remove,
+            context.Archives,
+            context.ConfigStore);
+
+        return await service.MoveAsync(root.Value, targetRoot, cancellationToken).ConfigureAwait(false);
+    }
+
+    public static OperationResult<MigrationPlan> CreateMigrationPlan(string? sourceRoot)
+    {
+        CliContext context = CliContext.Create();
+
+        return CreateMigrator(context).CreatePlan(sourceRoot);
+    }
+
+    public static OperationResult<MigrationOutcome> MigrateLegacy(string? sourceRoot)
+    {
+        CliContext context = CliContext.Create();
+
+        return CreateMigrator(context).Migrate(sourceRoot);
+    }
+
+    public static OperationResult MigrateRollback(string backupId)
+    {
+        CliContext context = CliContext.Create();
+
+        return CreateMigrator(context).Rollback(backupId);
+    }
+
+    private static LegacyMigrator CreateMigrator(CliContext context)
+    {
+        return new LegacyMigrator(
+            context.FileSystem,
+            context.Platform,
+            context.Registry,
+            context.Markers,
+            context.Metadata,
+            context.Archives,
+            context.ConfigStore,
+            context.Clock);
     }
 
     public static OperationResult<AppearanceOutcome> AppearanceGet(string instanceName)

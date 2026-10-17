@@ -1,6 +1,6 @@
 # oh_my_cloud: The Google Cloud CLI
 
-[← Back to the README](../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#optional-tooling-packs)
 
 The Google Cloud CLI and the targets that drive it: projects, service accounts, buckets, BigQuery, Cloud Run, Artifact Registry, virtual machines.
 

@@ -1,6 +1,8 @@
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 using wsl_squad.UI.Cli.Commands;
+using wsl_squad.UI.Cli.Interaction;
 
 CommandApp app = new();
 app.Configure(config =>
@@ -38,6 +40,24 @@ app.Configure(config =>
     });
     _ = config.AddCommand<AppearanceCommand>("appearance")
         .WithDescription("Show or change an instance's terminal appearance.");
+    _ = config.AddCommand<WslConfigCommand>("wslconfig")
+        .WithDescription("Create or show the Windows-wide .wslconfig file.");
+    _ = config.AddCommand<DoctorCommand>("doctor")
+        .WithDescription("Check the environment and report problems.");
+    _ = config.AddBranch("migrate", migrate =>
+    {
+        _ = migrate.AddCommand<MigrateLegacyCommand>("legacy")
+            .WithDescription("Adopt a legacy .wsl-fleet fleet (use --dry-run first).");
+        _ = migrate.AddCommand<MigrateRollbackCommand>("rollback")
+            .WithDescription("Roll back a migration from its backup id.");
+    });
+    _ = config.AddBranch("root", root =>
+    {
+        _ = root.AddCommand<RootShowCommand>("show")
+            .WithDescription("Show the resolved fleet root and configuration paths.");
+        _ = root.AddCommand<RootMoveCommand>("move")
+            .WithDescription("Move the fleet to another folder (destructive).");
+    });
     _ = config.AddBranch("docker", docker =>
     {
         _ = docker.AddCommand<DockerRegisterCommand>("register")
@@ -64,5 +84,12 @@ app.Configure(config =>
         });
     });
 });
+
+if (args.Length == 0)
+{
+    return Console.IsInputRedirected
+        ? await app.RunAsync(["--help"]).ConfigureAwait(false)
+        : await new InteractiveMenu(AnsiConsole.Console).RunAsync(CancellationToken.None).ConfigureAwait(false);
+}
 
 return await app.RunAsync(args).ConfigureAwait(false);

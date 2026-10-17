@@ -1,6 +1,6 @@
 # hide_my_scaff
 
-[← Back to the README](../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#optional-tooling-packs)
 
 Creating a project with the `fnew` picker, the three gmake targets it delegates to (copier, cruft, ccds), and the `.env` every project wants.
 
