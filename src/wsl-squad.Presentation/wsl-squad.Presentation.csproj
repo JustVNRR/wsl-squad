@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.13" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -13,6 +14,7 @@
     <RootNamespace>wsl_squad.Presentation</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);MVVMTK0042;CA1822;S2325;IDE0055;IDE0072;S4136</NoWarn>
   </PropertyGroup>
 
 </Project>

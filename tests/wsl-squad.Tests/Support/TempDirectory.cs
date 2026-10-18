@@ -1,6 +1,5 @@
 namespace wsl_squad.Tests.Support;
 
-/// <summary>Creates an isolated temporary directory for a test and deletes it on dispose.</summary>
 public sealed class TempDirectory : IDisposable
 {
     public TempDirectory()
@@ -23,11 +22,9 @@ public sealed class TempDirectory : IDisposable
         }
         catch (IOException)
         {
-            // Best-effort cleanup for tests.
         }
         catch (UnauthorizedAccessException)
         {
-            // Best-effort cleanup for tests.
         }
     }
 }

@@ -488,5 +488,5 @@ $RECYCLE.BIN/
 scaffold-sln.ps1
 
 # Pack helper scripts are embedded resources, not build output
-!src/wsl-squad.Core/Resources/Linux/packs/**/bin/
-!src/wsl-squad.Core/Resources/Linux/packs/**/bin/**
+!src/wsl-squad.Core/Resources/packs/**/bin/
+!src/wsl-squad.Core/Resources/packs/**/bin/**

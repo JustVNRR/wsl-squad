@@ -2,18 +2,33 @@
 
   <ItemGroup>
     <ProjectReference Include="..\wsl-squad.Presentation\wsl-squad.Presentation.csproj" />
+    <ProjectReference Include="..\wsl-squad.UI.Runner\wsl-squad.UI.Runner.csproj" ReferenceOutputAssembly="false" Private="false" />
     <Resource Include="..\..\Assets\fonts\**\*.ttf" Link="Assets\Fonts\%(Filename)%(Extension)" />
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
+  <Target Name="CopyRunner" AfterTargets="Build">
+    <ItemGroup>
+      <RunnerFiles Include="$(MSBuildProjectDirectory)\..\wsl-squad.UI.Runner\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(OutDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyRunnerOnPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <RunnerFiles Include="$(MSBuildProjectDirectory)\..\wsl-squad.UI.Runner\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(PublishDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <!-- Permet la compilation (pas l'exécution) depuis Linux/CI. -->
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <RootNamespace>wsl_squad.UI.Wpf</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <NoWarn>$(NoWarn);S6605;IDE0017;IDE0305;IDE0270;S3267;CA1869</NoWarn>
   </PropertyGroup>
 </Project>

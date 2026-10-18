@@ -1,0 +1,152 @@
+using System.Diagnostics;
+
+namespace wsl_squad.Core.Repositories;
+
+internal static class NativeCommand
+{
+    public static (int ExitCode, string Output) Run(
+        string program,
+        IReadOnlyList<string> arguments,
+        string? workingDirectory = null)
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = program,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+
+        if (!string.IsNullOrEmpty(workingDirectory))
+        {
+            start.WorkingDirectory = workingDirectory;
+        }
+
+        foreach (string argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> error = process.StandardError.ReadToEndAsync();
+
+        process.WaitForExit();
+
+        return (process.ExitCode, output.GetAwaiter().GetResult() + error.GetAwaiter().GetResult());
+    }
+
+    public static int RunAttached(
+        string program,
+        IReadOnlyList<string> arguments,
+        string? workingDirectory = null)
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = program,
+            UseShellExecute = false,
+            CreateNoWindow = false,
+        };
+
+        if (!string.IsNullOrEmpty(workingDirectory))
+        {
+            start.WorkingDirectory = workingDirectory;
+        }
+
+        foreach (string argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+
+        process.WaitForExit();
+
+        return process.ExitCode;
+    }
+
+    public static (int ExitCode, string Output) RunInteractive(
+        string program,
+        IReadOnlyList<string> arguments,
+        string? workingDirectory = null)
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = program,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = false,
+        };
+
+        if (!string.IsNullOrEmpty(workingDirectory))
+        {
+            start.WorkingDirectory = workingDirectory;
+        }
+
+        foreach (string argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+        System.Text.StringBuilder captured = new();
+
+        void Keep(string? line, bool error)
+        {
+            if (line is null)
+            {
+                return;
+            }
+
+            lock (captured)
+            {
+                _ = captured.AppendLine(line);
+            }
+
+            if (error)
+            {
+                Console.Error.WriteLine(line);
+            }
+            else
+            {
+                Console.WriteLine(line);
+            }
+        }
+
+        process.OutputDataReceived += (_, e) => Keep(e.Data, error: false);
+        process.ErrorDataReceived += (_, e) => Keep(e.Data, error: true);
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        process.WaitForExit();
+
+        return (process.ExitCode, captured.ToString());
+    }
+
+    public static bool Test(string program, IReadOnlyList<string> arguments)
+    {
+        try
+        {
+            return Run(program, arguments).ExitCode == 0;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+    }
+
+    public static void Invoke(string program, IReadOnlyList<string> arguments, string message)
+    {
+        (int exitCode, _) = Run(program, arguments);
+
+        if (exitCode != 0)
+        {
+            throw new InvalidOperationException($"{message} (Exit code: {exitCode})");
+        }
+    }
+}

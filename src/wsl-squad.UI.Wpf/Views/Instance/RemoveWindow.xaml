@@ -1,0 +1,27 @@
+<views:ChromeWindow x:Class="wsl_squad.UI.Wpf.Views.Instance.RemoveWindow"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:views="clr-namespace:wsl_squad.UI.Wpf.Views"
+                    Title="Remove instance"
+                    SizeToContent="WidthAndHeight"
+                    WindowStartupLocation="CenterScreen"
+                    ResizeMode="NoResize"
+                    Foreground="{DynamicResource AppForegroundBrush}">
+    <StackPanel Margin="18">
+        <TextBlock Text="WARNING: PERMANENT DESTRUCTION" FontWeight="Bold" Foreground="{DynamicResource AppDangerBrush}"/>
+        <TextBlock Text="{Binding Lead}" Margin="0,10,0,0" TextWrapping="Wrap" FontWeight="SemiBold"/>
+        <Border BorderBrush="{DynamicResource AppDividerBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
+        <TextBlock Margin="0,20,0,0" TextWrapping="Wrap">Proceeding will PERMANENTLY DESTROY this distribution, erasing:</TextBlock>
+        <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">   - its install folder,</TextBlock>
+        <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">   - its virtual disk (VHDX), and its content.</TextBlock>
+        <TextBlock Margin="0,10,0,10" TextWrapping="Wrap">This operation CANNOT be undone.</TextBlock>
+        <CheckBox x:Name="ChkArchive" IsChecked="{Binding ArchiveFirst, Mode=TwoWay}" TabIndex="0" Margin="0,12,0,0" Content="Archive it first"/>
+        <TextBlock Margin="0,14,0,10" TextWrapping="Wrap" Text="To confirm DESTRUCTION, type the name of the instance:"/>
+        <TextBox x:Name="TxtName" Text="{Binding Typed, UpdateSourceTrigger=PropertyChanged}" TabIndex="1" Margin="0,6,0,0"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Cancel" TabIndex="2" Margin="0,0,8,0" IsCancel="True"/>
+            <Button Content="REMOVE" TabIndex="3" IsDefault="True" Command="{Binding ConfirmCommand}"
+                    Background="{DynamicResource AppDeleteBrush}" Foreground="{DynamicResource AppDeleteInkBrush}" BorderBrush="{DynamicResource AppDeleteBorderBrush}"/>
+        </StackPanel>
+    </StackPanel>
+</views:ChromeWindow>

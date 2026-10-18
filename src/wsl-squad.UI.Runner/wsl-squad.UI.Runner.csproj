@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\wsl-squad.Core\wsl-squad.Core.csproj" />
+    <ProjectReference Include="..\wsl-squad.Presentation\wsl-squad.Presentation.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>wsl_squad.UI.Runner</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <NoWarn>$(NoWarn);CA1416;S6605;S3267;IDE0017;IDE0270;IDE0305</NoWarn>
+  </PropertyGroup>
+
+</Project>

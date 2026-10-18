@@ -1,0 +1,1522 @@
+using System.Diagnostics;
+using System.Globalization;
+
+using wsl_squad.Core.Dtos;
+using wsl_squad.Core.Entities;
+using wsl_squad.Core.Mappers;
+using wsl_squad.Core.Repositories;
+
+namespace wsl_squad.Core.Services;
+
+public sealed class InstanceService : IInstanceService
+{
+    private readonly IInstanceRepository _instanceRepository;
+    private readonly IArchiveRepository _archiveRepository;
+    private readonly IWslRepository _wslRepository;
+    private readonly ITerminalRepository _terminalRepository;
+    private readonly IDockerRepository _dockerRepository;
+    private readonly IPackCatalogRepository _packCatalogRepository;
+    private readonly IConfigRepository _configRepository;
+    private readonly IInstanceMapper _instanceMapper;
+
+    public InstanceService(
+        IInstanceRepository instanceRepository,
+        IArchiveRepository archiveRepository,
+        IWslRepository wslRepository,
+        ITerminalRepository terminalRepository,
+        IDockerRepository dockerRepository,
+        IPackCatalogRepository packCatalogRepository,
+        IConfigRepository configRepository,
+        IInstanceMapper instanceMapper)
+    {
+        _instanceRepository = instanceRepository;
+        _archiveRepository = archiveRepository;
+        _wslRepository = wslRepository;
+        _terminalRepository = terminalRepository;
+        _dockerRepository = dockerRepository;
+        _packCatalogRepository = packCatalogRepository;
+        _configRepository = configRepository;
+        _instanceMapper = instanceMapper;
+    }
+
+    public IReadOnlyList<WslIndexDto> GetAll()
+    {
+        List<WslIndexDto> rows = [];
+        IReadOnlyList<string>? dockerNames = _dockerRepository.GetDesktopNames();
+
+        foreach (WslInstance distro in _wslRepository.GetAllDistros())
+        {
+            if (!_instanceRepository.HasMarker(distro.Name))
+            {
+                continue;
+            }
+
+            distro.Size = _instanceRepository.GetVhdxSize(distro.Name);
+            rows.Add(_instanceMapper.ToIndexDto(distro) with
+            {
+                Docker = DockerState(dockerNames, distro.Name),
+                Path = _instanceRepository.GetFolder(distro.Name),
+            });
+        }
+
+        foreach (WslInstance archive in _archiveRepository.GetAllArchives())
+        {
+            archive.Size = _archiveRepository.GetTarSize(archive.Name);
+            rows.Add(_instanceMapper.ToIndexDto(archive) with
+            {
+                Path = _archiveRepository.GetFolder(archive.Name),
+                Archived = _archiveRepository.GetCreatedAt(archive.Name)
+                    .ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+            });
+        }
+
+        return rows;
+    }
+
+    public WslIndexDto? GetByName(string name)
+    {
+        foreach (WslInstance distro in _wslRepository.GetAllDistros())
+        {
+            if (distro.Name != name || !_instanceRepository.HasMarker(name))
+            {
+                continue;
+            }
+
+            distro.Size = _instanceRepository.GetVhdxSize(name);
+
+            return _instanceMapper.ToIndexDto(distro);
+        }
+
+        foreach (WslInstance archive in _archiveRepository.GetAllArchives())
+        {
+            if (archive.Name != name)
+            {
+                continue;
+            }
+
+            archive.Size = _archiveRepository.GetTarSize(name);
+
+            return _instanceMapper.ToIndexDto(archive);
+        }
+
+        return null;
+    }
+
+    public IReadOnlyList<WslOrphanDto> GetOrphans()
+    {
+        List<string> claimed = [];
+
+        foreach (WslInstance distro in _wslRepository.GetAllDistros())
+        {
+            string folder = _wslRepository.GetFolder(distro.Name);
+
+            if (folder.Length == 0 || !_instanceRepository.HasMarkerIn(folder))
+            {
+                continue;
+            }
+
+            claimed.Add(folder.TrimEnd('\\'));
+        }
+
+        List<WslOrphanDto> rows = [];
+
+        foreach (string name in _instanceRepository.GetMarkedFolders())
+        {
+            if (claimed.Contains(_instanceRepository.GetFolder(name)))
+            {
+                continue;
+            }
+
+            rows.Add(new WslOrphanDto
+            {
+                Name = name,
+                Path = _instanceRepository.GetFolder(name),
+                Size = _instanceRepository.GetVhdxSize(name),
+            });
+        }
+
+        return rows;
+    }
+
+    public IReadOnlyList<string> GetRunningNames()
+    {
+        return _wslRepository.GetRunningNames();
+    }
+
+    public GetBuildSourcesResponseDto GetBuildSources()
+    {
+        return new GetBuildSourcesResponseDto
+        {
+            Dockerfiles = [.. FormatSourceRows(_configRepository.GetDockerfiles())],
+            Onboardings = [.. FormatSourceRows(_configRepository.GetOnboardings())],
+            Recipes = [.. FormatSourceRows(_configRepository.GetRecipes())],
+        };
+    }
+
+    public WslBuildSourceDto CreateRecipe(NewRecipeDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string target = _configRepository.CreateRecipe((dto.Name ?? string.Empty).Trim());
+        SourceRow row = new(
+            Path.GetFileName(target),
+            target,
+            Directory.GetLastWriteTime(target),
+            string.Empty);
+
+        return FormatSourceRows([row])[0];
+    }
+
+    public void OpenInEditor(string path)
+    {
+        try
+        {
+            _ = Process.Start(new ProcessStartInfo("code")
+            {
+                ArgumentList = { path },
+                UseShellExecute = true,
+            });
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            _ = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+    }
+
+    public RegisterDockerResponseDto RegisterDocker(RegisterDockerDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.InstanceName ?? string.Empty;
+        string restart = string.Empty;
+
+        try
+        {
+            _dockerRepository.SetDesktopState(name);
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException or FileNotFoundException)
+        {
+            throw new InvalidOperationException(
+                $"Docker Desktop's settings could not take '{name}': {exception.Message}",
+                exception);
+        }
+
+        if (dto.Restart)
+        {
+            restart = "pending";
+
+            if (_dockerRepository.TestRunning())
+            {
+                if (_dockerRepository.RestartDesktop())
+                {
+                    restart = "restarted";
+                }
+            }
+            else if (_dockerRepository.StartDesktop())
+            {
+                restart = "started";
+            }
+        }
+
+        return new RegisterDockerResponseDto { InstanceName = name, Restart = restart };
+    }
+
+    public UnregisterDockerResponseDto UnregisterDocker(UnregisterDockerDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.InstanceName ?? string.Empty;
+        string restart = string.Empty;
+
+        try
+        {
+            _dockerRepository.RemoveDesktopState(name);
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException or FileNotFoundException)
+        {
+            throw new InvalidOperationException(
+                $"Docker Desktop's settings could not release '{name}': {exception.Message}",
+                exception);
+        }
+
+        if (dto.Restart && _dockerRepository.TestRunning())
+        {
+            restart = _dockerRepository.RestartDesktop() ? "restarted" : "pending";
+        }
+
+        return new UnregisterDockerResponseDto { InstanceName = name, Restart = restart };
+    }
+
+    public WslBuildSourceDto UploadRecipe(UploadRecipeDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string kind = dto.Kind ?? string.Empty;
+        string source = dto.Source ?? string.Empty;
+        string fileName = dto.FileName ?? string.Empty;
+        string target = _configRepository.CopyRecipe(kind, source, fileName);
+        SourceRow row = new(
+            Path.GetFileName(Path.GetDirectoryName(target) ?? string.Empty),
+            target,
+            File.GetLastWriteTime(target),
+            fileName == "Dockerfile" ? _configRepository.ReadRecipeFamily(target) : string.Empty);
+
+        return FormatSourceRows([row])[0];
+    }
+
+    public bool TestDocker()
+    {
+        return _dockerRepository.TestRunning();
+    }
+
+    public bool StartDocker()
+    {
+        return _dockerRepository.TestRunning() || _dockerRepository.StartDesktop();
+    }
+
+    public void DeleteRecipe(string path)
+    {
+        _configRepository.RemoveRecipe(path);
+    }
+
+    public void ExportRecipe(ExportRecipeDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        _configRepository.ExportRecipe(dto.Path ?? string.Empty, dto.Target ?? string.Empty);
+    }
+
+    public IReadOnlyList<WslBuildPackDto> GetBuildPacks()
+    {
+        List<WslBuildPackDto> rows = [];
+
+        foreach (WslPack pack in ReadCatalog().OfferedFor(string.Empty))
+        {
+            rows.Add(new WslBuildPackDto
+            {
+                Name = pack.Name,
+                Family = pack.Family,
+                Description = pack.Description,
+                Shell = pack.Name == "oh_my_shell",
+            });
+        }
+
+        return rows;
+    }
+
+    public BuildResponseDto Build(BuildDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.Name ?? string.Empty;
+        string? user = dto.User;
+
+        foreach (WslInstance distro in _wslRepository.GetAllDistros())
+        {
+            if (distro.Name == name)
+            {
+                throw new InvalidOperationException($"An instance named '{name}' is registered on this machine.");
+            }
+        }
+
+        if (_instanceRepository.IsFolderOccupied(name))
+        {
+            throw new InvalidOperationException(
+                $"Installation folder '{_instanceRepository.GetFolder(name)}' already exists and is not empty.");
+        }
+
+        string tag = $"wsl-fleet:{name}";
+        string imageRef = dto.BuildPath ?? string.Empty;
+
+        if (dto.BuildType is WslBuildType.Dockerfile or WslBuildType.Recipe)
+        {
+            if (dto.BuildType == WslBuildType.Recipe && !File.Exists(imageRef))
+            {
+                throw new InvalidOperationException($"The recipe carries no Dockerfile: '{dto.Context}'.");
+            }
+
+            _dockerRepository.Build(tag, imageRef, dto.Context ?? string.Empty, dto.Interactive);
+            imageRef = tag;
+        }
+        else if (dto.BuildType == WslBuildType.Image)
+        {
+            imageRef = _dockerRepository.Load(imageRef, dto.Interactive);
+        }
+
+        string installPath = _instanceRepository.GetFolder(name);
+        string tarPath = Path.Combine(Path.GetDirectoryName(installPath) ?? string.Empty, $"{name}-rootfs.tar");
+
+        try
+        {
+            _dockerRepository.ExportRootfs(imageRef, tarPath, dto.Interactive);
+
+            if (!Directory.Exists(installPath))
+            {
+                _ = Directory.CreateDirectory(installPath);
+            }
+
+            _wslRepository.Import(name, installPath, tarPath, dto.Interactive);
+        }
+        catch
+        {
+            if (Directory.Exists(installPath))
+            {
+                Directory.Delete(installPath, recursive: true);
+            }
+
+            throw;
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(tarPath);
+            }
+            catch (IOException)
+            {
+            }
+        }
+
+        _instanceRepository.WriteMarker(name, "build");
+
+        WslInstance instance = new() { Name = name, DefaultUser = user ?? "root" };
+        WslTheme theme = WslTheme.Default(name);
+
+        if (!string.IsNullOrEmpty(dto.Font))
+        {
+            theme.FontName = dto.Font;
+        }
+
+        if (!string.IsNullOrEmpty(dto.ColourScheme))
+        {
+            theme.ColorScheme = dto.ColourScheme;
+        }
+
+        if (dto.Icon is not null)
+        {
+            theme.SetIcon(_instanceMapper.ToDrawing(dto.Icon));
+        }
+
+        instance.Theme = theme;
+
+        if (!string.IsNullOrEmpty(dto.Onboarding))
+        {
+            _wslRepository.SaveOnboardingScript(name, dto.Onboarding);
+            _wslRepository.RunOnboarding(name, user ?? "root", dto.Interactive);
+            _wslRepository.Terminate(name);
+        }
+        else
+        {
+            string imageUser = string.Empty;
+
+            foreach (string line in _wslRepository.GetInInstance(name, ["cat", "/etc/wsl.conf"]))
+            {
+                if (line.TrimStart().StartsWith("default", StringComparison.Ordinal))
+                {
+                    int separator = line.IndexOf('=', StringComparison.Ordinal);
+
+                    if (separator >= 0)
+                    {
+                        imageUser = line[(separator + 1)..].Trim();
+                    }
+                }
+            }
+
+            instance.DefaultUser = imageUser.Length == 0 ? "root" : imageUser;
+        }
+
+        List<string> warnings = [];
+
+        try
+        {
+            warnings.AddRange(ApplyLook(name, instance));
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException)
+        {
+            warnings.Add($"the look failed: {exception.Message}");
+        }
+
+        if (dto.BuildType == WslBuildType.Dockerfile)
+        {
+            if (dto.KeepImage)
+            {
+                string savePath = _dockerRepository.GetSavedImagePath(name);
+
+                if (!_dockerRepository.SaveImage(tag, savePath))
+                {
+                    warnings.Add($"the image could not be saved to '{savePath}'.");
+                }
+            }
+
+            _ = _dockerRepository.RemoveImage(tag);
+        }
+
+        if (dto.RegisterDocker)
+        {
+            RegisterDockerDesktop(name);
+            warnings.AddRange(WaitDockerClient(name));
+        }
+
+        if (dto.Packs.Count > 0)
+        {
+            try
+            {
+                warnings.AddRange(InstallChosenPacks(name, dto.Packs, dto.Interactive));
+            }
+            catch (InvalidOperationException exception)
+            {
+                warnings.Add($"not installed - {exception.Message}");
+            }
+        }
+
+        WslRecipeStatus status = WslRecipeStatus.Ok;
+
+        if (warnings.Count > 0)
+        {
+            status = WslRecipeStatus.Warning;
+        }
+
+        return new BuildResponseDto
+        {
+            InstanceName = name,
+            Status = status,
+            Messages = warnings,
+        };
+    }
+
+    public OpenResponseDto Open(string instanceName)
+    {
+        if (_terminalRepository.HasWslProfile(instanceName))
+        {
+            _terminalRepository.TouchSettings();
+            _wslRepository.OpenProfile(instanceName);
+
+            return new OpenResponseDto { InstanceName = instanceName, Profile = true };
+        }
+
+        _wslRepository.OpenBareShell(instanceName);
+
+        return new OpenResponseDto { InstanceName = instanceName, Profile = false };
+    }
+
+    public RestartResponseDto Restart(string instanceName)
+    {
+        try
+        {
+            _wslRepository.Terminate(instanceName);
+        }
+        catch (InvalidOperationException exception)
+        {
+            throw new InvalidOperationException(
+                $"The stop did not complete - '{instanceName}' may still be running, and was not started again. {exception.Message}",
+                exception);
+        }
+
+        try
+        {
+            _wslRepository.Start(instanceName);
+        }
+        catch (InvalidOperationException exception)
+        {
+            throw new InvalidOperationException(
+                $"The start did not complete - '{instanceName}' is stopped. {exception.Message}",
+                exception);
+        }
+
+        return new RestartResponseDto { InstanceName = instanceName };
+    }
+
+    public void Remove(RemoveDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.InstanceName ?? string.Empty;
+
+        if (dto.ArchiveFirst)
+        {
+            try
+            {
+                _ = Archive(ArchiveDtoFor(name));
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or IOException)
+            {
+                throw new InvalidOperationException(
+                    $"The archive did not complete - nothing was destroyed. {exception.Message}",
+                    exception);
+            }
+        }
+
+        _wslRepository.TerminateQuietly(name);
+        _wslRepository.Unregister(name);
+        _instanceRepository.RemoveFolder(name);
+
+        WslGuids fragments = _terminalRepository.GetWslGuids(name);
+        _ = _terminalRepository.PruneGhostEntries(name, fragments.Guids);
+        _terminalRepository.DeleteFragment(name);
+        _ = _terminalRepository.RemoveStaleFragments(fragments.Guids);
+
+        try
+        {
+            _dockerRepository.RemoveDesktopState(name);
+        }
+        catch (IOException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    public CompactResponseDto Compact(CompactDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.InstanceName ?? string.Empty;
+        bool archived = false;
+
+        if (dto.ArchiveFirst)
+        {
+            try
+            {
+                _ = Archive(ArchiveDtoFor(name));
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or IOException)
+            {
+                throw new InvalidOperationException(
+                    $"The archive did not complete - nothing was compacted: {exception.Message}",
+                    exception);
+            }
+
+            archived = true;
+        }
+
+        bool wasRunning = _wslRepository.GetRunningNames().Contains(name);
+        long sizeBefore = _instanceRepository.GetVhdxSize(name);
+        _wslRepository.Compact(name);
+        long sizeAfter = _instanceRepository.GetVhdxSize(name);
+        bool restarted = false;
+
+        if (wasRunning)
+        {
+            try
+            {
+                _wslRepository.Start(name);
+                restarted = true;
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+
+        return new CompactResponseDto
+        {
+            InstanceName = name,
+            Archived = archived,
+            Restarted = restarted,
+            SizeBefore = sizeBefore,
+            SizeAfter = sizeAfter,
+            Gained = sizeBefore - sizeAfter,
+        };
+    }
+
+    public IReadOnlyList<string> GetFonts()
+    {
+        List<string> names = [];
+
+        foreach (string name in _configRepository.GetPromptFontNames())
+        {
+            if (!names.Contains(name))
+            {
+                names.Add(name);
+            }
+        }
+
+        foreach (TerminalFont font in _terminalRepository.GetTerminalFonts())
+        {
+            if (!names.Contains(font.Name))
+            {
+                names.Add(font.Name);
+            }
+        }
+
+        return names;
+    }
+
+    public IReadOnlyList<WslIconPairDto> GetIconPairs()
+    {
+        List<WslIconPairDto> rows = [];
+
+        foreach (WslIconPairDto pair in _terminalRepository.GetIconPairs())
+        {
+            rows.Add(new WslIconPairDto
+            {
+                Name = pair.Name,
+                Top = pair.Top,
+                Bottom = pair.Bottom,
+                TextColor = pair.TextColor,
+            });
+        }
+
+        return rows;
+    }
+
+    public GetAppearanceResponseDto GetAppearance(string instanceName)
+    {
+        WslTheme theme = _terminalRepository.GetAppearance(instanceName);
+        WslTheme? storedTheme = _instanceRepository.GetInstance(instanceName).Theme;
+
+        if (storedTheme?.Icon is { Text.Length: > 0 } drawing)
+        {
+            theme.SetIcon(drawing);
+        }
+
+        if (_instanceRepository.HasIcon(instanceName))
+        {
+            theme.IconPath = _instanceRepository.GetIconPath(instanceName);
+        }
+
+        return _instanceMapper.ToAppearanceResponse(theme, _terminalRepository.HasFragment(instanceName));
+    }
+
+    public SetAppearanceResponseDto SetAppearance(SetAppearanceDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.InstanceName ?? string.Empty;
+        WslInstance model = _instanceRepository.GetInstance(name);
+        WslTheme theme = _terminalRepository.GetAppearance(name);
+        WslTheme? storedTheme = model.Theme;
+
+        if (storedTheme?.Icon is { Text.Length: > 0 } storedIcon)
+        {
+            theme.SetIcon(storedIcon);
+        }
+
+        List<string> changes = [];
+        bool rewriteProfile = false;
+
+        if (!string.IsNullOrEmpty(dto.Font))
+        {
+            theme.FontName = dto.Font;
+            changes.Add($"font '{dto.Font}'");
+            rewriteProfile = true;
+        }
+
+        if (!string.IsNullOrEmpty(dto.ColourScheme))
+        {
+            theme.ColorScheme = dto.ColourScheme;
+            changes.Add($"colours '{dto.ColourScheme}'");
+            rewriteProfile = true;
+        }
+
+        if (dto.Icon is not null)
+        {
+            string iconPath = _instanceRepository.GetIconPath(name);
+            theme.SetIcon(_terminalRepository.DrawIcon(name, iconPath, _instanceMapper.ToDrawing(dto.Icon)));
+            theme.IconPath = iconPath;
+            changes.Add("icon");
+            rewriteProfile = true;
+        }
+
+        if (!string.IsNullOrEmpty(dto.IconImage))
+        {
+            _instanceRepository.SaveIcon(name, dto.IconImage);
+            theme.IconPath = _instanceRepository.GetIconPath(name);
+            changes.Add("icon image");
+        }
+
+        if (!rewriteProfile)
+        {
+            return new SetAppearanceResponseDto { InstanceName = name, Changes = changes };
+        }
+
+        string profileGuid = _terminalRepository.GetProfileGuid(name);
+
+        if (profileGuid.Length == 0)
+        {
+            throw new InvalidOperationException(
+                $"Windows Terminal has no profile for '{name}' - the look cannot be applied.");
+        }
+
+        _terminalRepository.SaveFragment(name, profileGuid, theme);
+        model.Theme = theme;
+        _instanceRepository.SaveInstance(model, string.Empty);
+        _terminalRepository.TouchSettings();
+
+        return new SetAppearanceResponseDto { InstanceName = name, Changes = changes };
+    }
+
+    public IReadOnlyList<WslColorSchemeDto> GetColorSchemes()
+    {
+        return _terminalRepository.GetColorSchemes();
+    }
+
+    public GetPacksResponseDto GetPacks(string instanceName)
+    {
+        WslPackCatalog catalog = ReadCatalog();
+        string packsDirectory = PacksDirectory(instanceName);
+        IReadOnlyList<string> installed = _wslRepository.GetInstalledPacks(instanceName, packsDirectory);
+        string family = _wslRepository.GetFamily(instanceName);
+
+        List<WslPackDto> candidate = [];
+
+        foreach (WslPack pack in catalog.OfferedFor(family))
+        {
+            if (!installed.Contains(pack.Name))
+            {
+                candidate.Add(_instanceMapper.ToPackDto(pack));
+            }
+        }
+
+        List<string> removable = [];
+        List<WslPackDto> installedPacks = [];
+
+        foreach (string packName in installed)
+        {
+            WslPack? pack = catalog.GetPack(packName);
+
+            if (pack is not null && !pack.Offered)
+            {
+                continue;
+            }
+
+            removable.Add(packName);
+
+            if (pack is not null)
+            {
+                installedPacks.Add(_instanceMapper.ToPackDto(pack));
+            }
+        }
+
+        return new GetPacksResponseDto
+        {
+            Installed = [.. installed],
+            Candidate = candidate,
+            InstalledPacks = installedPacks,
+            Removable = removable,
+        };
+    }
+
+    public ManagePacksResponseDto ManagePacks(ManagePacksDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.InstanceName ?? string.Empty;
+        WslPackCatalog catalog = ReadCatalog();
+        string packsDirectory = PacksDirectory(name);
+        string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
+
+        try
+        {
+            File.Delete(errorLog);
+        }
+        catch (IOException)
+        {
+        }
+
+        IReadOnlyList<string> before = _wslRepository.GetInstalledPacks(name, packsDirectory);
+        IReadOnlyList<string> toRemove = catalog.ResolveRemoval(before, dto.ToRemove, dto.ToAdd);
+        IReadOnlyList<PackRemovalConflict> conflicts = catalog.GetRemovalConflicts(before, toRemove, dto.ToAdd);
+
+        if (conflicts.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"'{conflicts[0].Name}' cannot be removed: required by {string.Join(" and ", conflicts[0].Blockers)}.");
+        }
+
+        foreach (string packName in dto.ToAdd)
+        {
+            WslPack? pack = catalog.GetPack(packName);
+
+            if (pack is null)
+            {
+                continue;
+            }
+
+            PackStep result = InstallPack(name, pack, packsDirectory, errorLog, dto.Interactive);
+
+            if (result.Step is "installed" or "declined")
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name, packsDirectory);
+
+            return new ManagePacksResponseDto
+            {
+                InstanceName = name,
+                Outcome = "failed",
+                ExitCode = result.ExitCode,
+                Failed = [result.Pack],
+                Installed = Subtract(after, before),
+            };
+        }
+
+        foreach (string packName in toRemove)
+        {
+            PackStep? result = RemoveOne(name, packName, packsDirectory, errorLog, dto.Interactive);
+
+            if (result is null)
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name, packsDirectory);
+
+            return new ManagePacksResponseDto
+            {
+                InstanceName = name,
+                Outcome = "failed",
+                ExitCode = result.ExitCode,
+                Failed = [result.Pack],
+                Installed = Subtract(after, before),
+                Removed = Subtract(before, after),
+            };
+        }
+
+        if (toRemove.Count > 0)
+        {
+            _ = _wslRepository.RunOrphanCleanup(name);
+        }
+
+        IReadOnlyList<string> final = _wslRepository.GetInstalledPacks(name, packsDirectory);
+
+        return new ManagePacksResponseDto
+        {
+            InstanceName = name,
+            Outcome = "ok",
+            ExitCode = 0,
+            Installed = Subtract(final, before),
+            Removed = Subtract(before, final),
+        };
+    }
+
+    public IReadOnlyList<WslDockerImageDto> GetAllSavedImages()
+    {
+        List<WslDockerImageDto> rows = [];
+
+        foreach (SavedImageRow image in _dockerRepository.GetAllSavedImages())
+        {
+            rows.Add(new WslDockerImageDto
+            {
+                Name = $"{image.Name} ({image.Modified:dd'/'MM HH:mm})",
+                Path = image.Path,
+                Uploaded = HasFingerprint(Path.GetFileName(Path.GetDirectoryName(image.Path) ?? string.Empty)),
+            });
+        }
+
+        return rows;
+    }
+
+    public IsRegistryImageValidResponseDto IsRegistryImageValid(string imageRef)
+    {
+        RegistryAnswer answer = _dockerRepository.TestRegistryImage(imageRef);
+
+        return new IsRegistryImageValidResponseDto
+        {
+            Valid = answer.Ok,
+            Why = answer.Why,
+        };
+    }
+
+    public ArchiveResponseDto Archive(ArchiveDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string name = dto.InstanceName ?? string.Empty;
+        string format = string.IsNullOrEmpty(dto.Format) ? "tar.gz" : dto.Format;
+        string archiveName = $"{name}_archive";
+        string archiveDir = _archiveRepository.GetFolder(archiveName);
+        string archiveTar = Path.Combine(archiveDir, $"{archiveName}.{format}");
+
+        long diskBytes = _instanceRepository.GetVhdxSize(name);
+        long freeBytes = _instanceRepository.GetFreeSpace(archiveDir);
+
+        if (freeBytes < diskBytes)
+        {
+            string drive = (Path.GetPathRoot(Path.GetFullPath(archiveDir)) ?? string.Empty).TrimEnd(':');
+
+            throw new InvalidOperationException(
+                $"Not enough room on {drive}: needed {ReferenceHelpers.FormatSize(diskBytes)}, free {ReferenceHelpers.FormatSize(freeBytes)}.");
+        }
+
+        bool stopped = false;
+
+        if (_wslRepository.GetRunningNames().Contains(name))
+        {
+            if (!dto.Permit)
+            {
+                throw new InvalidOperationException(
+                    $"'{name}' is running, and stopping it was not allowed: an archive reads a still disk.");
+            }
+
+            _wslRepository.Terminate(name);
+            stopped = true;
+        }
+
+        WslInstance stored = _instanceRepository.GetInstance(name);
+        WslTheme theme = stored.Theme ?? WslTheme.Default(name);
+
+        try
+        {
+            if (_archiveRepository.HasArchive(archiveName))
+            {
+                _archiveRepository.DeleteArchive(archiveName);
+            }
+
+            _archiveRepository.EnsureFolder(archiveName);
+
+            try
+            {
+                _wslRepository.Export(name, archiveTar, format);
+            }
+            catch
+            {
+                TryDeleteFile(archiveTar);
+                throw;
+            }
+
+            if (_instanceRepository.HasIcon(name))
+            {
+                _archiveRepository.SaveIcon(archiveName, _instanceRepository.GetIconPath(name));
+                theme.IconPath = _archiveRepository.GetIconPath(archiveName);
+            }
+
+            WslInstance archive = new()
+            {
+                Name = archiveName,
+                IsArchive = true,
+                DefaultUser = stored.DefaultUser,
+                Theme = theme,
+            };
+
+            _archiveRepository.SaveInstance(archive, _dockerRepository.GetDesktopState(name));
+        }
+        finally
+        {
+            if (stopped)
+            {
+                _wslRepository.Start(name);
+            }
+        }
+
+        return new ArchiveResponseDto
+        {
+            InstanceName = name,
+            ArchiveDir = archiveDir,
+            Tar = archiveTar,
+            LookFont = theme.FontName,
+            LookColourScheme = theme.ColorScheme,
+            Docker = _dockerRepository.GetDesktopState(name),
+            Stopped = stopped,
+        };
+    }
+
+    public RestoreResponseDto Restore(RestoreDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string archiveName = dto.ArchiveName ?? string.Empty;
+        string name = dto.InstanceName ?? string.Empty;
+
+        foreach (WslInstance distro in _wslRepository.GetAllDistros())
+        {
+            if (distro.Name == name)
+            {
+                string registered = _wslRepository.GetFolder(name);
+
+                throw new InvalidOperationException(
+                    $"An instance named '{name}' is already registered at '{registered}'. " +
+                    "Unregister it first, or restore the archive under another name.");
+            }
+        }
+
+        string installPath = _instanceRepository.GetFolder(name);
+
+        if (Directory.Exists(installPath))
+        {
+            throw new InvalidOperationException($"A folder with that name already exists: {installPath}");
+        }
+
+        string tar = _archiveRepository.GetTar(archiveName);
+
+        if (tar.Length == 0)
+        {
+            throw new InvalidOperationException(
+                $"No tar in the archive folder: {_archiveRepository.GetFolder(archiveName)}");
+        }
+
+        _wslRepository.Import(name, installPath, tar);
+        _instanceRepository.WriteMarker(name, "restore");
+
+        WslInstance stored = _archiveRepository.GetInstance(archiveName);
+        WslTheme theme = stored.Theme ?? WslTheme.Default(name);
+
+        if (_archiveRepository.HasIcon(archiveName))
+        {
+            _instanceRepository.SaveIcon(name, _archiveRepository.GetIconPath(archiveName));
+            theme.IconPath = _instanceRepository.GetIconPath(name);
+        }
+
+        string profileGuid = _terminalRepository.GetProfileGuid(name);
+
+        if (profileGuid.Length > 0)
+        {
+            _terminalRepository.SaveFragment(name, profileGuid, theme);
+        }
+
+        WslInstance instance = new()
+        {
+            Name = name,
+            DefaultUser = stored.DefaultUser,
+            Theme = theme,
+        };
+
+        _instanceRepository.SaveInstance(instance, string.Empty);
+        _terminalRepository.TouchSettings();
+
+        string carried = _archiveRepository.GetDocker(archiveName);
+
+        if (carried == "yes" && _dockerRepository.GetDesktopState(name) == "no")
+        {
+            _dockerRepository.SetDesktopState(name);
+            _ = _dockerRepository.RestartDesktop();
+        }
+
+        return new RestoreResponseDto { ArchiveName = archiveName, InstanceName = name };
+    }
+
+    public DeleteArchiveResponseDto DeleteArchive(string archive)
+    {
+        _archiveRepository.DeleteArchive(archive);
+
+        return new DeleteArchiveResponseDto { ArchiveName = archive };
+    }
+
+    public DuplicateResponseDto Duplicate(DuplicateDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string source = dto.SourceName ?? string.Empty;
+        string copy = dto.CopyName ?? string.Empty;
+
+        foreach (WslInstance distro in _wslRepository.GetAllDistros())
+        {
+            if (distro.Name == copy)
+            {
+                throw new InvalidOperationException($"An instance named '{copy}' already exists.");
+            }
+        }
+
+        foreach (WslInstance archive in _archiveRepository.GetAllArchives())
+        {
+            if (archive.Name == copy)
+            {
+                throw new InvalidOperationException($"An instance named '{copy}' already exists.");
+            }
+        }
+
+        string destination = _instanceRepository.GetFolder(copy);
+        long diskBytes = _instanceRepository.GetVhdxSize(source);
+        long needed = 2 * diskBytes;
+        long freeBytes = _instanceRepository.GetFreeSpace(destination);
+
+        if (freeBytes < needed)
+        {
+            string drive = (Path.GetPathRoot(Path.GetFullPath(destination)) ?? string.Empty).TrimEnd(':');
+
+            throw new InvalidOperationException(
+                $"Not enough room on {drive}: needed {ReferenceHelpers.FormatSize(needed)}, free {ReferenceHelpers.FormatSize(freeBytes)}.");
+        }
+
+        WslInstance stored = _instanceRepository.GetInstance(source);
+        WslTheme theme = _terminalRepository.GetAppearance(source);
+        WslTheme? storedTheme = stored.Theme;
+
+        if (storedTheme?.Icon is { Text.Length: > 0 } storedIcon)
+        {
+            theme.SetIcon(storedIcon);
+        }
+
+        string dockerCarried = _dockerRepository.GetDesktopState(source);
+        bool stopped = false;
+
+        if (_wslRepository.GetRunningNames().Contains(source))
+        {
+            _wslRepository.Terminate(source);
+            stopped = true;
+        }
+
+        string tempTar = Path.Combine(Path.GetDirectoryName(destination) ?? string.Empty, $"{copy}-export.tar.gz");
+
+        try
+        {
+            _wslRepository.Export(source, tempTar, "tar.gz");
+            _wslRepository.Import(copy, destination, tempTar);
+            _instanceRepository.WriteMarker(copy, "duplicate");
+
+            if (_instanceRepository.HasIcon(source))
+            {
+                _instanceRepository.SaveIcon(copy, _instanceRepository.GetIconPath(source));
+                theme.IconPath = _instanceRepository.GetIconPath(copy);
+            }
+
+            string profileGuid = _terminalRepository.GetProfileGuid(copy);
+
+            if (profileGuid.Length > 0)
+            {
+                _terminalRepository.SaveFragment(copy, profileGuid, theme);
+            }
+
+            WslInstance instance = new()
+            {
+                Name = copy,
+                DefaultUser = stored.DefaultUser,
+                Theme = theme,
+            };
+
+            _instanceRepository.SaveInstance(instance, string.Empty);
+            _terminalRepository.TouchSettings();
+
+            if (dockerCarried == "yes" && _dockerRepository.GetDesktopState(copy) == "no")
+            {
+                _dockerRepository.SetDesktopState(copy);
+                _ = _dockerRepository.RestartDesktop();
+            }
+        }
+        finally
+        {
+            TryDeleteFile(tempTar);
+
+            if (stopped)
+            {
+                _wslRepository.Start(source);
+            }
+        }
+
+        return new DuplicateResponseDto { SourceName = source, CopyName = copy };
+    }
+
+    private static ArchiveDto ArchiveDtoFor(string name)
+    {
+        return new ArchiveDto
+        {
+            InstanceName = name,
+            Format = "tar.gz",
+            Permit = true,
+        };
+    }
+
+    private List<string> ApplyLook(string name, WslInstance instance)
+    {
+        List<string> warnings = [];
+        WslTheme theme = instance.Theme ?? WslTheme.Default(name);
+
+        if (!_terminalRepository.IsFontInstalled(theme.FontName ?? string.Empty))
+        {
+            try
+            {
+                _terminalRepository.InstallFont(theme.FontName ?? string.Empty, null);
+            }
+            catch (Exception exception) when (exception is IOException or InvalidOperationException or PlatformNotSupportedException or HttpRequestException)
+            {
+                warnings.Add($"the font '{theme.FontName}' would not install: {exception.Message}");
+            }
+        }
+
+        string iconPath = _instanceRepository.GetIconPath(name);
+        bool iconDrawn = false;
+
+        try
+        {
+            theme.SetIcon(_terminalRepository.DrawIcon(name, iconPath, null));
+            iconDrawn = true;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or PlatformNotSupportedException)
+        {
+            TryDeleteFile(iconPath);
+            warnings.Add($"no icon ({exception.Message})");
+        }
+
+        WslGuids fragments = _terminalRepository.GetWslGuids(name);
+
+        if (fragments.Guids.Count > 0)
+        {
+            PruneReport ghosts = _terminalRepository.PruneGhostEntries(name, fragments.Guids);
+
+            foreach (string path in ghosts.Unreadable)
+            {
+                warnings.Add($"ghost entries NOT pruned in {path} (unreadable JSON - a // comment breaks parsing; remove them by hand)");
+            }
+        }
+
+        _ = _terminalRepository.RemoveStaleFragments(fragments.Guids);
+
+        if (!string.IsNullOrEmpty(fragments.ProfileGuid))
+        {
+            theme.IconPath = iconDrawn ? iconPath : string.Empty;
+            _terminalRepository.SaveFragment(name, fragments.ProfileGuid, theme);
+        }
+        else
+        {
+            warnings.Add($"no WSL fragment for '{name}' - the profile was not applied");
+        }
+
+        instance.Theme = theme;
+        _instanceRepository.SaveInstance(instance, string.Empty);
+        _terminalRepository.TouchSettings();
+
+        return warnings;
+    }
+
+    private void RegisterDockerDesktop(string name)
+    {
+        try
+        {
+            _dockerRepository.SetDesktopState(name);
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        {
+            throw new InvalidOperationException(
+                $"Docker Desktop's settings could not take '{name}': {exception.Message}",
+                exception);
+        }
+
+        if (!_dockerRepository.RestartDesktop())
+        {
+            throw new InvalidOperationException($"Docker Desktop would not restart to pick '{name}' up.");
+        }
+    }
+
+    private IReadOnlyList<string> WaitDockerClient(string name)
+    {
+        bool usable = false;
+
+        for (int attempt = 1; attempt <= 5 && !usable; attempt++)
+        {
+            usable = _wslRepository.TestInInstance(name, ["docker", "version"]);
+
+            if (!usable)
+            {
+                Thread.Sleep(2000);
+            }
+        }
+
+        return usable
+            ?
+            [
+                "Docker Desktop: ready - 'docker' works in this instance.",
+            ]
+            :
+            [
+                "Docker Desktop: 'docker' does not answer in this instance yet.",
+                "run 'docker version' in there; if it names the socket's permissions, restart Docker Desktop and open a new terminal.",
+            ];
+    }
+
+    private List<string> InstallChosenPacks(string name, IReadOnlyList<string> chosen, bool interactive)
+    {
+        WslPackCatalog catalog = ReadCatalog();
+        string packsDirectory = PacksDirectory(name);
+        string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
+
+        foreach (string packName in catalog.ResolveSelection(chosen, []))
+        {
+            WslPack? pack = catalog.GetPack(packName);
+
+            if (pack is null)
+            {
+                continue;
+            }
+
+            PackStep result = InstallPack(name, pack, packsDirectory, errorLog, interactive);
+
+            if (result.Step is "installed" or "declined")
+            {
+                continue;
+            }
+
+            List<string> notes = [$"'{result.Pack}' installation failed."];
+
+            IReadOnlyList<string> now = _wslRepository.GetInstalledPacks(name, packsDirectory);
+            List<string> skipped = [];
+
+            foreach (string wanted in chosen)
+            {
+                if (wanted != result.Pack && !now.Contains(wanted))
+                {
+                    skipped.Add(wanted);
+                }
+            }
+
+            if (skipped.Count > 0)
+            {
+                notes.Add($"{string.Join(", ", skipped)} installation skipped.");
+            }
+
+            return notes;
+        }
+
+        return [];
+    }
+
+    private WslPackCatalog ReadCatalog()
+    {
+        return new WslPackCatalog { Packs = _packCatalogRepository.GetAllPacks() };
+    }
+
+    private string PacksDirectory(string name)
+    {
+        string home = _wslRepository.GetHome(name);
+
+        if (home.Length == 0)
+        {
+            throw new InvalidOperationException($"'{name}' did not say where its user's home is.");
+        }
+
+        return $"{home}/.config/packs";
+    }
+
+    private PackStep InstallPack(string name, WslPack pack, string packsDirectory, string errorLog, bool interactive = false)
+    {
+        string target = $"{packsDirectory}/{pack.Name}";
+        int code = _wslRepository.CopyFolderIntoInstance(name, _packCatalogRepository.GetFolder(pack.Name), target);
+
+        if (code != 0)
+        {
+            _ = _wslRepository.RemoveFolderInInstance(name, target);
+
+            return new PackStep(pack.Name, "copy", code);
+        }
+
+        if (_wslRepository.HasInInstance(name, $"{target}/install_root.sh"))
+        {
+            int rootCode = _wslRepository.RunScriptInInstance(name, target, "install_root.sh", asRoot: true, errorLog, interactive);
+
+            if (rootCode != 0)
+            {
+                _ = _wslRepository.RemoveFolderInInstance(name, target);
+
+                return new PackStep(pack.Name, "root", rootCode);
+            }
+        }
+
+        bool sudoWindow = false;
+
+        try
+        {
+            sudoWindow = _wslRepository.OpenPackSudoWindow(name);
+            code = _wslRepository.RunScriptInInstance(name, target, "install.sh", asRoot: false, errorLog, interactive);
+        }
+        finally
+        {
+            if (sudoWindow)
+            {
+                _wslRepository.ClosePackSudoWindow(name);
+            }
+        }
+
+        if (code == 2)
+        {
+            _ = _wslRepository.RemoveFolderInInstance(name, target);
+
+            return new PackStep(pack.Name, "declined", 0);
+        }
+
+        if (code != 0)
+        {
+            _ = _wslRepository.RemoveFolderInInstance(name, target);
+
+            return new PackStep(pack.Name, "install", code);
+        }
+
+        return new PackStep(pack.Name, "installed", 0);
+    }
+
+    private PackStep? RemoveOne(string name, string packName, string packsDirectory, string errorLog, bool interactive = false)
+    {
+        string target = $"{packsDirectory}/{packName}";
+        string catalogRemove = Path.Combine(_packCatalogRepository.GetFolder(packName), "remove.sh");
+
+        if (File.Exists(catalogRemove))
+        {
+            _ = _wslRepository.CopyFileIntoInstance(name, catalogRemove, $"{target}/remove.sh");
+        }
+
+        if (_wslRepository.HasInInstance(name, $"{target}/remove.sh"))
+        {
+            int code = _wslRepository.RunScriptInInstance(name, target, "remove.sh", asRoot: true, errorLog, interactive);
+
+            if (code != 0)
+            {
+                return new PackStep(packName, "remove", code);
+            }
+        }
+
+        int folderCode = _wslRepository.RemoveFolderInInstance(name, target);
+
+        return folderCode != 0 ? new PackStep(packName, "folder", folderCode) : null;
+    }
+
+    private static List<string> Subtract(IReadOnlyList<string> left, IReadOnlyList<string> right)
+    {
+        return [.. left.Where(name => !right.Contains(name))];
+    }
+
+    private static List<WslBuildSourceDto> FormatSourceRows(IReadOnlyList<SourceRow> rows)
+    {
+        List<WslBuildSourceDto> output = [];
+
+        foreach (SourceRow row in rows.OrderBy(item => item.Name, StringComparer.Ordinal))
+        {
+            bool uploaded = HasFingerprint(row.Name);
+            string name = uploaded ? row.Name[..^9] : row.Name;
+
+            output.Add(new WslBuildSourceDto
+            {
+                Name = $"{name} ({row.Modified.ToString("dd'/'MM HH:mm", CultureInfo.InvariantCulture)})",
+                Path = row.Path,
+                Family = row.Family,
+                Uploaded = uploaded,
+            });
+        }
+
+        return output;
+    }
+
+    private static string DockerState(IReadOnlyList<string>? dockerNames, string name)
+    {
+        if (dockerNames is null)
+        {
+            return "unknown";
+        }
+
+        return dockerNames.Contains(name) ? "yes" : "no";
+    }
+
+    private static bool HasFingerprint(string name)
+    {
+        if (name.Length < 9 || name[^9] != '-')
+        {
+            return false;
+        }
+
+        return name[^8..].All(char.IsAsciiHexDigitLower);
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
+    private sealed record PackStep(string Pack, string Step, int ExitCode);
+}

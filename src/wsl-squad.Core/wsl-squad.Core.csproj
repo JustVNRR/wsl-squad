@@ -1,21 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>wsl_squad.Core</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <RootNamespace>wsl_squad.Core</RootNamespace>
+        <NoWarn>$(NoWarn);CA1822;S2325;IDE0032;S2292;S4144;IDE0019;IDE0017;IDE0047;S3267;S1075;S2589;IDE0045;CA1859;SYSLIB1054</NoWarn>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <!-- Scripts Linux embarqués dans la DLL -->
-    <EmbeddedResource Include="Resources\Linux\**\*.*" LogicalName="linux/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Resources\recipes\**\*" LogicalName="recipes/%(RecursiveDir)%(Filename)%(Extension)" />
-    <!-- Polices partagées depuis /Assets, également embarquées dans la DLL de Core -->
-    <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf" LogicalName="fonts/%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- Packs et fichiers de build embarqués dans la DLL -->
+        <EmbeddedResource Include="Resources\packs\**\*"
+                            LogicalName="packs/%(RecursiveDir)%(Filename)%(Extension)" />
+        <EmbeddedResource Include="Resources\build\**\*"
+                            LogicalName="build/%(RecursiveDir)%(Filename)%(Extension)" />
 
-  <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="10.0.13" />
-    <PackageReference Include="System.IO.Abstractions" Version="22.3.0" />
-  </ItemGroup>
+        <!-- Recettes Docker -->
+        <EmbeddedResource Include="Resources\recipes\**\*"
+                            LogicalName="recipes/%(RecursiveDir)%(Filename)%(Extension)" />
+
+        <!-- Polices partagées : ajout de Link pour ranger l'affichage dans Resources\Fonts -->
+        <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf"
+                            Link="Resources\Fonts\%(RecursiveDir)%(Filename)%(Extension)"
+                            LogicalName="fonts/%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="wsl-squad.Core.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.Drawing.Common" Version="10.0.13" />
+        <PackageReference Include="System.IO.Abstractions" Version="22.3.0" />
+    </ItemGroup>
 
 </Project>

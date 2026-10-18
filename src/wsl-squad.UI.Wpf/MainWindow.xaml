@@ -1,12 +1,149 @@
-﻿<Window x:Class="wsl_squad.UI.Wpf.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:wsl_squad.UI.Wpf"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+<views:ChromeWindow x:Class="wsl_squad.UI.Wpf.MainWindow"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:views="clr-namespace:wsl_squad.UI.Wpf.Views"
+                    Title="WSL SQUAD"
+                    SizeToContent="WidthAndHeight"
+                    WindowStartupLocation="CenterScreen"
+                    MinHeight="240"
+                    Foreground="{DynamicResource AppForegroundBrush}"
+                    Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="WSL SQUAD" FontWeight="SemiBold" Foreground="{DynamicResource AppForegroundBrush}"/>
+                <TextBlock Text="{Binding Root, StringFormat='Root: {0}'}" Foreground="{DynamicResource AppMutedBrush}" Margin="0,2,0,0"/>
+            </StackPanel>
+            <Button Grid.Column="1" Command="{Binding AddCommand}" Content="&#xF067;" FontFamily="{DynamicResource IconFace}"
+                    Margin="0,0,8,0" VerticalAlignment="Top"
+                    Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
+                    ToolTip="Add"/>
+            <Button Grid.Column="2" Command="{Binding RefreshCommand}" IsEnabled="{Binding Free}" Content="&#xF021;" FontFamily="{DynamicResource IconFace}"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
+                    ToolTip="Refresh"/>
+            <Button Grid.Column="3" Command="{Binding SettingsCommand}" Content="&#xF013;" FontFamily="{DynamicResource IconFace}"
+                    Margin="8,0,0,0" VerticalAlignment="Top"
+                    Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
+                    ToolTip="Settings"/>
+            <Button Grid.Column="4" Command="{Binding ThemeCommand}" IsEnabled="{Binding CanToggleTheme}"
+                    Content="{Binding ThemeGlyph}" ToolTip="{Binding ThemeTooltip}"
+                    FontFamily="{DynamicResource IconFace}"
+                    Margin="8,0,0,0" VerticalAlignment="Top"
+                    Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"/>
+            <Button x:Name="BtnQuit" Grid.Column="5" Content="&#xF00D;" FontFamily="{DynamicResource IconFace}"
+                    Margin="8,0,0,0" VerticalAlignment="Top" Click="OnQuit"
+                    Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
+                    ToolTip="Close"/>
+        </Grid>
+
+        <ListView x:Name="LstInstances" ItemsSource="{Binding Rows}" IsEnabled="{Binding Free}" Grid.Row="1"
+                  Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppDividerBrush}"
+                  Foreground="{DynamicResource AppForegroundBrush}"
+                  AlternationCount="2" KeyboardNavigation.TabNavigation="Continue"
+                  VirtualizingPanel.IsVirtualizing="False"
+                  ScrollViewer.CanContentScroll="False"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding Size}"/>
+                    <GridViewColumn Header="Action" Width="Auto">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF2EA;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource ArchivedRowButton}"
+                                                ToolTip="Restore"/>
+                                        <Button Command="{Binding DataContext.DeleteArchiveCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource ArchivedRowButton}"
+                                                ToolTip="Delete"/>
+                                        <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF120;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Shell"/>
+                                        <Button Command="{Binding DataContext.RestartCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF01E;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Restart"/>
+                                        <Button Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF304;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Edit"/>
+                                        <Button Command="{Binding DataContext.AppearanceCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF53F;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Appearance"/>
+                                        <Button Command="{Binding DataContext.DuplicateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF0C5;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Duplicate"/>
+                                        <Button Command="{Binding DataContext.ArchiveCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF187;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Archive"/>
+                                        <Button Command="{Binding DataContext.CompactCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF066;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Compact"/>
+                                        <Button Command="{Binding DataContext.DockerCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF1B2;" FontFamily="{DynamicResource IconFace}"
+                                                Margin="0,0,4,0" Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Docker Desktop"/>
+                                        <Button Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}"
+                                                Background="Transparent"
+                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                Style="{DynamicResource LiveRowButton}"
+                                                ToolTip="Remove"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <ProgressBar Grid.Row="2" Height="4" Margin="0,10,0,0"
+                     IsIndeterminate="True"
+                     Foreground="{DynamicResource AppForegroundBrush}" Background="{DynamicResource AppInputBackgroundBrush}" BorderThickness="0">
+            <ProgressBar.Style>
+                <Style TargetType="ProgressBar">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Busy}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ProgressBar.Style>
+        </ProgressBar>
     </Grid>
-</Window>
+</views:ChromeWindow>

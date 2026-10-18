@@ -2,7 +2,6 @@ using wsl_squad.Core.Abstractions.Process;
 
 namespace wsl_squad.Tests.Support;
 
-/// <summary>Records process invocations and returns scripted results.</summary>
 public sealed class FakeProcessRunner : IProcessRunner
 {
     private readonly List<ProcessInvocation> _invocations = [];

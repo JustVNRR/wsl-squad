@@ -1,0 +1,37 @@
+using System.Reflection;
+
+namespace wsl_squad.Core.Services;
+
+public static class CatalogBootstrap
+{
+    public static void Ensure(string assetsRoot)
+    {
+        Assembly assembly = typeof(ServiceFactory).Assembly;
+
+        foreach (string resource in assembly.GetManifestResourceNames())
+        {
+            if (!resource.StartsWith("packs/", StringComparison.Ordinal) &&
+                !resource.StartsWith("build/", StringComparison.Ordinal) &&
+                !resource.StartsWith("recipes/", StringComparison.Ordinal) &&
+                !resource.StartsWith("fonts/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string target = Path.Combine(
+                assetsRoot,
+                resource.Replace('/', Path.DirectorySeparatorChar));
+
+            if (File.Exists(target))
+            {
+                continue;
+            }
+
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(target) ?? assetsRoot);
+
+            using Stream source = assembly.GetManifestResourceStream(resource)!;
+            using FileStream destination = File.Create(target);
+            source.CopyTo(destination);
+        }
+    }
+}

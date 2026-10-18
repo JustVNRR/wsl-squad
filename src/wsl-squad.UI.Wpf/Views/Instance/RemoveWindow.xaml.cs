@@ -1,0 +1,17 @@
+using wsl_squad.Presentation.ViewModels;
+
+namespace wsl_squad.UI.Wpf.Views.Instance;
+
+public partial class RemoveWindow : ChromeWindow
+{
+    public RemoveWindow(RemoveViewModel viewModel)
+    {
+        InitializeComponent();
+        Dress();
+        DataContext = viewModel;
+
+        viewModel.CloseRequested += (_, _) => DialogResult = true;
+        ContentRendered += (_, _) => _ = ChkArchive.Focus();
+    }
+
+}
