@@ -1,6 +1,5 @@
 namespace wsl_squad.Core.Entities;
 
-/// <summary>The pack catalogue and its dependency rules (reference <c>WslPackCatalog</c>).</summary>
 public sealed class WslPackCatalog
 {
     public IReadOnlyList<WslPack> Packs { get; set; } = [];
@@ -173,5 +172,4 @@ public sealed class WslPackCatalog
     }
 }
 
-/// <summary>A pack that cannot be removed because another pack requires it.</summary>
 public sealed record PackRemovalConflict(string Name, IReadOnlyList<string> Blockers);

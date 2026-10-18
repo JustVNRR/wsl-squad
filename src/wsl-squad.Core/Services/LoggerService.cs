@@ -1,8 +1,9 @@
+using System.Diagnostics;
+
 using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>Appends the session's lines to the log and the console (reference <c>LoggerService</c>).</summary>
 public sealed class LoggerService : ILoggerService
 {
     private readonly string _path;
@@ -18,9 +19,9 @@ public sealed class LoggerService : ILoggerService
             {
                 _ = Directory.CreateDirectory(directory);
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // The reference ignores an unwritable log directory.
+                Trace.TraceWarning($"[LoggerService] Failed to create log directory '{directory}': {ex.Message}");
             }
         }
 
@@ -31,9 +32,9 @@ public sealed class LoggerService : ILoggerService
                 File.Move(_path, _path + ".1", overwrite: true);
             }
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // The reference ignores rotation failures.
+            Trace.TraceWarning($"[LoggerService] Failed to rotate log file '{_path}': {ex.Message}");
         }
 
         Append($"==== session {DateTime.Now:yyyy-MM-dd HH:mm:ss} ====");
@@ -54,9 +55,9 @@ public sealed class LoggerService : ILoggerService
             {
                 File.AppendAllText(_path, line + Environment.NewLine);
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // The console line still goes out.
+                Trace.TraceWarning($"[LoggerService] Failed to append to log file '{_path}': {ex.Message}");
             }
         }
 

@@ -3,7 +3,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>Windows Terminal integration.</summary>
 public interface ITerminalRepository
 {
     public string GetFragmentPath(string instanceName);

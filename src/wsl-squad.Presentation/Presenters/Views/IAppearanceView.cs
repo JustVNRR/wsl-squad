@@ -2,7 +2,6 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.Presenters.Views;
 
-/// <summary>The appearance dialogue's prompts and reports.</summary>
 public interface IAppearanceView : IPresenterViewBase
 {
     public void ShowNoFragmentWarning();

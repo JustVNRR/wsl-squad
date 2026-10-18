@@ -1,6 +1,5 @@
 namespace wsl_squad.Core.Entities;
 
-/// <summary>A managed WSL distribution (reference <c>WslInstance</c>).</summary>
 public sealed class WslInstance
 {
     private string _name = string.Empty;

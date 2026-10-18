@@ -5,7 +5,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>The editable pack catalogue on disk (reference <c>PackCatalogRepository</c>).</summary>
 public sealed class PackCatalogRepository : IPackCatalogRepository
 {
     private readonly string _packsRoot;

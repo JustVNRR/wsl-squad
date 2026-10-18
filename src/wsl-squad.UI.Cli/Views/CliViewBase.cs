@@ -4,7 +4,6 @@ using wsl_squad.UI.Cli.Interaction;
 
 namespace wsl_squad.UI.Cli.Views;
 
-/// <summary>Shared console prompts and output (reference <c>BaseViewCli.psm1</c>).</summary>
 public abstract class CliViewBase : IPresenterViewBase
 {
     protected CliViewBase()

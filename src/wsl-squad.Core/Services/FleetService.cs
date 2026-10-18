@@ -3,7 +3,6 @@ using wsl_squad.Core.Repositories;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>The fleet root and its overall operations (reference <c>FleetService</c>).</summary>
 public sealed class FleetService : IFleetService
 {
     private readonly IConfigRepository _configRepository;

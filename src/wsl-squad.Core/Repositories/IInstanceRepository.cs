@@ -2,7 +2,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>An instance's folder and metadata.</summary>
 public interface IInstanceRepository
 {
     public string GetFolder(string name);

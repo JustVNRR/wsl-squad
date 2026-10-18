@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Markup;
@@ -74,11 +75,9 @@ internal sealed class ThemeService
                             Source = new Uri(uploaded, UriKind.Absolute),
                         };
                     }
-                    catch (XamlParseException)
+                    catch (Exception ex) when (ex is XamlParseException or IOException)
                     {
-                    }
-                    catch (IOException)
-                    {
+                        Trace.TraceWarning($"[ThemeService] Could not load uploaded theme '{uploaded}': {ex.Message}");
                     }
                 }
             }
@@ -88,16 +87,9 @@ internal sealed class ThemeService
                 Source = new Uri($"Themes/{colourSet}.xaml", UriKind.Relative),
             };
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or InvalidOperationException or XamlParseException)
         {
-            return null;
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
-        catch (XamlParseException)
-        {
+            Trace.TraceWarning($"[ThemeService] Could not load theme '{colourSet}': {ex.Message}");
             return null;
         }
     }

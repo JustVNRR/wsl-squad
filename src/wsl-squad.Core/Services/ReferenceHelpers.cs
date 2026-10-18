@@ -2,7 +2,6 @@ using System.Globalization;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>Small helpers shared by the services (reference <c>Tools/Helpers.psm1</c>).</summary>
 public static class ReferenceHelpers
 {
     public static string FormatSize(long bytes)

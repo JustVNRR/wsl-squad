@@ -2,10 +2,9 @@ using System.Buffers.Binary;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>Lit la table cmap d'une police pour savoir si un caractère est présent.</summary>
 internal static class FontGlyphReader
 {
-    private const uint _cmapTag = 0x636D6170; // "cmap"
+    private const uint _cmapTag = 0x636D6170;
 
     public static bool HasGlyph(string path, int codePoint)
     {

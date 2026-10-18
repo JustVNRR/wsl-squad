@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Deletes an archive (reference <c>DeleteArchivePresenter.psm1</c>).</summary>
 public sealed class DeleteArchivePresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

@@ -2,7 +2,6 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>The fleet's instance lifecycle.</summary>
 public interface IInstanceService
 {
     public IReadOnlyList<WslIndexDto> GetAll();

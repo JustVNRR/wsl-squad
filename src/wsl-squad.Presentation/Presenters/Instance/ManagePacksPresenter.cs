@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Edits an instance's packs (reference <c>ManagePacksPresenter.psm1</c>).</summary>
 public sealed class ManagePacksPresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

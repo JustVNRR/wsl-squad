@@ -2,7 +2,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>Archives on disk.</summary>
 public interface IArchiveRepository
 {
     public string GetFolder(string archiveName);

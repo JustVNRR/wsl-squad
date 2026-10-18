@@ -3,7 +3,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Mappers;
 
-/// <summary>Fleet entity/DTO mapping.</summary>
 public interface IInstanceMapper
 {
     public WslIndexDto ToIndexDto(WslInstance instance);

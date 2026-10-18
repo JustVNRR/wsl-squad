@@ -3,10 +3,8 @@ using System.Security.Cryptography;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>A Dockerfile, onboarding script or recipe row read from the catalogue.</summary>
 public sealed record SourceRow(string Name, string Path, DateTime Modified, string Family);
 
-/// <summary>The editable catalogue and the shell's own settings (reference <c>ConfigRepository</c>).</summary>
 public sealed class ConfigRepository : IConfigRepository
 {
     private static readonly string[] _recipeKinds = ["dockerfiles", "onboardings", "dockerimages", "recipes"];

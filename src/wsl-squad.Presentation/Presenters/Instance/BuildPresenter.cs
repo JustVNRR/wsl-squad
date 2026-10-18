@@ -1,5 +1,4 @@
-using System.Globalization;
-using System.Text;
+using System.Diagnostics;
 
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
@@ -295,7 +294,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                 case "user":
                 {
-                    string proposal = ProposeUserName();
+                    string proposal = NameRules.ProposeUserName();
                     string prompt = proposal.Length > 0
                         ? $"User name for '{name}' [{proposal}] (CTRL+C to abort)"
                         : $"User name for '{name}' (CTRL+C to abort)";
@@ -417,8 +416,9 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             {
                 _ = _service.Open(dto.Name ?? string.Empty);
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
+                Trace.TraceWarning($"[BuildPresenter] Could not open shell for '{dto.Name}': {ex.Message}");
             }
 
             return ActionResult.Ok($"Build : {dto.Name}");
@@ -506,24 +506,4 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         };
     }
 
-    private static string ProposeUserName()
-    {
-        string proposal = Environment.UserName.ToLowerInvariant();
-        proposal = proposal.Normalize(NormalizationForm.FormD);
-        StringBuilder clean = new();
-
-        foreach (char character in proposal)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
-            {
-                _ = clean.Append(character);
-            }
-        }
-
-        proposal = new string([.. clean.ToString().Select(character =>
-            char.IsAsciiLetterOrDigit(character) ? character : '-')]);
-        proposal = proposal.Trim('-', '_');
-
-        return NameRules.IsValidUser(proposal) ? proposal : string.Empty;
-    }
 }

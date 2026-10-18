@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Fleet;
 
-/// <summary>The settings menu and pack catalogue actions (reference <c>SettingsPresenter.psm1</c>).</summary>
 public sealed class SettingsPresenter : BasePresenter<IFleetView>
 {
     private readonly IPackCatalogService _catalogue;

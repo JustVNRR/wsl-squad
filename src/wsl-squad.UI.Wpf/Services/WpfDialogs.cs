@@ -96,8 +96,9 @@ public sealed class WpfDialogs : IDialogService
             {
                 File.Delete(requestPath);
             }
-            catch (IOException)
+            catch (IOException ex)
             {
+                Trace.TraceWarning($"[WpfDialogs] Could not delete temporary build request file '{requestPath}': {ex.Message}");
             }
         }
     }

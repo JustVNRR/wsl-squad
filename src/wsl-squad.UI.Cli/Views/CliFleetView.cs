@@ -5,7 +5,6 @@ using wsl_squad.UI.Cli.Interaction;
 
 namespace wsl_squad.UI.Cli.Views;
 
-/// <summary>The fleet browser, settings and migration views (reference CLI views).</summary>
 public sealed class CliFleetView : CliViewBase, IFleetView
 {
     public void Clear()

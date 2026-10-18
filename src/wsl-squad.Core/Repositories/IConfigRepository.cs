@@ -1,6 +1,5 @@
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>The editable catalogue and the shell's settings.</summary>
 public interface IConfigRepository
 {
     public IReadOnlyList<string> GetThemeNames();

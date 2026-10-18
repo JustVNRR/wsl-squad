@@ -1,10 +1,11 @@
+using System.Diagnostics;
+
 using wsl_squad.Core.Dtos;
 using wsl_squad.Presentation.Presenters.Views;
 using wsl_squad.UI.Cli.Interaction;
 
 namespace wsl_squad.UI.Cli.Views;
 
-/// <summary>The instance lifecycle's console prompts and reports.</summary>
 public sealed class CliInstanceView : CliViewBase, IInstanceView
 {
     public void ShowNoInstances()
@@ -295,9 +296,9 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
             {
                 Console.Beep(1000, 400);
             }
-            catch (PlatformNotSupportedException)
+            catch (PlatformNotSupportedException ex)
             {
-                // A console without a buzzer is fine.
+                Trace.TraceWarning($"[CliInstanceView] Console.Beep not supported: {ex.Message}");
             }
         }
 

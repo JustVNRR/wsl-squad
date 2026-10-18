@@ -3,7 +3,6 @@ using System.Text.Json;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>Reads and writes JSON and text files without leaving half-written files.</summary>
 internal static class AtomicFile
 {
     public static readonly JsonSerializerOptions JsonOptions = new()

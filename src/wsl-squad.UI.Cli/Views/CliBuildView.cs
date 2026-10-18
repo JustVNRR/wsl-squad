@@ -4,7 +4,6 @@ using wsl_squad.UI.Cli.Interaction;
 
 namespace wsl_squad.UI.Cli.Views;
 
-/// <summary>The console build assistant (reference <c>Instance/Build.psm1</c>).</summary>
 public sealed class CliBuildView : CliViewBase, IBuildView
 {
     public void ShowNameHint()

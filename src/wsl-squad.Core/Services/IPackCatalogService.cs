@@ -2,7 +2,6 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>The pack catalogue's editing operations.</summary>
 public interface IPackCatalogService
 {
     public IReadOnlyList<WslPackDto> GetAllPacks();

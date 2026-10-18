@@ -3,7 +3,6 @@ using System.Text;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>Reads a font's family name without depending on Windows.</summary>
 internal static class FontNameReader
 {
     private const ushort _familyNameId = 1;

@@ -1,6 +1,5 @@
 namespace wsl_squad.Core.Entities;
 
-/// <summary>A tool pack from the catalogue (reference <c>WslPack</c>).</summary>
 public sealed class WslPack
 {
     private string _name = string.Empty;

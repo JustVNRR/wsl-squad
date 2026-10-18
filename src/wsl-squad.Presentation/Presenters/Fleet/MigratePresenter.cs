@@ -3,7 +3,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Fleet;
 
-/// <summary>Moves the fleet root (reference <c>MigratePresenter.psm1</c>).</summary>
 public sealed class MigratePresenter : BasePresenter<IFleetView>
 {
     private readonly IFleetService _service;

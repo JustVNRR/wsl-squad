@@ -5,7 +5,6 @@ using wsl_squad.Presentation.ViewModels;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Duplicates an instance (reference <c>DuplicatePresenter.psm1</c>).</summary>
 public sealed class DuplicatePresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

@@ -46,8 +46,9 @@ public sealed class WslRepository : IWslRepository
             {
                 found.Add(new WslInstance { Name = name });
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
+                Trace.TraceWarning($"[WslRepository] Ignored malformed WSL distribution '{name}': {ex.Message}");
             }
         }
 
@@ -353,11 +354,7 @@ public sealed class WslRepository : IWslRepository
                 CopyTree(sourceFolder, unc);
                 copied = true;
             }
-            catch (IOException)
-            {
-                copied = false;
-            }
-            catch (UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 copied = false;
             }
@@ -404,11 +401,7 @@ public sealed class WslRepository : IWslRepository
 
             return 0;
         }
-        catch (IOException)
-        {
-            return 1;
-        }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return 1;
         }
@@ -441,16 +434,7 @@ public sealed class WslRepository : IWslRepository
 
         (int code, string output) = NativeCommand.Run("wsl.exe", wslArguments);
 
-        if (!string.IsNullOrEmpty(errorLog) && output.Length > 0)
-        {
-            try
-            {
-                File.AppendAllText(errorLog, output);
-            }
-            catch (IOException)
-            {
-            }
-        }
+        TryAppendErrorLog(errorLog, output);
 
         return code;
     }
@@ -505,16 +489,14 @@ public sealed class WslRepository : IWslRepository
 
         if (!string.IsNullOrEmpty(errorLog))
         {
-            try
+            string output;
+
+            lock (captured)
             {
-                lock (captured)
-                {
-                    File.AppendAllText(errorLog, captured.ToString());
-                }
+                output = captured.ToString();
             }
-            catch (IOException)
-            {
-            }
+
+            TryAppendErrorLog(errorLog, output);
         }
 
         return process.ExitCode;
@@ -600,6 +582,23 @@ public sealed class WslRepository : IWslRepository
         foreach (string directory in Directory.EnumerateDirectories(source))
         {
             CopyTree(directory, Path.Combine(target, Path.GetFileName(directory)));
+        }
+    }
+
+    private static void TryAppendErrorLog(string? errorLog, string content)
+    {
+        if (string.IsNullOrEmpty(errorLog) || content.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            File.AppendAllText(errorLog, content);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Trace.TraceWarning($"[WslRepository] Could not append script output to '{errorLog}': {ex.Message}");
         }
     }
 }

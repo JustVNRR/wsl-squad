@@ -116,6 +116,7 @@ public sealed class WpfThemeService : IUiThemeService
         catch (Exception exception) when (
             exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
+            Trace.TraceWarning($"[WpfThemeService] Could not assemble font choices: {exception.Message}");
         }
 
         return names;
@@ -254,8 +255,9 @@ public sealed class WpfThemeService : IUiThemeService
                 _settingsPath,
                 JsonSerializer.Serialize(_settings, _jsonOptions));
         }
-        catch (IOException)
+        catch (IOException ex)
         {
+            Trace.TraceWarning($"[WpfThemeService] Could not save GUI settings: {ex.Message}");
         }
     }
 
@@ -275,6 +277,7 @@ public sealed class WpfThemeService : IUiThemeService
         }
         catch (Exception exception) when (exception is IOException or JsonException)
         {
+            Trace.TraceWarning($"[WpfThemeService] Could not load GUI settings, using defaults: {exception.Message}");
         }
 
         return new UiThemeSettings();
@@ -311,12 +314,15 @@ public sealed class WpfThemeService : IUiThemeService
             }
             catch (Exception exception) when (exception is IOException or XamlParseException or InvalidOperationException)
             {
+                Trace.TraceWarning($"[WpfThemeService] Failed to generate built-in theme '{name}': {exception.Message}");
+
                 try
                 {
                     File.Delete(target);
                 }
-                catch (IOException)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
+                    Trace.TraceWarning($"[WpfThemeService] Could not delete invalid theme target '{target}': {ex.Message}");
                 }
             }
         }
@@ -333,12 +339,9 @@ public sealed class WpfThemeService : IUiThemeService
         {
             return File.ReadAllText(path).TrimStart().StartsWith('<');
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return false;
-        }
-        catch (UnauthorizedAccessException)
-        {
+            Trace.TraceWarning($"[WpfThemeService] Could not read file to check XAML format '{path}': {ex.Message}");
             return false;
         }
     }

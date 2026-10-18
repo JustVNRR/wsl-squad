@@ -4,7 +4,6 @@ using wsl_squad.Core.Repositories;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>Builds the service graph (reference <c>ServiceFactory</c>).</summary>
 public sealed class ServiceFactory : IServiceFactory
 {
     public IInstanceService CreateInstanceService(

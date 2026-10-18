@@ -2,7 +2,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>The pack catalogue on disk.</summary>
 public interface IPackCatalogRepository
 {
     public void SeedFrom(string sourceRoot);

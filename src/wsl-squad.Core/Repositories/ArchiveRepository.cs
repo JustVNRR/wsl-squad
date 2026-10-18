@@ -4,7 +4,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>Reads archives and moves their root (reference <c>ArchiveRepository</c>).</summary>
 public sealed class ArchiveRepository : IArchiveRepository
 {
     private readonly IConfigRepository? _configRepository;

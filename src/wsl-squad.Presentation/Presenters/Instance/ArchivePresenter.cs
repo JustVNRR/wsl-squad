@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Archives an instance (reference <c>ArchivePresenter.psm1</c>).</summary>
 public sealed class ArchivePresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

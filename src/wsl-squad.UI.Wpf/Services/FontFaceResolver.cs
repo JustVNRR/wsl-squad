@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -39,11 +40,9 @@ public static class FontFaceResolver
                     _registered[name] = family;
                 }
             }
-            catch (IOException)
+            catch (Exception exception) when (exception is IOException or FileFormatException)
             {
-            }
-            catch (System.IO.FileFormatException)
-            {
+                Trace.TraceWarning($"[FontFaceResolver] Skipped invalid font directory '{directory}': {exception.Message}");
             }
         }
     }

@@ -1,6 +1,5 @@
 namespace wsl_squad.Core.Entities;
 
-/// <summary>A WSL instance's Windows Terminal look (reference <c>WslTheme</c>).</summary>
 public sealed class WslTheme
 {
     public string? IconPath { get; set; }

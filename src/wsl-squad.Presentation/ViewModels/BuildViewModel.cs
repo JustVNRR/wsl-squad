@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Text;
+using System.Diagnostics;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -120,8 +119,9 @@ public sealed partial class BuildViewModel : BaseViewModel
             _recipes = [.. sources.Recipes];
             _images = [.. instance.GetAllSavedImages()];
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            Trace.TraceWarning($"[BuildViewModel] Partial build sources loaded: {ex.Message}");
         }
 
         _dockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
@@ -129,7 +129,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         _imageIndex = _images.Count > 0 ? 0 : -1;
         _recipeIndex = _recipes.Count > 0 ? 0 : -1;
 
-        _user = ProposeUserName();
+        _user = NameRules.ProposeUserName();
 
         CreateCommand = new RelayCommand(Create, () => _nameOk && _userOk);
 
@@ -209,27 +209,7 @@ public sealed partial class BuildViewModel : BaseViewModel
             return;
         }
 
-        try
-        {
-            WslBuildSourceDto row = _instance.UploadRecipe(new UploadRecipeDto
-            {
-                Kind = "dockerimages",
-                Source = source,
-                FileName = Path.GetFileName(source),
-            });
-
-            _images.Add(new WslDockerImageDto
-            {
-                Name = row.Name,
-                Path = row.Path,
-                Uploaded = row.Uploaded,
-            });
-            ImageIndex = _images.Count - 1;
-            SyncLists();
-        }
-        catch (InvalidOperationException)
-        {
-        }
+        AddRecipe("dockerimages", source, Path.GetFileName(source), "DockerImages");
     }
 
     public void DeleteSelected(string listName)
@@ -270,10 +250,12 @@ public sealed partial class BuildViewModel : BaseViewModel
             WslBuildSourceDto row = _instance.CreateRecipe(new NewRecipeDto { Name = chosen });
             _recipes.Add(row);
             RecipeIndex = _recipes.Count - 1;
+            RecipeError = string.Empty;
             SyncLists();
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            RecipeError = ex.Message;
         }
     }
 
@@ -290,8 +272,9 @@ public sealed partial class BuildViewModel : BaseViewModel
         {
             _instance.OpenInEditor(PathOf(row));
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            Trace.TraceWarning($"[BuildViewModel] Failed to open editor: {ex.Message}");
         }
     }
 
@@ -338,8 +321,9 @@ public sealed partial class BuildViewModel : BaseViewModel
                 Target = target,
             });
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            Trace.TraceWarning($"[BuildViewModel] Failed to export recipe to '{target}': {ex.Message}");
         }
     }
 
@@ -378,8 +362,9 @@ public sealed partial class BuildViewModel : BaseViewModel
                         RegistryError = $"Unknown registry image '{reference}' - {verdict.Why}";
                     }
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
+                    Trace.TraceWarning($"[BuildViewModel] Could not verify registry image '{reference}': {ex.Message}");
                 }
             }
         }
@@ -480,8 +465,9 @@ public sealed partial class BuildViewModel : BaseViewModel
                     problem = $"An instance named '{Name}' already exists.";
                 }
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
+                Trace.TraceWarning($"[BuildViewModel] Fleet check skipped for '{Name}': {ex.Message}");
             }
         }
 
@@ -635,8 +621,16 @@ public sealed partial class BuildViewModel : BaseViewModel
 
             SyncLists();
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            if (listName == "DockerImages")
+            {
+                ImageError = ex.Message;
+            }
+            else
+            {
+                Trace.TraceWarning($"[BuildViewModel] Failed to upload '{source}' ({kind}): {ex.Message}");
+            }
         }
     }
 
@@ -691,24 +685,4 @@ public sealed partial class BuildViewModel : BaseViewModel
         };
     }
 
-    private static string ProposeUserName()
-    {
-        string proposal = Environment.UserName.ToLowerInvariant();
-        proposal = proposal.Normalize(NormalizationForm.FormD);
-        StringBuilder clean = new();
-
-        foreach (char character in proposal)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
-            {
-                _ = clean.Append(character);
-            }
-        }
-
-        proposal = new string([.. clean.ToString().Select(character =>
-            char.IsAsciiLetterOrDigit(character) ? character : '-')]);
-        proposal = proposal.Trim('-', '_');
-
-        return NameRules.IsValidUser(proposal) ? proposal : string.Empty;
-    }
 }

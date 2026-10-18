@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Opens an instance (reference <c>OpenPresenter.psm1</c>).</summary>
 public sealed class OpenPresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

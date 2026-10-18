@@ -108,15 +108,15 @@ public sealed class TerminalRepository : ITerminalRepository
 
     public void DeleteFragment(string instanceName)
     {
+        string path = GetFragmentPath(instanceName);
+
         try
         {
-            File.Delete(GetFragmentPath(instanceName));
+            File.Delete(path);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-        }
-        catch (UnauthorizedAccessException)
-        {
+            Trace.TraceWarning($"[TerminalRepository] Could not delete fragment '{path}': {ex.Message}");
         }
     }
 
@@ -240,11 +240,7 @@ public sealed class TerminalRepository : ITerminalRepository
                     pruned += all.Count - kept.Count;
                 }
             }
-            catch (JsonException)
-            {
-                unreadable.Add(settingsPath);
-            }
-            catch (IOException)
+            catch (Exception ex) when (ex is JsonException or IOException)
             {
                 unreadable.Add(settingsPath);
             }
@@ -494,6 +490,7 @@ public sealed class TerminalRepository : ITerminalRepository
         catch (Exception exception) when (
             exception is SecurityException or UnauthorizedAccessException or IOException)
         {
+            Trace.TraceWarning($"[TerminalRepository] Registry lookup for Terminal packages failed: {exception.Message}");
         }
 
         if (locations.Count == 0)
@@ -512,6 +509,7 @@ public sealed class TerminalRepository : ITerminalRepository
             catch (Exception exception) when (
                 exception is SecurityException or UnauthorizedAccessException or IOException)
             {
+                Trace.TraceWarning($"[TerminalRepository] WindowsApps enumeration failed: {exception.Message}");
             }
         }
 
@@ -633,8 +631,9 @@ public sealed class TerminalRepository : ITerminalRepository
             {
                 File.Delete(temporary);
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                Trace.TraceWarning($"[TerminalRepository] Could not delete temporary font '{temporary}': {ex.Message}");
             }
         }
     }
@@ -844,11 +843,7 @@ public sealed class TerminalRepository : ITerminalRepository
         {
             return ParseObject(File.ReadAllText(path));
         }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return null;
         }

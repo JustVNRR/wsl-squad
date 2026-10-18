@@ -5,16 +5,12 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.ViewModels;
 
-/// <summary>An icon pair row.</summary>
 public sealed record LookPairRow(WslIconPairDto Pair, string Label);
 
-/// <summary>A font row.</summary>
 public sealed record LookFontRow(string Name, string Label);
 
-/// <summary>A colour scheme row.</summary>
 public sealed record LookSchemeRow(WslColorSchemeDto Scheme, string Label);
 
-/// <summary>Apparence d'une instance (référence <c>SetAppearanceViewModel.psm1</c>).</summary>
 public sealed partial class SetAppearanceViewModel : BaseViewModel
 {
     private readonly GetAppearanceResponseDto _appearance;

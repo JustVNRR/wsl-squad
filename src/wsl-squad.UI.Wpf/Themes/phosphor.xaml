@@ -1,11 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- The phosphor theme - the window's chart as it shipped, in its two
-         versions. Every key replaces the same key of theme.xaml when this
-         theme is chosen or its version switched; a key left out keeps the
-         default's. The reds stay put on purpose - they mean "destructive"
-         whatever the phosphor. -->
     <ResourceDictionary x:Key="Dark">
         <SolidColorBrush x:Key="AppForegroundBrush" Color="#33FF66"/>
         <SolidColorBrush x:Key="AppBackgroundBrush" Color="#1E1E1E"/>
@@ -29,8 +24,6 @@
         <SolidColorBrush x:Key="AppDeleteInkBrush" Color="#FFFFFF"/>
     </ResourceDictionary>
 
-    <!-- The light version: deep green ink on cream paper - the phosphor
-         identity read off a printout. -->
     <ResourceDictionary x:Key="Light">
         <SolidColorBrush x:Key="AppForegroundBrush" Color="#145C28"/>
         <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F2EFE4"/>

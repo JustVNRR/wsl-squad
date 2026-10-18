@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Registers an instance with Docker Desktop (reference <c>RegisterDockerPresenter.psm1</c>).</summary>
 public sealed class RegisterDockerPresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

@@ -2,7 +2,6 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.Presenters.Views;
 
-/// <summary>The fleet browser, settings and migration prompts.</summary>
 public interface IFleetView : IPresenterViewBase
 {
     public void Clear();

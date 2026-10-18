@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
@@ -33,11 +34,7 @@ public sealed class ConsoleHost
 
             return true;
         }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
-        catch (IOException)
+        catch (Exception ex) when (ex is InvalidOperationException or IOException)
         {
             return false;
         }
@@ -61,11 +58,7 @@ public sealed class ConsoleHost
         {
             return Console.CursorTop;
         }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (ArgumentOutOfRangeException)
+        catch (Exception ex) when (ex is IOException or ArgumentOutOfRangeException)
         {
             return null;
         }
@@ -79,11 +72,7 @@ public sealed class ConsoleHost
 
             return Console.CursorTop == top;
         }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-        catch (IOException)
+        catch (Exception ex) when (ex is ArgumentException or IOException)
         {
             return false;
         }
@@ -95,11 +84,7 @@ public sealed class ConsoleHost
         {
             return (Console.WindowWidth, Console.WindowHeight);
         }
-        catch (IOException)
-        {
-            return (0, 0);
-        }
-        catch (ArgumentOutOfRangeException)
+        catch (Exception ex) when (ex is IOException or ArgumentOutOfRangeException)
         {
             return (0, 0);
         }
@@ -221,11 +206,7 @@ public sealed class ConsoleHost
 
             return (true, prior);
         }
-        catch (IOException)
-        {
-            return (false, false);
-        }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or InvalidOperationException)
         {
             return (false, false);
         }
@@ -237,11 +218,9 @@ public sealed class ConsoleHost
         {
             Console.TreatControlCAsInput = prior;
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or InvalidOperationException)
         {
-        }
-        catch (InvalidOperationException)
-        {
+            Trace.TraceWarning($"[ConsoleHost] Could not restore Ctrl+C mode: {ex.Message}");
         }
     }
 
@@ -256,8 +235,9 @@ public sealed class ConsoleHost
         {
             Console.Clear();
         }
-        catch (IOException)
+        catch (IOException ex)
         {
+            Trace.TraceWarning($"[ConsoleHost] Could not clear console: {ex.Message}");
         }
     }
 }

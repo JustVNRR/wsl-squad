@@ -368,13 +368,7 @@ public sealed class InstanceService : IInstanceService
         }
         finally
         {
-            try
-            {
-                File.Delete(tarPath);
-            }
-            catch (IOException)
-            {
-            }
+            TryDeleteFile(tarPath);
         }
 
         _instanceRepository.WriteMarker(name, "build");
@@ -559,11 +553,9 @@ public sealed class InstanceService : IInstanceService
         {
             _dockerRepository.RemoveDesktopState(name);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or InvalidOperationException)
         {
-        }
-        catch (InvalidOperationException)
-        {
+            Trace.TraceWarning($"[InstanceService] Could not remove Docker Desktop state for '{name}': {ex.Message}");
         }
     }
 
@@ -603,8 +595,9 @@ public sealed class InstanceService : IInstanceService
                 _wslRepository.Start(name);
                 restarted = true;
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
+                Trace.TraceWarning($"[InstanceService] Failed to restart '{name}' after compact: {ex.Message}");
             }
         }
 
@@ -806,13 +799,7 @@ public sealed class InstanceService : IInstanceService
         string packsDirectory = PacksDirectory(name);
         string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
 
-        try
-        {
-            File.Delete(errorLog);
-        }
-        catch (IOException)
-        {
-        }
+        TryDeleteFile(errorLog);
 
         IReadOnlyList<string> before = _wslRepository.GetInstalledPacks(name, packsDirectory);
         IReadOnlyList<string> toRemove = catalog.ResolveRemoval(before, dto.ToRemove, dto.ToAdd);
@@ -1510,11 +1497,9 @@ public sealed class InstanceService : IInstanceService
         {
             File.Delete(path);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-        }
-        catch (UnauthorizedAccessException)
-        {
+            Trace.TraceWarning($"[InstanceService] Could not delete '{path}': {ex.Message}");
         }
     }
 

@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Removes an instance (reference <c>RemovePresenter.psm1</c>).</summary>
 public sealed class RemovePresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

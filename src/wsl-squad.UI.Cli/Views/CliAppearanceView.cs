@@ -4,7 +4,6 @@ using wsl_squad.UI.Cli.Interaction;
 
 namespace wsl_squad.UI.Cli.Views;
 
-/// <summary>The console appearance editor (reference <c>Instance/SetAppearance.psm1</c>).</summary>
 public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 {
     public void ShowNoFragmentWarning()

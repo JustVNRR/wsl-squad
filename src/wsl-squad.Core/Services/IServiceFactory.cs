@@ -2,7 +2,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>Builds the application's service graph.</summary>
 public interface IServiceFactory
 {
     public IInstanceService CreateInstanceService(

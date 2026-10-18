@@ -2,10 +2,8 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.Presenters.Views;
 
-/// <summary>A row offered by the pack chooser.</summary>
 public sealed record PackChoice(string Name, string Description);
 
-/// <summary>The prompts and reports of the instance lifecycle.</summary>
 public interface IInstanceView : IPresenterViewBase
 {
     public void ShowNoInstances();

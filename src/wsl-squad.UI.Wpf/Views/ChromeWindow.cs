@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -137,8 +138,9 @@ public class ChromeWindow : Window
         {
             DragMove();
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            Trace.TraceWarning($"[ChromeWindow] Window drag move aborted: {ex.Message}");
         }
     }
 

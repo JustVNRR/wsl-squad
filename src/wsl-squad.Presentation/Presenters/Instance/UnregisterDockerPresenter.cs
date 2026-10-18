@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Unregisters an instance from Docker Desktop (reference <c>UnregisterDockerPresenter.psm1</c>).</summary>
 public sealed class UnregisterDockerPresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

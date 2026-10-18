@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Restarts an instance (reference <c>RestartPresenter.psm1</c>).</summary>
 public sealed class RestartPresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;

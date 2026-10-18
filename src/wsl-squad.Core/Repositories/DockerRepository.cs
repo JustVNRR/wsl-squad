@@ -227,8 +227,9 @@ public sealed class DockerRepository : IDockerRepository
 
                 return true;
             }
-            catch (System.ComponentModel.Win32Exception)
+            catch (System.ComponentModel.Win32Exception ex)
             {
+                Trace.TraceWarning($"[DockerRepository] Direct launch of '{executable}' failed, falling back to CLI: {ex.Message}");
             }
         }
 
@@ -326,13 +327,13 @@ public sealed class DockerRepository : IDockerRepository
             ? [.. existing.Select(node => node?.GetValue<string>()).OfType<string>().Where(name => name.Length > 0)]
             : [];
 
-        _ = names.RemoveAll(name => name == instanceName);
+        int removed = names.RemoveAll(name => name == instanceName);
 
         if (add)
         {
             names.Add(instanceName);
         }
-        else if (!names.Contains(instanceName))
+        else if (removed == 0)
         {
             return;
         }

@@ -5,7 +5,6 @@ using wsl_squad.Core.Repositories;
 
 namespace wsl_squad.Core.Services;
 
-/// <summary>The pack catalogue's editing operations (reference <c>PackCatalogService</c>).</summary>
 public sealed class PackCatalogService : IPackCatalogService
 {
     private readonly WslPackCatalog _catalog;

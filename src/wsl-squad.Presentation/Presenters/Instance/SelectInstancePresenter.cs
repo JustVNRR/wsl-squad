@@ -3,7 +3,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Asks for an instance when the caller gave no name (reference <c>SelectInstancePresenter.psm1</c>).</summary>
 public sealed class SelectInstancePresenter : BasePresenter<IInstanceView>
 {
     public SelectInstancePresenter(IInstanceView view)

@@ -2,7 +2,6 @@ using wsl_squad.Presentation.Settings;
 
 namespace wsl_squad.Presentation.Abstractions;
 
-/// <summary>The interface layer's theme and font services (reference <c>WpfService</c>).</summary>
 public interface IUiThemeService
 {
     public UiThemeSettings GetTheme();

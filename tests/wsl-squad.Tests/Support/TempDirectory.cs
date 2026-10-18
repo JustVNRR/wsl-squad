@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.IO;
+
 namespace wsl_squad.Tests.Support;
 
 public sealed class TempDirectory : IDisposable
@@ -20,11 +23,9 @@ public sealed class TempDirectory : IDisposable
         {
             Directory.Delete(Path, recursive: true);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-        }
-        catch (UnauthorizedAccessException)
-        {
+            Trace.TraceWarning($"[TempDirectory] Could not clean up test directory '{Path}': {ex.Message}");
         }
     }
 }

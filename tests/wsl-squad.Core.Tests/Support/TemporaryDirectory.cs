@@ -1,6 +1,6 @@
+using System.Diagnostics;
 namespace wsl_squad.Core.Tests.Support;
 
-/// <summary>A temporary folder removed when the test ends.</summary>
 public sealed class TemporaryDirectory : IDisposable
 {
     public TemporaryDirectory()
@@ -33,13 +33,9 @@ public sealed class TemporaryDirectory : IDisposable
         {
             Directory.Delete(Path, recursive: true);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // Best effort cleanup.
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Best effort cleanup.
+            Trace.TraceWarning($"[TemporaryDirectory] Could not clean up test directory '{Path}': {ex.Message}");
         }
     }
 }

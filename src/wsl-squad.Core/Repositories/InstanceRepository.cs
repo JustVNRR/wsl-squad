@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
@@ -5,7 +6,6 @@ using wsl_squad.Core.Entities;
 
 namespace wsl_squad.Core.Repositories;
 
-/// <summary>Reads and writes an instance's folder and metadata (reference <c>InstanceRepository</c>).</summary>
 public sealed class InstanceRepository : IInstanceRepository
 {
     private readonly Func<string> _root;
@@ -200,20 +200,18 @@ public sealed class InstanceRepository : IInstanceRepository
 
     public void RemoveFolder(string name)
     {
+        string folder = GetFolder(name);
+
         try
         {
-            if (Directory.Exists(GetFolder(name)))
+            if (Directory.Exists(folder))
             {
-                Directory.Delete(GetFolder(name), recursive: true);
+                Directory.Delete(folder, recursive: true);
             }
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // The reference ignores the same failure.
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // The reference ignores the same failure.
+            Trace.TraceWarning($"[InstanceRepository] Could not remove instance folder '{folder}': {ex.Message}");
         }
     }
 

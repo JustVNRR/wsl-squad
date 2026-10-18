@@ -3,7 +3,6 @@ using wsl_squad.Presentation.Settings;
 
 namespace wsl_squad.Presentation.Tests.Support;
 
-/// <summary>An in-memory <see cref="IUiThemeService"/>.</summary>
 public sealed class TestThemeService : IUiThemeService
 {
     public UiThemeSettings Theme { get; set; } = new();

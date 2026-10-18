@@ -4,7 +4,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-/// <summary>Changes an instance's appearance (reference <c>SetAppearancePresenter.psm1</c>).</summary>
 public sealed class SetAppearancePresenter : BasePresenter<IAppearanceView>
 {
     private readonly IInstanceService _service;

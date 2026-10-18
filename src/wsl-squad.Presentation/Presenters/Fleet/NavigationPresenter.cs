@@ -3,7 +3,6 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Fleet;
 
-/// <summary>The fleet navigation stack (reference <c>NavigationPresenter.psm1</c>).</summary>
 public sealed class NavigationPresenter
 {
     private readonly BrowsePresenter _browse;
