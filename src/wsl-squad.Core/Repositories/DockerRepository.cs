@@ -213,27 +213,167 @@ public sealed class DockerRepository : IDockerRepository
         return NativeCommand.Test("docker", ["desktop", "restart"]);
     }
 
+    private static readonly TimeSpan _dockerStartupTimeout =
+        TimeSpan.FromSeconds(60);
+
+    private static readonly TimeSpan _dockerProbeTimeout =
+        TimeSpan.FromSeconds(3);
+
+    private static readonly TimeSpan _dockerProbeInterval =
+        TimeSpan.FromSeconds(1);
+
     public bool StartDesktop()
     {
-        string? programFiles = Environment.GetEnvironmentVariable("ProgramFiles");
+        if (IsDockerReady())
+        {
+            return true;
+        }
+
+        if (!TryStartDesktop())
+        {
+            Trace.TraceWarning(
+                "[DockerRepository] Desktop launch request failed; " +
+                "checking whether Docker becomes available anyway.");
+        }
+
+        return WaitForDockerReady(_dockerStartupTimeout);
+    }
+
+    private static bool TryStartDesktop()
+    {
+        string? programFiles =
+            Environment.GetEnvironmentVariable("ProgramFiles");
 
         if (!string.IsNullOrEmpty(programFiles))
         {
-            string executable = Path.Combine(programFiles, "Docker", "Docker", "Docker Desktop.exe");
+            string executable = Path.Combine(
+                programFiles,
+                "Docker",
+                "Docker",
+                "Docker Desktop.exe");
 
             try
             {
-                _ = Process.Start(new ProcessStartInfo(executable) { UseShellExecute = true });
+                using Process? process = Process.Start(
+                    new ProcessStartInfo(executable)
+                    {
+                        UseShellExecute = true
+                    });
 
-                return true;
+                if (process is not null)
+                {
+                    return true;
+                }
+
+                Trace.TraceWarning(
+                    $"[DockerRepository] Process.Start returned null for '{executable}'.");
             }
             catch (System.ComponentModel.Win32Exception ex)
             {
-                Trace.TraceWarning($"[DockerRepository] Direct launch of '{executable}' failed, falling back to CLI: {ex.Message}");
+                Trace.TraceWarning(
+                    $"[DockerRepository] Direct launch failed: {ex.Message}");
+            }
+            catch (FileNotFoundException ex)
+            {
+                Trace.TraceWarning(
+                    $"[DockerRepository] Docker Desktop executable not found: {ex.Message}");
             }
         }
 
         return NativeCommand.Test("docker", ["desktop", "start"]);
+    }
+
+    private static bool WaitForDockerReady(TimeSpan timeout)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
+        do
+        {
+            if (IsDockerReady())
+            {
+                return true;
+            }
+
+            if (stopwatch.Elapsed >= timeout)
+            {
+                break;
+            }
+
+            TimeSpan remaining = timeout - stopwatch.Elapsed;
+            TimeSpan delay = remaining < _dockerProbeInterval
+                ? remaining
+                : _dockerProbeInterval;
+
+            if (delay > TimeSpan.Zero)
+            {
+                Thread.Sleep(delay);
+            }
+        }
+        while (stopwatch.Elapsed < timeout);
+
+        Trace.TraceWarning(
+            $"[DockerRepository] Docker did not become ready within {timeout}.");
+
+        return false;
+    }
+
+    private static bool IsDockerReady()
+    {
+        try
+        {
+            using Process? process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                ArgumentList = { "info" },
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            });
+
+            if (process is null)
+            {
+                return false;
+            }
+
+            Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+            Task<string> stderr = process.StandardError.ReadToEndAsync();
+
+            if (!process.WaitForExit(
+                    (int)_dockerProbeTimeout.TotalMilliseconds))
+            {
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                    process.WaitForExit();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Trace.TraceWarning(
+                        $"[DockerRepository] Process already stopped: {ex.Message}");
+                }
+
+                return false;
+            }
+
+            Task.WaitAll(stdout, stderr);
+
+            return process.ExitCode == 0;
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            Trace.TraceWarning(
+                $"[DockerRepository] Cannot execute docker info: {ex.Message}");
+
+            return false;
+        }
+        catch (InvalidOperationException ex)
+        {
+            Trace.TraceWarning(
+                $"[DockerRepository] Docker readiness check failed: {ex.Message}");
+
+            return false;
+        }
     }
 
     public bool TestRunning()

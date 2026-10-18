@@ -325,6 +325,12 @@ public sealed class InstanceService : IInstanceService
                 $"Installation folder '{_instanceRepository.GetFolder(name)}' already exists and is not empty.");
         }
 
+        if (!StartDocker())
+        {
+            throw new InvalidOperationException(
+                "Docker Desktop is not running and could not be started.");
+        }
+
         string tag = $"wsl-fleet:{name}";
         string imageRef = dto.BuildPath ?? string.Empty;
 
