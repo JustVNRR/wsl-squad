@@ -9,6 +9,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>wsl_squad.UI.Cli</RootNamespace>
+    <AssemblyName>wsl-squad.cli</AssemblyName>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);CA1416;S6605;S3267;IDE0017;IDE0270;IDE0305;S4136</NoWarn>

@@ -68,6 +68,10 @@ artifacts/
 # Packaging Output
 dist/
 
+# Installer runtime payload
+installer/redist/*
+!installer/redist/README.md
+
 # Tye
 .tye/
 
@@ -487,9 +491,8 @@ $RECYCLE.BIN/
 # Claude Code
 .claude/
 
-# Local scaffolding and publishing scripts
+# Local scaffolding script
 scaffold-sln.ps1
-scripts/publish.ps1
 
 # Pack helper scripts are embedded resources, not build output
 !src/wsl-squad.Core/Resources/packs/**/bin/

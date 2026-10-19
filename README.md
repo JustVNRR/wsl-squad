@@ -82,6 +82,9 @@ wsl-squad/
 │   ├── wsl-squad.Presentation.Tests/
 │   └── wsl-squad.UI.Cli.Tests/
 ├── Assets/fonts/                 # bundled fonts
+├── scripts/                      # publish scripts; scaffold-sln.ps1 is local
+├── installer/                    # Inno Setup sources; redist binaries are ignored
+├── artifacts/                    # generated output, ignored: bin, obj, publish, dist
 ├── Directory.Build.props
 ├── global.json
 ├── wsl-squad.slnx

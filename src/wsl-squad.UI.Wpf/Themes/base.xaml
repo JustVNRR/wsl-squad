@@ -23,10 +23,10 @@
     <SolidColorBrush x:Key="AppDeleteBorderBrush" Color="#BB2D0F"/>
     <SolidColorBrush x:Key="AppDeleteInkBrush" Color="#FFFFFF"/>
 
-    <FontFamily x:Key="UiFaceVT323">pack://application:,,,/wsl-squad.UI.Wpf;component/Assets/Fonts/VT323-Regular.ttf#VT323</FontFamily>
-    <FontFamily x:Key="UiFaceMeslo">pack://application:,,,/wsl-squad.UI.Wpf;component/Assets/Fonts/MesloLGS%20NF%20Regular.ttf#MesloLGS NF</FontFamily>
+    <FontFamily x:Key="UiFaceVT323">pack://application:,,,/Assets/Fonts/VT323-Regular.ttf#VT323</FontFamily>
+    <FontFamily x:Key="UiFaceMeslo">pack://application:,,,/Assets/Fonts/MesloLGS%20NF%20Regular.ttf#MesloLGS NF</FontFamily>
 
-    <FontFamily x:Key="IconFace">pack://application:,,,/wsl-squad.UI.Wpf;component/Assets/Fonts/fa-solid-900.ttf#Font Awesome 6 Free Solid</FontFamily>
+    <FontFamily x:Key="IconFace">pack://application:,,,/Assets/Fonts/fa-solid-900.ttf#Font Awesome 6 Free Solid</FontFamily>
 
     <Style TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource AppForegroundBrush}"/>

@@ -13,11 +13,11 @@ indent_size = 2
 
 [*.cs]
 dotnet_analyzer_diagnostic.severity = warning
-# Le nom du produit contient un underscore (wsl_squad) : convention assumée.
+# The product name contains an underscore (wsl_squad): accepted convention.
 dotnet_diagnostic.CA1707.severity = none
-# Constructeurs explicites préférés à l'injection de dépendances.
+# Explicit constructors are preferred over dependency injection.
 dotnet_diagnostic.IDE0290.severity = none
-# Pas de ternaires imposés à la place des retours explicites.
+# Do not force ternaries in place of explicit returns.
 dotnet_diagnostic.IDE0046.severity = none
 csharp_style_namespace_declarations = file_scoped:warning
 dotnet_sort_system_directives_first = true
@@ -46,9 +46,9 @@ dotnet_naming_symbols.types_and_methods_symbols.applicable_kinds = class, struct
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
 [tests/**/*.cs]
-# Les assertions FluentAssertions renvoient des contraintes fluides : les ignorer est intentionnel.
+# FluentAssertions assertions return fluent constraints; ignoring them is intentional.
 dotnet_diagnostic.IDE0058.severity = none
 
 [src/wsl-squad.UI.Cli/**/*.cs]
-# Les builders Spectre.Console renvoient des objets chaînables dont la valeur est ignorée.
+# Spectre.Console builders return chainable objects whose value is ignored.
 dotnet_diagnostic.IDE0058.severity = none
