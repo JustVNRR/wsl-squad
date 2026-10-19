@@ -71,6 +71,7 @@ Make sure Docker Desktop is running before you start.
 
 ```text
 wsl-squad/
+├── .github/workflows/            # release workflow
 ├── src/
 │   ├── wsl-squad.Core/           # Entities, Dtos, Mappers, Repositories, Services, Resources
 │   ├── wsl-squad.Presentation/   # ViewModels, Presenters, Abstractions, Settings, Drawing

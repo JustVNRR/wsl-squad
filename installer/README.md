@@ -59,6 +59,10 @@ artifacts\dist\wsl-squad-setup.exe
 
 `artifacts\` groups all generated outputs: `bin\`, `obj\`, `publish\` and `dist\`. The folder is ignored by Git. The `.iss` script locates it with `RepoRoot + "\artifacts"` from the `installer\` folder.
 
+## Wizard size
+
+The setup window uses `WizardSizePercent=125` and the dialog font uses `DialogFontSize=12`. Adjust these values in `wsl-squad.iss` if the wizard is too large or too small. `WizardSizePercent` changes the window size; `DialogFontSize` changes the text size.
+
 ## Publication modes
 
 The script defaults to a **framework-dependent** publication:
@@ -207,11 +211,15 @@ Reinstall the setup over the existing installation:
 
 ## Version
 
-Update `wsl-squad.iss`:
+The default version is defined in `wsl-squad.iss`:
 
 ```ini
+#ifndef AppVersion
 #define AppVersion "1.0.0"
+#endif
 ```
+
+The release workflow passes the version with `/DAppVersion=<version>`. When `AppVersion` is not defined on the command line, the default above is used.
 
 Keep the same `AppId` between versions so that upgrades replace the existing installation.
 

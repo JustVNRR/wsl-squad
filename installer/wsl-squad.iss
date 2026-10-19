@@ -1,5 +1,7 @@
 #define AppName "WSL Squad"
+#ifndef AppVersion
 #define AppVersion "1.0.0"
+#endif
 #define AppPublisher "JustVNRR"
 #define GuiExe "wsl-squad.gui.exe"
 #define CliExe "wsl-squad.cli.exe"
@@ -29,6 +31,7 @@ OutputBaseFilename=wsl-squad-setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+WizardSizePercent=125
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#GuiExe}
@@ -36,6 +39,12 @@ SetupIconFile={#RepoRoot}\src\wsl-squad.UI.Wpf\Assets\app.ico
 CloseApplications=yes
 RestartApplications=no
 ChangesEnvironment=yes
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[LangOptions]
+DialogFontSize=12
 
 [Files]
 #if SelfContained == 1
