@@ -487,8 +487,9 @@ $RECYCLE.BIN/
 # Claude Code
 .claude/
 
-# Local scaffolding script
+# Local scaffolding and publishing scripts
 scaffold-sln.ps1
+scripts/publish.ps1
 
 # Pack helper scripts are embedded resources, not build output
 !src/wsl-squad.Core/Resources/packs/**/bin/

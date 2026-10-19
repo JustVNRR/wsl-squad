@@ -9,14 +9,14 @@
 
   <Target Name="CopyRunner" AfterTargets="Build">
     <ItemGroup>
-      <RunnerFiles Include="$(MSBuildProjectDirectory)\..\wsl-squad.UI.Runner\bin\$(Configuration)\$(TargetFramework)\**\*" />
+      <RunnerFiles Include="$(RepositoryRoot)bin\wsl-squad.UI.Runner\$(Configuration)\$(TargetFramework)\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(OutDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="CopyRunnerOnPublish" AfterTargets="Publish">
     <ItemGroup>
-      <RunnerFiles Include="$(MSBuildProjectDirectory)\..\wsl-squad.UI.Runner\bin\$(Configuration)\$(TargetFramework)\**\*" />
+      <RunnerFiles Include="$(RepositoryRoot)bin\wsl-squad.UI.Runner\$(Configuration)\$(TargetFramework)\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(PublishDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
