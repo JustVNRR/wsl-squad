@@ -137,17 +137,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         });
                     }
 
-                    if (rows.Count == 1 && road.Type != WslBuildType.Recipe)
-                    {
-                        SelectSource(rows[0], road.Type, ref buildPath, ref context, ref family);
-                        stack.Push(packs.Count > 0
-                            ? "packs"
-                            : NextAfterPacks(sources.Onboardings.Count, road));
-                    }
-                    else
-                    {
-                        stack.Push("source");
-                    }
+                    stack.Push("source");
 
                     break;
                 }

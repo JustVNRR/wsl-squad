@@ -59,7 +59,9 @@ public sealed class CliFleetView : CliViewBase, IFleetView
 
     public PresenterAction? PickAction(string title, IReadOnlyList<PresenterAction> actions)
     {
-        return Pick(title, actions, action => action.Label);
+        int keyWidth = Math.Max(12, actions.Max(action => action.Key.Length));
+
+        return Pick(title, actions, action => $"{action.Key.PadRight(keyWidth)} {action.Label}");
     }
 
     public WslPackDto? PickPack(IReadOnlyList<WslPackDto> packs)
@@ -81,9 +83,9 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     {
         List<ConsoleMenuItem> items =
         [
-            new("edit      open the pack's folder", "edit"),
-            new("duplicate duplicate it under a new name", "duplicate"),
-            new("delete    delete it from the catalog", "delete"),
+            new("edit", "open the pack's folder"),
+            new("duplicate", "duplicate it under a new name"),
+            new("delete", "delete it from the catalog"),
         ];
         ConsoleMenu menu = new($"Pack '{packName}'", new ConsoleHost(Theme));
 
@@ -94,7 +96,7 @@ public sealed class CliFleetView : CliViewBase, IFleetView
 
         IReadOnlyList<ConsoleMenuItem>? picked = menu.Prompt();
 
-        return picked is { Count: > 0 } ? picked[0].Value as string : null;
+        return picked is { Count: > 0 } ? picked[0].Key : null;
     }
 
     public string? AskName(string sourceName)
@@ -143,9 +145,8 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     public string? AskTarget(string root)
     {
         Write(string.Empty);
-        Write($"Move the fleet from '{root}' to: ");
 
-        return AskLine(string.Empty)?.Trim();
+        return AskLine($"Move the fleet from '{root}' to")?.Trim();
     }
 
     public void ShowCancelled(string noun)

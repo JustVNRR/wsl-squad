@@ -30,34 +30,39 @@ public sealed class MigratePresenter : BasePresenter<IFleetView>
 
         if (string.IsNullOrEmpty(target))
         {
-            string? answer = View.AskTarget(root);
-
-            if (string.IsNullOrEmpty(answer))
+            while (true)
             {
-                View.ShowCancelled("moved");
+                string? answer = View.AskTarget(root);
 
-                return ActionResult.Ok("Migrate : cancelled");
+                if (string.IsNullOrEmpty(answer))
+                {
+                    View.ShowCancelled("moved");
+
+                    return ActionResult.Ok("Migrate : cancelled");
+                }
+
+                answer = answer.Trim().Trim('"').TrimEnd('\\');
+
+                if (answer == root.TrimEnd('\\'))
+                {
+                    View.ShowSameFolder();
+
+                    continue;
+                }
+
+                string? problem = ReferenceHelpers.TestFleetTarget(answer);
+
+                if (problem is not null)
+                {
+                    View.ShowTargetProblem(problem);
+
+                    continue;
+                }
+
+                target = answer;
+
+                break;
             }
-
-            answer = answer.Trim().Trim('"').TrimEnd('\\');
-
-            if (answer == root.TrimEnd('\\'))
-            {
-                View.ShowSameFolder();
-
-                return ActionResult.Ok("Migrate : cancelled");
-            }
-
-            string? problem = ReferenceHelpers.TestFleetTarget(answer);
-
-            if (problem is not null)
-            {
-                View.ShowTargetProblem(problem);
-
-                return ActionResult.Ok("Migrate : cancelled");
-            }
-
-            target = answer;
         }
 
         View.ShowLead();

@@ -23,6 +23,17 @@ public sealed class DeleteArchivePresenter : BasePresenter<IInstanceView>
             return ActionResult.Nok("DeleteArchive : no name");
         }
 
+        bool? confirmed = View.Confirm(
+            $"Delete the archive '{target}'? It cannot be restored.",
+            defaultNo: true);
+
+        if (confirmed != true)
+        {
+            View.ShowCancelled("deleted");
+
+            return ActionResult.Ok("DeleteArchive : cancelled");
+        }
+
         View.ShowDeleting(target);
 
         try

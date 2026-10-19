@@ -210,7 +210,7 @@ public sealed class WslRepository : IWslRepository
         List<string> wslArguments = ["-d", instanceName, "--"];
         wslArguments.AddRange(arguments);
 
-        (int _, string output) = NativeCommand.Run("wsl.exe", wslArguments);
+        (int _, string output) = NativeCommand.Run("wsl.exe", wslArguments, includeError: false);
 
         return
         [
@@ -315,11 +315,20 @@ public sealed class WslRepository : IWslRepository
             instanceName,
             ["find", packsDirectory, "-mindepth", "2", "-maxdepth", "2", "-name", "pack.conf"]);
 
+        return ParseInstalledPacks(found);
+    }
+
+    internal static IReadOnlyList<string> ParseInstalledPacks(IReadOnlyList<string> found)
+    {
+        const string suffix = "/pack.conf";
+
         return
         [
             .. found
-                .Select(line => line.Replace("/pack.conf", string.Empty, StringComparison.Ordinal))
-                .Select(line => line.Split('/')[^1])
+                .Where(line => line.EndsWith(suffix, StringComparison.Ordinal))
+                .Select(line => line[..^suffix.Length])
+                .Select(folder => folder[(folder.LastIndexOf('/') + 1)..])
+                .Where(name => name.Length > 0)
                 .Order(StringComparer.Ordinal),
         ];
     }

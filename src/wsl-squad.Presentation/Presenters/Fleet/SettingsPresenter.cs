@@ -117,7 +117,8 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
                 Description = pack.Description,
             });
         }
-        catch (InvalidOperationException exception)
+        catch (Exception exception) when (
+            exception is InvalidOperationException or ArgumentException or IOException or UnauthorizedAccessException)
         {
             ShowFailure(exception.Message);
 

@@ -166,6 +166,52 @@ public class PresenterTests
         view.Dependents.Should().ContainKey("tools");
     }
 
+    [Fact]
+    public void Settings_presenter_reports_an_invalid_pack_copy_name()
+    {
+        Mock<IPackCatalogService> catalogue = new();
+        catalogue.Setup(c => c.CreatePack(It.IsAny<CreatePackDto>()))
+            .Throws(new ArgumentException("'__under' is not usable as a pack name."));
+        TestFleetView view = new();
+        SettingsPresenter presenter = new(catalogue.Object, view, []);
+        WslPackDto pack = new() { Name = "tools" };
+
+        ActionResult? result = presenter.Duplicate(pack);
+
+        result!.Status.Should().Be(ActionResultStatus.Nok);
+        view.Errors.Should().ContainSingle(message => message.Contains("not usable", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Delete_archive_presenter_cancels_without_confirmation()
+    {
+        Mock<IInstanceService> service = new();
+        TestInstanceView view = new() { ConfirmAnswer = false };
+        DeleteArchivePresenter presenter = new(service.Object, view);
+
+        ActionResult result = presenter.Run("old");
+
+        result.Status.Should().Be(ActionResultStatus.Ok);
+        result.Message.Should().Be("DeleteArchive : cancelled");
+        service.Verify(s => s.DeleteArchive(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Delete_archive_presenter_deletes_after_confirmation()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.DeleteArchive("old"))
+            .Returns(new DeleteArchiveResponseDto { ArchiveName = "old" });
+        TestInstanceView view = new() { ConfirmAnswer = true };
+        DeleteArchivePresenter presenter = new(service.Object, view);
+
+        ActionResult result = presenter.Run("old");
+
+        result.Status.Should().Be(ActionResultStatus.Ok);
+        result.Message.Should().Be("DeleteArchive : old");
+        service.Verify(s => s.DeleteArchive("old"), Times.Once);
+    }
+
     private sealed class TestFleetView : IFleetView
     {
         public string? PickedInstance { get; set; } = "alpha";

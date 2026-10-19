@@ -7,7 +7,8 @@ internal static class NativeCommand
     public static (int ExitCode, string Output) Run(
         string program,
         IReadOnlyList<string> arguments,
-        string? workingDirectory = null)
+        string? workingDirectory = null,
+        bool includeError = true)
     {
         ProcessStartInfo start = new()
         {
@@ -36,7 +37,10 @@ internal static class NativeCommand
 
         process.WaitForExit();
 
-        return (process.ExitCode, output.GetAwaiter().GetResult() + error.GetAwaiter().GetResult());
+        string standardOutput = output.GetAwaiter().GetResult();
+        string standardError = error.GetAwaiter().GetResult();
+
+        return (process.ExitCode, includeError ? standardOutput + standardError : standardOutput);
     }
 
     public static int RunAttached(
