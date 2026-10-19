@@ -753,8 +753,7 @@ public sealed class InstanceService : IInstanceService
     public GetPacksResponseDto GetPacks(string instanceName)
     {
         WslPackCatalog catalog = ReadCatalog();
-        string packsDirectory = PacksDirectory(instanceName);
-        IReadOnlyList<string> installed = _wslRepository.GetInstalledPacks(instanceName, packsDirectory);
+        IReadOnlyList<string> installed = _wslRepository.GetInstalledPacks(instanceName);
         string family = _wslRepository.GetFamily(instanceName);
 
         List<WslPackDto> candidate = [];
@@ -802,12 +801,11 @@ public sealed class InstanceService : IInstanceService
 
         string name = dto.InstanceName ?? string.Empty;
         WslPackCatalog catalog = ReadCatalog();
-        string packsDirectory = PacksDirectory(name);
         string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
 
         TryDeleteFile(errorLog);
 
-        IReadOnlyList<string> before = _wslRepository.GetInstalledPacks(name, packsDirectory);
+        IReadOnlyList<string> before = _wslRepository.GetInstalledPacks(name);
         IReadOnlyList<string> toRemove = catalog.ResolveRemoval(before, dto.ToRemove, dto.ToAdd);
         IReadOnlyList<PackRemovalConflict> conflicts = catalog.GetRemovalConflicts(before, toRemove, dto.ToAdd);
 
@@ -826,14 +824,14 @@ public sealed class InstanceService : IInstanceService
                 continue;
             }
 
-            PackStep result = InstallPack(name, pack, packsDirectory, errorLog, dto.Interactive);
+            PackStep result = InstallPack(name, pack, errorLog, dto.Interactive);
 
             if (result.Step is "installed" or "declined")
             {
                 continue;
             }
 
-            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name, packsDirectory);
+            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name);
 
             return new ManagePacksResponseDto
             {
@@ -847,14 +845,14 @@ public sealed class InstanceService : IInstanceService
 
         foreach (string packName in toRemove)
         {
-            PackStep? result = RemoveOne(name, packName, packsDirectory, errorLog, dto.Interactive);
+            PackStep? result = RemoveOne(name, packName, errorLog, dto.Interactive);
 
             if (result is null)
             {
                 continue;
             }
 
-            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name, packsDirectory);
+            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name);
 
             return new ManagePacksResponseDto
             {
@@ -872,7 +870,7 @@ public sealed class InstanceService : IInstanceService
             _ = _wslRepository.RunOrphanCleanup(name);
         }
 
-        IReadOnlyList<string> final = _wslRepository.GetInstalledPacks(name, packsDirectory);
+        IReadOnlyList<string> final = _wslRepository.GetInstalledPacks(name);
 
         return new ManagePacksResponseDto
         {
@@ -1310,7 +1308,6 @@ public sealed class InstanceService : IInstanceService
     private List<string> InstallChosenPacks(string name, IReadOnlyList<string> chosen, bool interactive)
     {
         WslPackCatalog catalog = ReadCatalog();
-        string packsDirectory = PacksDirectory(name);
         string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
 
         foreach (string packName in catalog.ResolveSelection(chosen, []))
@@ -1322,7 +1319,7 @@ public sealed class InstanceService : IInstanceService
                 continue;
             }
 
-            PackStep result = InstallPack(name, pack, packsDirectory, errorLog, interactive);
+            PackStep result = InstallPack(name, pack, errorLog, interactive);
 
             if (result.Step is "installed" or "declined")
             {
@@ -1331,7 +1328,7 @@ public sealed class InstanceService : IInstanceService
 
             List<string> notes = [$"'{result.Pack}' installation failed."];
 
-            IReadOnlyList<string> now = _wslRepository.GetInstalledPacks(name, packsDirectory);
+            IReadOnlyList<string> now = _wslRepository.GetInstalledPacks(name);
             List<string> skipped = [];
 
             foreach (string wanted in chosen)
@@ -1358,37 +1355,24 @@ public sealed class InstanceService : IInstanceService
         return new WslPackCatalog { Packs = _packCatalogRepository.GetAllPacks() };
     }
 
-    private string PacksDirectory(string name)
+    private PackStep InstallPack(string name, WslPack pack, string errorLog, bool interactive = false)
     {
-        string home = _wslRepository.GetHome(name);
-
-        if (home.Length == 0)
-        {
-            throw new InvalidOperationException($"'{name}' did not say where its user's home is.");
-        }
-
-        return $"{home}/.config/packs";
-    }
-
-    private PackStep InstallPack(string name, WslPack pack, string packsDirectory, string errorLog, bool interactive = false)
-    {
-        string target = $"{packsDirectory}/{pack.Name}";
-        int code = _wslRepository.CopyFolderIntoInstance(name, _packCatalogRepository.GetFolder(pack.Name), target);
+        int code = _wslRepository.CopyPackIntoInstance(name, _packCatalogRepository.GetFolder(pack.Name), pack.Name);
 
         if (code != 0)
         {
-            _ = _wslRepository.RemoveFolderInInstance(name, target);
+            _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
 
             return new PackStep(pack.Name, "copy", code);
         }
 
-        if (_wslRepository.HasInInstance(name, $"{target}/install_root.sh"))
+        if (_wslRepository.PackHasFile(name, pack.Name, "install_root.sh"))
         {
-            int rootCode = _wslRepository.RunScriptInInstance(name, target, "install_root.sh", asRoot: true, errorLog, interactive);
+            int rootCode = _wslRepository.RunPackScript(name, pack.Name, "install_root.sh", asRoot: true, errorLog, interactive);
 
             if (rootCode != 0)
             {
-                _ = _wslRepository.RemoveFolderInInstance(name, target);
+                _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
 
                 return new PackStep(pack.Name, "root", rootCode);
             }
@@ -1399,7 +1383,7 @@ public sealed class InstanceService : IInstanceService
         try
         {
             sudoWindow = _wslRepository.OpenPackSudoWindow(name);
-            code = _wslRepository.RunScriptInInstance(name, target, "install.sh", asRoot: false, errorLog, interactive);
+            code = _wslRepository.RunPackScript(name, pack.Name, "install.sh", asRoot: false, errorLog, interactive);
         }
         finally
         {
@@ -1411,14 +1395,14 @@ public sealed class InstanceService : IInstanceService
 
         if (code == 2)
         {
-            _ = _wslRepository.RemoveFolderInInstance(name, target);
+            _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
 
             return new PackStep(pack.Name, "declined", 0);
         }
 
         if (code != 0)
         {
-            _ = _wslRepository.RemoveFolderInInstance(name, target);
+            _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
 
             return new PackStep(pack.Name, "install", code);
         }
@@ -1426,19 +1410,18 @@ public sealed class InstanceService : IInstanceService
         return new PackStep(pack.Name, "installed", 0);
     }
 
-    private PackStep? RemoveOne(string name, string packName, string packsDirectory, string errorLog, bool interactive = false)
+    private PackStep? RemoveOne(string name, string packName, string errorLog, bool interactive = false)
     {
-        string target = $"{packsDirectory}/{packName}";
         string catalogRemove = Path.Combine(_packCatalogRepository.GetFolder(packName), "remove.sh");
 
         if (File.Exists(catalogRemove))
         {
-            _ = _wslRepository.CopyFileIntoInstance(name, catalogRemove, $"{target}/remove.sh");
+            _ = _wslRepository.CopyPackFileIntoInstance(name, catalogRemove, packName, "remove.sh");
         }
 
-        if (_wslRepository.HasInInstance(name, $"{target}/remove.sh"))
+        if (_wslRepository.PackHasFile(name, packName, "remove.sh"))
         {
-            int code = _wslRepository.RunScriptInInstance(name, target, "remove.sh", asRoot: true, errorLog, interactive);
+            int code = _wslRepository.RunPackScript(name, packName, "remove.sh", asRoot: true, errorLog, interactive);
 
             if (code != 0)
             {
@@ -1446,7 +1429,7 @@ public sealed class InstanceService : IInstanceService
             }
         }
 
-        int folderCode = _wslRepository.RemoveFolderInInstance(name, target);
+        int folderCode = _wslRepository.RemovePackFromInstance(name, packName);
 
         return folderCode != 0 ? new PackStep(packName, "folder", folderCode) : null;
     }

@@ -116,6 +116,19 @@ internal static class Runner
 
         Console.WriteLine($"Applying packs on '{name}'...");
 
+        List<string> toAdd = SplitPacks(add);
+        List<string> toRemove = SplitPacks(remove);
+
+        foreach (string pack in toAdd)
+        {
+            Console.WriteLine($"Installing '{pack}'...");
+        }
+
+        foreach (string pack in toRemove)
+        {
+            Console.WriteLine($"Removing '{pack}'...");
+        }
+
         IInstanceService service = CreateService();
         ManagePacksResponseDto response;
 
@@ -124,8 +137,8 @@ internal static class Runner
             response = service.ManagePacks(new ManagePacksDto
             {
                 InstanceName = name,
-                ToAdd = SplitPacks(add),
-                ToRemove = SplitPacks(remove),
+                ToAdd = toAdd,
+                ToRemove = toRemove,
                 Interactive = true,
             });
         }

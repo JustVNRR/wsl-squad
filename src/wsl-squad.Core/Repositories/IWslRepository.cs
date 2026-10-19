@@ -34,25 +34,25 @@ public interface IWslRepository
 
     public bool TestInInstance(string instanceName, IReadOnlyList<string> arguments);
 
-    public string GetHome(string instanceName);
-
     public string GetFamily(string instanceName);
 
     public void SaveOnboardingScript(string instanceName, string source);
 
     public void RunOnboarding(string instanceName, string asUser, bool interactive = false);
 
-    public IReadOnlyList<string> GetInstalledPacks(string instanceName, string packsDirectory);
+    public IReadOnlyList<string> GetInstalledPacks(string instanceName);
 
-    public int CopyFolderIntoInstance(string instanceName, string sourceFolder, string target);
+    public int CopyPackIntoInstance(string instanceName, string sourceFolder, string packName);
 
-    public int CopyFileIntoInstance(string instanceName, string sourceFile, string targetPath);
+    public int CopyPackFileIntoInstance(string instanceName, string sourceFile, string packName, string fileName);
 
     public int RunScriptInInstance(string instanceName, string workingDirectory, string script, bool asRoot, string? errorLog, bool interactive = false);
 
-    public bool HasInInstance(string instanceName, string path);
+    public int RunPackScript(string instanceName, string packName, string script, bool asRoot, string? errorLog, bool interactive = false);
 
-    public int RemoveFolderInInstance(string instanceName, string target);
+    public bool PackHasFile(string instanceName, string packName, string fileName);
+
+    public int RemovePackFromInstance(string instanceName, string packName);
 
     public bool OpenPackSudoWindow(string instanceName);
 

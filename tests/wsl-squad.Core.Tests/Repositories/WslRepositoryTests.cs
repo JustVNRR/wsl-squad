@@ -39,4 +39,10 @@ public class WslRepositoryTests
     {
         WslRepository.ParseInstalledPacks([]).Should().BeEmpty();
     }
+
+    [Fact]
+    public void Quotes_single_quotes_in_a_shell_value()
+    {
+        WslRepository.ShellValue("a'b").Should().Be("'a'\"'\"'b'");
+    }
 }

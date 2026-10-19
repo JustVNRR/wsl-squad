@@ -43,6 +43,43 @@ internal static class NativeCommand
         return (process.ExitCode, includeError ? standardOutput + standardError : standardOutput);
     }
 
+    public static (int ExitCode, string Output) RunWithInput(
+        string program,
+        IReadOnlyList<string> arguments,
+        string input,
+        bool includeError = true)
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = program,
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+
+        foreach (string argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> error = process.StandardError.ReadToEndAsync();
+
+        process.StandardInput.Write(input);
+        process.StandardInput.Close();
+        process.WaitForExit();
+
+        string standardOutput = output.GetAwaiter().GetResult();
+        string standardError = error.GetAwaiter().GetResult();
+
+        return (process.ExitCode, includeError ? standardOutput + standardError : standardOutput);
+    }
+
     public static int RunAttached(
         string program,
         IReadOnlyList<string> arguments,

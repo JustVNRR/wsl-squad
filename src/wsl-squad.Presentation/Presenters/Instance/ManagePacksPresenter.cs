@@ -111,6 +111,7 @@ public sealed class ManagePacksPresenter : BasePresenter<IInstanceView>
                 InstanceName = name,
                 ToAdd = toAdd,
                 ToRemove = toRemove,
+                Interactive = true,
             });
             View.Show(response);
 

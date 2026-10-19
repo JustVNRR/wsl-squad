@@ -112,14 +112,31 @@ public class InstanceServiceTests
             new WslPack { Name = "other-family", Family = "arch" },
             new WslPack { Name = "installed", Offered = false },
         ]);
-        _wsl.Setup(wsl => wsl.GetHome("alpha")).Returns("/home/alpha");
-        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha", "/home/alpha/.config/packs")).Returns(["installed"]);
+        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns(["installed"]);
         _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
 
         GetPacksResponseDto response = _service.GetPacks("alpha");
 
         response.Candidate.Select(pack => pack.Name).Should().Equal("new-pack");
         response.Removable.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Offers_all_packs_when_none_are_installed()
+    {
+        _packs.Setup(repository => repository.GetAllPacks()).Returns(
+        [
+            new WslPack { Name = "shell", Family = "debian" },
+            new WslPack { Name = "tools", Family = "debian" },
+        ]);
+        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns([]);
+        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
+
+        GetPacksResponseDto response = _service.GetPacks("alpha");
+
+        response.Installed.Should().BeEmpty();
+        response.Removable.Should().BeEmpty();
+        response.Candidate.Select(pack => pack.Name).Should().Equal("shell", "tools");
     }
 
     [Fact]
@@ -130,8 +147,7 @@ public class InstanceServiceTests
             new WslPack { Name = "shell", Offered = false },
             new WslPack { Name = "tools", Requires = ["shell"] },
         ]);
-        _wsl.Setup(wsl => wsl.GetHome("alpha")).Returns("/home/alpha");
-        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha", "/home/alpha/.config/packs")).Returns(["shell", "tools"]);
+        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns(["shell", "tools"]);
         _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
 
         Action act = () => _service.ManagePacks(new ManagePacksDto

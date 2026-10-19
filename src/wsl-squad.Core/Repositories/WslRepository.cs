@@ -9,7 +9,26 @@ public sealed class WslRepository : IWslRepository
 {
     private const string _lxssPath = @"Software\Microsoft\Windows\CurrentVersion\Lxss";
 
+    private const string _homeScript =
+        "user=$(awk -F= '/^[[:space:]]*default[[:space:]]*=/{gsub(/^[[:space:]]+|[[:space:]]+$/, \"\", $2); print $2; exit}' /etc/wsl.conf 2>/dev/null | tr -d '\\r'); " +
+        "[ -n \"$user\" ] || user=$(id -un); " +
+        "home=$(awk -F: -v u=\"$user\" '$1 == u { print $6; exit }' /etc/passwd | tr -d '\\r'); " +
+        "if [ -z \"$home\" ]; then " +
+        "other=$(id -un); " +
+        "if [ \"$other\" != \"$user\" ]; then " +
+        "home=$(awk -F: -v u=\"$other\" '$1 == u { print $6; exit }' /etc/passwd | tr -d '\\r'); " +
+        "fi; fi; " +
+        "[ -n \"$home\" ] || home=\"${HOME:-}\"; " +
+        "[ -n \"$home\" ] || { [ \"$(id -u)\" = 0 ] && home=/root; }; " +
+        "if [ -z \"$home\" ] || [ ! -d \"$home/.config/packs\" ]; then " +
+        "for candidate in /home/* /root; do " +
+        "if [ -d \"$candidate/.config/packs\" ]; then home=\"$candidate\"; break; fi; " +
+        "done; fi; " +
+        "[ -n \"$home\" ] || { echo 'The instance did not say where its user home is.' >&2; exit 1; }";
+
     private readonly string _orphanScript;
+
+    private readonly record struct PackLocation(string User, string Home);
 
     public WslRepository(string distroDir)
     {
@@ -228,13 +247,6 @@ public sealed class WslRepository : IWslRepository
         return NativeCommand.Test("wsl.exe", wslArguments);
     }
 
-    public string GetHome(string instanceName)
-    {
-        IReadOnlyList<string> values = GetInInstance(instanceName, ["printenv", "HOME"]);
-
-        return values.Count > 0 ? values[0] : string.Empty;
-    }
-
     public string GetFamily(string instanceName)
     {
         IReadOnlyList<string> release = GetInInstance(instanceName, ["cat", "/etc/os-release"]);
@@ -309,13 +321,70 @@ public sealed class WslRepository : IWslRepository
         }
     }
 
-    public IReadOnlyList<string> GetInstalledPacks(string instanceName, string packsDirectory)
+    public IReadOnlyList<string> GetInstalledPacks(string instanceName)
     {
-        IReadOnlyList<string> found = GetInInstance(
-            instanceName,
-            ["find", packsDirectory, "-mindepth", "2", "-maxdepth", "2", "-name", "pack.conf"]);
+        string script = _homeScript +
+            "; for folder in \"$home\" /home/* /root; do " +
+            "find \"$folder/.config/packs\" -mindepth 2 -maxdepth 2 -name pack.conf 2>/dev/null; " +
+            "done | sort -u";
+
+        (int exitCode, string output) = NativeCommand.RunWithInput(
+            "wsl.exe",
+            ["-d", instanceName, "--", "sh", "-s"],
+            script,
+            includeError: true);
+
+        if (exitCode != 0)
+        {
+            return [];
+        }
+
+        IReadOnlyList<string> found =
+        [
+            .. output
+                .Replace("\0", string.Empty, StringComparison.Ordinal)
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+        ];
 
         return ParseInstalledPacks(found);
+    }
+
+    private PackLocation ResolveLocation(string instanceName)
+    {
+        string script = _homeScript +
+            "; printf 'WSL_SQUAD_USER=%s\\n' \"$user\"; " +
+            "printf 'WSL_SQUAD_HOME=%s\\n' \"$home\"";
+
+        (int exitCode, string output) = NativeCommand.RunWithInput(
+            "wsl.exe",
+            ["-d", instanceName, "--", "sh", "-s"],
+            script,
+            includeError: true);
+
+        string user = Marker(output, "WSL_SQUAD_USER=");
+        string home = Marker(output, "WSL_SQUAD_HOME=");
+
+        if (exitCode != 0 || home.Length == 0)
+        {
+            throw new InvalidOperationException($"'{instanceName}' did not say where its user's home is.");
+        }
+
+        return new PackLocation(user, home);
+    }
+
+    private static string Marker(string output, string prefix)
+    {
+        foreach (string line in output.Split(
+            '\n',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (line.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return line[prefix.Length..].Trim();
+            }
+        }
+
+        return string.Empty;
     }
 
     internal static IReadOnlyList<string> ParseInstalledPacks(IReadOnlyList<string> found)
@@ -329,12 +398,30 @@ public sealed class WslRepository : IWslRepository
                 .Select(line => line[..^suffix.Length])
                 .Select(folder => folder[(folder.LastIndexOf('/') + 1)..])
                 .Where(name => name.Length > 0)
+                .Distinct(StringComparer.Ordinal)
                 .Order(StringComparer.Ordinal),
         ];
     }
 
-    public int CopyFolderIntoInstance(string instanceName, string sourceFolder, string target)
+    internal static string ShellValue(string value)
     {
+        return "'" + value.Replace("'", "'\"'\"'", StringComparison.Ordinal) + "'";
+    }
+
+    private static string PackFolderPath(PackLocation location, string packName)
+    {
+        if (string.IsNullOrEmpty(packName))
+        {
+            throw new ArgumentException("A pack name is required.", nameof(packName));
+        }
+
+        return $"{location.Home}/.config/packs/{packName}";
+    }
+
+    public int CopyPackIntoInstance(string instanceName, string sourceFolder, string packName)
+    {
+        PackLocation location = ResolveLocation(instanceName);
+        string target = PackFolderPath(location, packName);
         int code = RunInInstance(instanceName, string.Empty, ["mkdir", "-p", target], string.Empty);
 
         if (code != 0)
@@ -353,7 +440,11 @@ public sealed class WslRepository : IWslRepository
 
         if (drivesMounted)
         {
-            copied = RunInInstance(instanceName, string.Empty, ["cp", "-r", ".", $"{target}/"], sourceFolder) == 0;
+            copied = RunInInstance(
+                instanceName,
+                string.Empty,
+                ["cp", "-r", ".", $"{target}/"],
+                sourceFolder) == 0;
         }
         else
         {
@@ -374,19 +465,21 @@ public sealed class WslRepository : IWslRepository
             _ = RunInInstance(
                 instanceName,
                 string.Empty,
-                ["sh", "-c", $"find '{target}' -name '*.sh' -exec chmod +x {{}} +"],
+                ["find", target, "-name", "*.sh", "-exec", "chmod", "+x", "{}", "+"],
                 string.Empty);
 
             return 0;
         }
 
-        _ = RemoveFolderInInstance(instanceName, target);
+        _ = RunInInstance(instanceName, string.Empty, ["rm", "-rf", target], string.Empty);
 
         return 1;
     }
 
-    public int CopyFileIntoInstance(string instanceName, string sourceFile, string targetPath)
+    public int CopyPackFileIntoInstance(string instanceName, string sourceFile, string packName, string fileName)
     {
+        PackLocation location = ResolveLocation(instanceName);
+        string target = $"{PackFolderPath(location, packName)}/{fileName}";
         string throughTheDrives = ToWslPath(sourceFile);
         bool drivesMounted = RunInInstance(
             instanceName,
@@ -399,13 +492,13 @@ public sealed class WslRepository : IWslRepository
             return RunInInstance(
                 instanceName,
                 string.Empty,
-                ["cp", "-f", throughTheDrives, targetPath],
+                ["cp", "-f", throughTheDrives, target],
                 string.Empty);
         }
 
         try
         {
-            string unc = $@"\\wsl.localhost\{instanceName}" + targetPath.Replace('/', '\\');
+            string unc = $@"\\wsl.localhost\{instanceName}" + target.Replace('/', '\\');
             File.Copy(sourceFile, unc, overwrite: true);
 
             return 0;
@@ -428,8 +521,9 @@ public sealed class WslRepository : IWslRepository
 
         if (asRoot)
         {
-            string userHome = GetHome(instanceName);
-            wslArguments.AddRange(["-u", "root", "--cd", workingDirectory, "--", "env", "LANG=C", $"HOME={userHome}", "bash", script]);
+            PackLocation location = ResolveLocation(instanceName);
+            wslArguments.AddRange(
+                ["-u", "root", "--cd", workingDirectory, "--", "env", "LANG=C", $"HOME={location.Home}", "bash", script]);
         }
         else
         {
@@ -438,7 +532,7 @@ public sealed class WslRepository : IWslRepository
 
         if (interactive)
         {
-            return RunScriptInteractive(wslArguments, errorLog);
+            return NativeCommand.RunAttached("wsl.exe", wslArguments);
         }
 
         (int code, string output) = NativeCommand.Run("wsl.exe", wslArguments);
@@ -448,94 +542,79 @@ public sealed class WslRepository : IWslRepository
         return code;
     }
 
-    private static int RunScriptInteractive(IReadOnlyList<string> arguments, string? errorLog)
+    public int RunPackScript(
+        string instanceName,
+        string packName,
+        string script,
+        bool asRoot,
+        string? errorLog,
+        bool interactive = false)
     {
-        ProcessStartInfo start = new()
-        {
-            FileName = "wsl.exe",
-            UseShellExecute = false,
-            CreateNoWindow = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
+        PackLocation location = ResolveLocation(instanceName);
+        string target = PackFolderPath(location, packName);
+        List<string> wslArguments = ["-d", instanceName];
 
-        foreach (string argument in arguments)
+        if (asRoot)
         {
-            start.ArgumentList.Add(argument);
+            wslArguments.AddRange(["-u", "root"]);
         }
 
-        using Process process = Process.Start(start)
-            ?? throw new InvalidOperationException("'wsl.exe' could not be started.");
-        System.Text.StringBuilder captured = new();
+        wslArguments.AddRange(
+            ["--cd", target, "--", "env", "LANG=C", $"HOME={location.Home}", "bash", script]);
 
-        void Keep(string? line, bool error)
+        if (interactive)
         {
-            if (line is null)
-            {
-                return;
-            }
-
-            lock (captured)
-            {
-                _ = captured.AppendLine(line);
-            }
-
-            if (error)
-            {
-                Console.Error.WriteLine(line);
-            }
-            else
-            {
-                Console.WriteLine(line);
-            }
+            return NativeCommand.RunAttached("wsl.exe", wslArguments);
         }
 
-        process.OutputDataReceived += (_, e) => Keep(e.Data, error: false);
-        process.ErrorDataReceived += (_, e) => Keep(e.Data, error: true);
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        process.WaitForExit();
+        (int code, string output) = NativeCommand.Run("wsl.exe", wslArguments);
 
-        if (!string.IsNullOrEmpty(errorLog))
-        {
-            string output;
+        TryAppendErrorLog(errorLog, output);
 
-            lock (captured)
-            {
-                output = captured.ToString();
-            }
-
-            TryAppendErrorLog(errorLog, output);
-        }
-
-        return process.ExitCode;
+        return code;
     }
 
-    public bool HasInInstance(string instanceName, string path)
+    public bool PackHasFile(string instanceName, string packName, string fileName)
     {
-        return RunInInstance(instanceName, string.Empty, ["test", "-f", path], string.Empty) == 0;
+        PackLocation location = ResolveLocation(instanceName);
+        string target = $"{PackFolderPath(location, packName)}/{fileName}";
+
+        return RunInInstance(instanceName, string.Empty, ["test", "-f", target], string.Empty) == 0;
     }
 
-    public int RemoveFolderInInstance(string instanceName, string target)
+    public int RemovePackFromInstance(string instanceName, string packName)
     {
-        return RunInInstance(instanceName, string.Empty, ["rm", "-rf", target], string.Empty);
+        PackLocation location = ResolveLocation(instanceName);
+
+        return RunInInstance(
+            instanceName,
+            string.Empty,
+            ["rm", "-rf", PackFolderPath(location, packName)],
+            string.Empty);
     }
 
     public bool OpenPackSudoWindow(string instanceName)
     {
-        string user = Path.GetFileName(GetHome(instanceName));
+        PackLocation location = ResolveLocation(instanceName);
 
-        if (user.Length == 0)
+        if (location.User.Length == 0)
         {
             return false;
         }
 
-        string command = "printf '%s\\n' '" + user + " ALL=(ALL) NOPASSWD: ALL' > /tmp/wsl-fleet-pack-sudo" +
+        string script = "printf '%s\\n' " + ShellValue(location.User + " ALL=(ALL) NOPASSWD: ALL") +
+            " > /tmp/wsl-fleet-pack-sudo" +
             " && chmod 0440 /tmp/wsl-fleet-pack-sudo" +
             " && visudo -cf /tmp/wsl-fleet-pack-sudo > /dev/null" +
             " && mv /tmp/wsl-fleet-pack-sudo /etc/sudoers.d/90-wsl-fleet-packs";
 
-        return RunInInstance(instanceName, "root", ["bash", "-c", command], string.Empty) == 0;
+        (int code, _) = NativeCommand.RunWithInput(
+            "wsl.exe",
+            ["-d", instanceName, "-u", "root", "--", "sh", "-s"],
+            script,
+            includeError: false);
+
+        return code == 0;
     }
 
     public void ClosePackSudoWindow(string instanceName)
