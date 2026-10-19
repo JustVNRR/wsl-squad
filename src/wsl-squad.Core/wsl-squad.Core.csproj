@@ -7,17 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- Packs et fichiers de build embarqués dans la DLL -->
         <EmbeddedResource Include="Resources\packs\**\*"
                             LogicalName="packs/%(RecursiveDir)%(Filename)%(Extension)" />
         <EmbeddedResource Include="Resources\build\**\*"
                             LogicalName="build/%(RecursiveDir)%(Filename)%(Extension)" />
-
-        <!-- Recettes Docker -->
         <EmbeddedResource Include="Resources\recipes\**\*"
                             LogicalName="recipes/%(RecursiveDir)%(Filename)%(Extension)" />
-
-        <!-- Polices partagées : ajout de Link pour ranger l'affichage dans Resources\Fonts -->
         <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf"
                             Link="Resources\Fonts\%(RecursiveDir)%(Filename)%(Extension)"
                             LogicalName="fonts/%(RecursiveDir)%(Filename)%(Extension)" />

@@ -10,8 +10,8 @@
 
 # --- 1. THE PROJECT TARGETS (from the root of a project) ---
 gmake pdf_from_md                             # The folder's markdown: the only .md, or the one the menu offers
-gmake pdf_from_md PDF_SRC=rapport.md          # Name it directly - no menu, the form scripts use
-gmake pdf_from_md PDF_SRC=rapport.md PDF_OUT=rapport-rv.pdf   # Write it under another name
+gmake pdf_from_md PDF_SRC=report.md          # Name it directly - no menu, the form scripts use
+gmake pdf_from_md PDF_SRC=report.md PDF_OUT=report-rv.pdf   # Write it under another name
 gmake pdf_open                                # Open a built PDF (PDF_OUT's, PDF_SRC's, or the folder's - menu)
 gmake docx_from_md                            # The same markdown in Word - Word is not needed
 # An existing PDF or Word is never replaced in silence: a menu asks - overwrite, cancel, save as...
@@ -28,22 +28,22 @@ gmake font_from_ubuntu FONT=noto              # ... named
 
 # --- 3. WHAT THE DOCUMENT CARRIES (its YAML header) ---
 # ---
-# bibliography: bibliographie.bib             # the .bib beside the document
+# bibliography: bibliography.bib             # the .bib beside the document
 # csl: csl/vancouver-superscript.csl          # the style, in the project's csl/ folder
 # citeproc: true                              # render the citations
 # ---
 
 # --- 4. THE COMMAND BEHIND THE TARGET ---
-pandoc rapport.md --citeproc --template=template.tex -o rapport.pdf --pdf-engine=xelatex
-pandoc rapport.md --citeproc -o rapport.docx  # Word output, no LaTeX involved
+pandoc report.md --citeproc --template=template.tex -o report.pdf --pdf-engine=xelatex
+pandoc report.md --citeproc -o report.docx  # Word output, no LaTeX involved
 pandoc --version                              # Which version is installed
 
 # --- 5. THE PDF TOOLS (poppler) ---
-pdfinfo rapport.pdf                           # Pages, size, engine - the facts
-pdftotext -layout rapport.pdf - | less        # The text, to check or to grep
-pdftotext -layout rapport.pdf - | grep -n "rétention"   # Find a passage and its page context
-pdftoppm -png -f 1 -l 1 rapport.pdf page      # Page 1 as page-1.png
-pdfunite rapport.pdf annexes.pdf envoi.pdf    # Merge PDFs: the document and its annexes, one file
+pdfinfo report.pdf                           # Pages, size, engine - the facts
+pdftotext -layout report.pdf - | less        # The text, to check or to grep
+pdftotext -layout report.pdf - | grep -n "retention"   # Find a passage and its page context
+pdftoppm -png -f 1 -l 1 report.pdf page      # Page 1 as page-1.png
+pdfunite report.pdf annexes.pdf outgoing.pdf    # Merge PDFs: the document and its annexes, one file
 
 # --- 6. WHEN THE BUILD STOPS ---
 ls *.md *.bib *.csl                           # What the command needs, beside the document

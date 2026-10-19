@@ -35,11 +35,19 @@ Every action is available both as a GUI and as a CLI.
 
 ---
 
-## Quick Start (TODO : a mettre à jour)
+## Quick Start
 
 Make sure Docker Desktop is running before you start.
 
-TODO : A COMPLETER
+1. Download the installer:
+   [wsl-squad-setup.exe](TODO_INSTALLER_URL)
+
+2. Or download the portable version:
+   [wsl-squad-portable.zip](TODO_PORTABLE_URL)
+
+3. All releases:
+   [Releases](TODO_RELEASES_URL)
+
 ---
 
 ## Optional Tooling (Packs)
