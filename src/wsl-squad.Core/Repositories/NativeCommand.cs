@@ -169,16 +169,71 @@ internal static class NativeCommand
         return (process.ExitCode, captured.ToString());
     }
 
-    public static bool Test(string program, IReadOnlyList<string> arguments)
+    public static bool Test(
+        string program,
+        IReadOnlyList<string> arguments,
+        int timeoutMilliseconds = 0)
     {
         try
         {
-            return Run(program, arguments).ExitCode == 0;
+            if (timeoutMilliseconds <= 0)
+            {
+                return Run(program, arguments).ExitCode == 0;
+            }
+
+            return RunWithTimeout(program, arguments, timeoutMilliseconds) == 0;
         }
         catch (System.ComponentModel.Win32Exception)
         {
             return false;
         }
+    }
+
+    private static int RunWithTimeout(
+        string program,
+        IReadOnlyList<string> arguments,
+        int timeoutMilliseconds)
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = program,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+
+        foreach (string argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> error = process.StandardError.ReadToEndAsync();
+
+        if (!process.WaitForExit(timeoutMilliseconds))
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException)
+            {
+                return -1;
+            }
+
+            _ = process.WaitForExit(1000);
+
+            return -1;
+        }
+
+        _ = output.GetAwaiter().GetResult();
+        _ = error.GetAwaiter().GetResult();
+
+        return process.ExitCode;
     }
 
     public static void Invoke(string program, IReadOnlyList<string> arguments, string message)

@@ -14,6 +14,23 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        if (!WslService.IsAvailable())
+        {
+            _ = MessageBox.Show(
+                "WSL 2 is required but was not detected." + Environment.NewLine + Environment.NewLine +
+                "Install it from an elevated PowerShell:" + Environment.NewLine +
+                "    wsl --install" + Environment.NewLine + Environment.NewLine +
+                "Restart Windows if prompted, then start WSL Squad again." + Environment.NewLine + Environment.NewLine +
+                "https://learn.microsoft.com/windows/wsl/install",
+                "WSL Squad",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            Shutdown(1);
+
+            return;
+        }
+
         string assets = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "wsl-squad");
