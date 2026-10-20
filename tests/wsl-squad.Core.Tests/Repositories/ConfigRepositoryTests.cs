@@ -34,7 +34,11 @@ public class ConfigRepositoryTests
     private static void ExtractFont(string resource, string target)
     {
         _ = Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-        using Stream source = typeof(ConfigRepository).Assembly.GetManifestResourceStream(resource)
+        string normalized = resource.Replace('\\', '/');
+        string[] names = typeof(ConfigRepository).Assembly.GetManifestResourceNames();
+        string? name = Array.Find(names, candidate => candidate.Replace('\\', '/') == normalized)
+            ?? throw new InvalidOperationException($"Missing resource {resource}.");
+        using Stream source = typeof(ConfigRepository).Assembly.GetManifestResourceStream(name)
             ?? throw new InvalidOperationException($"Missing resource {resource}.");
         using FileStream output = File.Create(target);
         source.CopyTo(output);

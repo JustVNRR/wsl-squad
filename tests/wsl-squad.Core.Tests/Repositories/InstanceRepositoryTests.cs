@@ -72,4 +72,45 @@ public class InstanceRepositoryTests
 
         Directory.Exists(temp.Combine("fleet", "alpha")).Should().BeFalse();
     }
+
+    [Fact]
+    public void RemoveFolder_survives_a_folder_that_cannot_be_deleted()
+    {
+        using TemporaryDirectory temp = new();
+        string folder = temp.Combine("fleet", "alpha");
+        _ = Directory.CreateDirectory(folder);
+        string file = Path.Combine(folder, "ext4.vhdx");
+        File.WriteAllText(file, "x");
+        FileStream? holder = null;
+        InstanceRepository repository = new(temp.Combine("fleet"));
+
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                holder = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
+            }
+            else
+            {
+                File.SetUnixFileMode(
+                    folder,
+                    UnixFileMode.UserRead | UnixFileMode.UserExecute);
+            }
+
+            Action act = () => repository.RemoveFolder("alpha");
+
+            act.Should().NotThrow();
+        }
+        finally
+        {
+            holder?.Dispose();
+
+            if (!OperatingSystem.IsWindows())
+            {
+                File.SetUnixFileMode(
+                    folder,
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
+        }
+    }
 }

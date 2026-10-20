@@ -57,4 +57,24 @@ public class TerminalRepositoryTests
 
         repository.GetFragmentPath("alpha").Should().EndWith(Path.Combine("wsl-squad", "alpha.json"));
     }
+
+    [Fact]
+    public void DeleteFragment_survives_a_directory_at_the_fragment_path()
+    {
+        TerminalRepository repository = new(string.Empty);
+        string name = $"catch-{Guid.NewGuid():N}";
+        string path = repository.GetFragmentPath(name);
+        _ = Directory.CreateDirectory(path);
+
+        try
+        {
+            Action act = () => repository.DeleteFragment(name);
+
+            act.Should().NotThrow();
+        }
+        finally
+        {
+            Directory.Delete(path, recursive: true);
+        }
+    }
 }

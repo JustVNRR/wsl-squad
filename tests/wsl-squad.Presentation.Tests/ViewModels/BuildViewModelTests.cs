@@ -68,7 +68,7 @@ public class BuildViewModelTests
         viewModel.Result.User.Should().Be("alice");
         viewModel.Result.BuildType.Should().Be(WslBuildType.Dockerfile);
         viewModel.Result.BuildPath.Should().Be("/catalog/ubuntu/Dockerfile");
-        viewModel.Result.Context.Should().Be("/catalog/ubuntu");
+        viewModel.Result.Context.Should().Be(Path.GetDirectoryName(viewModel.Result.BuildPath));
         viewModel.Result.Onboarding.Should().Be("/catalog/setup/onboarding.sh");
         viewModel.Result.RegisterDocker.Should().BeTrue();
     }
@@ -259,6 +259,140 @@ public class BuildViewModelTests
         _dialogs.LastConfirm!.Value.Title.Should().Be(title);
         _dialogs.LastConfirm.Value.Question.Should().Be($"Remove '{rowName}'?");
         _instance.Verify(service => service.DeleteRecipe(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Constructor_survives_a_source_read_failure()
+    {
+        Mock<IInstanceService> instance = new();
+        instance.Setup(service => service.GetBuildSources()).Throws(new InvalidOperationException("gone"));
+        instance.Setup(service => service.GetAll()).Returns([]);
+        TestDialogService dialogs = new();
+
+        BuildViewModel viewModel = new(instance.Object, dialogs);
+
+        viewModel.DockerfileNames.Should().BeEmpty();
+        viewModel.OnboardingNames.Should().BeEmpty();
+        viewModel.ImageNames.Should().BeEmpty();
+        viewModel.RecipeNames.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void NewRecipe_reports_a_creation_failure()
+    {
+        _instance.Setup(service => service.CreateRecipe(It.IsAny<NewRecipeDto>()))
+            .Throws(new InvalidOperationException("recipe failed"));
+        _dialogs.RecipeNameAnswer = "mine";
+        BuildViewModel viewModel = Create();
+
+        viewModel.NewRecipe();
+
+        viewModel.RecipeError.Should().Be("recipe failed");
+    }
+
+    [Fact]
+    public void EditSource_survives_an_editor_failure()
+    {
+        _instance.Setup(service => service.OpenInEditor(It.IsAny<string>()))
+            .Throws(new InvalidOperationException("editor failed"));
+        BuildViewModel viewModel = Create();
+
+        Action act = () => viewModel.EditSource("Dockerfiles");
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void ExportRecipeTo_survives_an_export_failure()
+    {
+        _instance.Setup(service => service.ExportRecipe(It.IsAny<ExportRecipeDto>()))
+            .Throws(new InvalidOperationException("export failed"));
+        BuildViewModel viewModel = Create();
+
+        Action act = () => viewModel.ExportRecipeTo("Dockerfiles", "/tmp/out");
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Create_survives_a_registry_probe_failure()
+    {
+        _instance.Setup(service => service.IsRegistryImageValid("alpine:latest"))
+            .Throws(new InvalidOperationException("docker failed"));
+        BuildViewModel viewModel = Create();
+        viewModel.Name = "alpha";
+        viewModel.RoadIndex = 2;
+        viewModel.RegistryRef = "alpine:latest";
+
+        Action act = () => viewModel.CreateCommand.Execute(null);
+
+        act.Should().NotThrow();
+        viewModel.Result.Should().NotBeNull();
+        viewModel.Result!.BuildType.Should().Be(WslBuildType.Registry);
+    }
+
+    [Fact]
+    public void ValidateName_survives_a_fleet_read_failure()
+    {
+        BuildViewModel viewModel = Create();
+        _instance.Setup(service => service.GetAll()).Throws(new InvalidOperationException("fleet failed"));
+
+        viewModel.Name = "alpha";
+
+        viewModel.NameError.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AddImage_reports_an_upload_failure()
+    {
+        _instance.Setup(service => service.UploadRecipe(It.IsAny<UploadRecipeDto>()))
+            .Throws(new InvalidOperationException("upload failed"));
+        BuildViewModel viewModel = Create();
+
+        viewModel.AddImage("/tmp/base.tar");
+
+        viewModel.ImageError.Should().Be("upload failed");
+    }
+
+    [Fact]
+    public void AddDockerfile_survives_an_upload_failure()
+    {
+        _instance.Setup(service => service.UploadRecipe(It.IsAny<UploadRecipeDto>()))
+            .Throws(new InvalidOperationException("upload failed"));
+        BuildViewModel viewModel = Create();
+
+        Action act = () => viewModel.AddDockerfile("/tmp/Dockerfile");
+
+        act.Should().NotThrow();
+        viewModel.DockerfileNames.Should().ContainSingle();
+    }
+
+    [Fact]
+    public void DeleteSelected_survives_a_delete_failure()
+    {
+        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
+        {
+            Dockerfiles =
+            [
+                new WslBuildSourceDto
+                {
+                    Name = "ubuntu (01/01 12:00)",
+                    Path = "/catalog/ubuntu/Dockerfile",
+                    Uploaded = true,
+                },
+            ],
+            Onboardings = [],
+            Recipes = [],
+        });
+        _instance.Setup(service => service.DeleteRecipe(It.IsAny<string>()))
+            .Throws(new InvalidOperationException("delete failed"));
+        _dialogs.ConfirmAnswer = true;
+        BuildViewModel viewModel = Create();
+
+        Action act = () => viewModel.DeleteSelected("Dockerfiles");
+
+        act.Should().NotThrow();
+        viewModel.DockerfileNames.Should().ContainSingle();
     }
 
     private static List<string> RecordChanges(BuildViewModel viewModel)

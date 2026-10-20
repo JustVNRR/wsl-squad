@@ -143,10 +143,43 @@ public class PresenterTests
             dto.Name == "alpha" &&
             dto.BuildType == WslBuildType.Dockerfile &&
             dto.BuildPath == "/catalog/ubuntu/Dockerfile" &&
-            dto.Context == "/catalog/ubuntu" &&
+            dto.Context == Path.GetDirectoryName(dto.BuildPath) &&
             dto.KeepImage &&
             !dto.RegisterDocker &&
             dto.Interactive)), Times.Once);
+    }
+
+    [Fact]
+    public void Build_presenter_survives_a_shell_open_failure()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
+        {
+            Dockerfiles =
+            [
+                new WslBuildSourceDto
+                {
+                    Name = "ubuntu",
+                    Path = "/catalog/ubuntu/Dockerfile",
+                },
+            ],
+            Onboardings = [],
+            Recipes = [],
+        });
+        service.Setup(s => s.GetAllSavedImages()).Returns([]);
+        service.Setup(s => s.StartDocker()).Returns(true);
+        service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
+        {
+            InstanceName = "alpha",
+            Status = WslRecipeStatus.Ok,
+        });
+        service.Setup(s => s.Open("alpha")).Throws(new InvalidOperationException("shell failed"));
+        TestBuildView view = new();
+
+        ActionResult result = new BuildPresenter(service.Object, view).Run();
+
+        result.Status.Should().Be(ActionResultStatus.Ok);
+        result.Message.Should().Be("Build : alpha");
     }
 
     [Fact]

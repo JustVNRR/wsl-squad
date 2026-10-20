@@ -9,7 +9,11 @@ public class EmbeddedResourcesTests
     [Fact]
     public void Packs_ingredients_and_recipes_are_embedded_at_the_root()
     {
-        string[] names = typeof(ServiceFactory).Assembly.GetManifestResourceNames();
+        string[] names =
+        [
+            .. typeof(ServiceFactory).Assembly.GetManifestResourceNames()
+                .Select(name => name.Replace('\\', '/')),
+        ];
 
         _ = names.Should().Contain("ingredients/Dockerfile");
         _ = names.Should().Contain("ingredients/onboarding.sh");

@@ -7,6 +7,7 @@ using wsl_squad.Core.Entities;
 using wsl_squad.Core.Mappers;
 using wsl_squad.Core.Repositories;
 using wsl_squad.Core.Services;
+using wsl_squad.Core.Tests.Support;
 
 namespace wsl_squad.Core.Tests.Services;
 
@@ -229,5 +230,102 @@ public class InstanceServiceTests
         });
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*No tar*");
+    }
+
+    [Fact]
+    public void Remove_survives_a_docker_desktop_cleanup_failure()
+    {
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
+        _terminal.Setup(terminal => terminal.GetWslGuids("alpha")).Returns(new WslGuids([], null));
+        _terminal.Setup(terminal => terminal.PruneGhostEntries("alpha", It.IsAny<IReadOnlyList<string>>()))
+            .Returns(new PruneReport(0, []));
+        _terminal.Setup(terminal => terminal.RemoveStaleFragments(It.IsAny<IReadOnlyList<string>>()))
+            .Returns([]);
+        _docker.Setup(docker => docker.RemoveDesktopState("alpha")).Throws(new IOException("locked"));
+
+        Action act = () => _service.Remove(new RemoveDto { InstanceName = "alpha" });
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Compact_survives_a_failed_restart()
+    {
+        _instances.Setup(instances => instances.GetVhdxSize("alpha")).Returns(100);
+        _wsl.Setup(wsl => wsl.GetRunningNames()).Returns(["alpha"]);
+        _wsl.Setup(wsl => wsl.Start("alpha")).Throws(new InvalidOperationException("no start"));
+
+        CompactResponseDto response = _service.Compact(new CompactDto { InstanceName = "alpha" });
+
+        response.Restarted.Should().BeFalse();
+        response.Gained.Should().Be(0);
+    }
+
+    [Fact]
+    public void Build_reports_a_look_failure_without_failing_the_build()
+    {
+        using TemporaryDirectory temp = new();
+        string folder = temp.Combine("alpha");
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
+        _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
+        _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));
+        _docker.Setup(docker => docker.TestRunning()).Returns(true);
+        _terminal.Setup(terminal => terminal.IsFontInstalled(It.IsAny<string>())).Returns(true);
+        _terminal.Setup(terminal => terminal.DrawIcon("alpha", It.IsAny<string>(), null))
+            .Returns(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
+        _terminal.Setup(terminal => terminal.GetWslGuids("alpha")).Returns(new WslGuids([], "guid"));
+        _terminal.Setup(terminal => terminal.PruneGhostEntries("alpha", It.IsAny<IReadOnlyList<string>>()))
+            .Returns(new PruneReport(0, []));
+        _terminal.Setup(terminal => terminal.RemoveStaleFragments(It.IsAny<IReadOnlyList<string>>()))
+            .Returns([]);
+        _terminal.Setup(terminal => terminal.SaveFragment("alpha", "guid", It.IsAny<WslTheme>()))
+            .Throws(new InvalidOperationException("no save"));
+
+        BuildResponseDto response = _service.Build(new BuildDto
+        {
+            Name = "alpha",
+            BuildType = WslBuildType.Dockerfile,
+            BuildPath = "Dockerfile",
+            KeepImage = false,
+        });
+
+        response.Status.Should().Be(WslRecipeStatus.Warning);
+        response.Messages.Should().Contain(message => message.Contains("the look failed", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Build_survives_a_rootfs_tar_that_cannot_be_deleted()
+    {
+        using TemporaryDirectory temp = new();
+        string folder = temp.Combine("alpha");
+        string tar = temp.Combine("alpha-rootfs.tar");
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
+        _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
+        _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));
+        _docker.Setup(docker => docker.TestRunning()).Returns(true);
+        _docker.Setup(docker => docker.ExportRootfs(It.IsAny<string>(), tar, It.IsAny<bool>()))
+            .Callback<string, string, bool>((_, _, _) => Directory.CreateDirectory(tar));
+        _terminal.Setup(terminal => terminal.IsFontInstalled(It.IsAny<string>())).Returns(true);
+        _terminal.Setup(terminal => terminal.DrawIcon("alpha", It.IsAny<string>(), null))
+            .Returns(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
+        _terminal.Setup(terminal => terminal.GetWslGuids("alpha")).Returns(new WslGuids([], "guid"));
+        _terminal.Setup(terminal => terminal.PruneGhostEntries("alpha", It.IsAny<IReadOnlyList<string>>()))
+            .Returns(new PruneReport(0, []));
+        _terminal.Setup(terminal => terminal.RemoveStaleFragments(It.IsAny<IReadOnlyList<string>>()))
+            .Returns([]);
+
+        Action act = () => _service.Build(new BuildDto
+        {
+            Name = "alpha",
+            BuildType = WslBuildType.Dockerfile,
+            BuildPath = "Dockerfile",
+            KeepImage = false,
+        });
+
+        act.Should().NotThrow();
     }
 }
