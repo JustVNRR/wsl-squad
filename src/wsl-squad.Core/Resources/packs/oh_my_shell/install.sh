@@ -74,7 +74,8 @@ fi
 # the same; newer coreutils deprecate it and print a warning.) The .env
 # files the gmake keeps your variables in are not in this folder either way.
 echo "Installing the shell configuration..."
-mkdir -p "$HOME/.config/zsh" "$HOME/.local/state/zsh" "$HOME/.cache/zsh"
+mkdir -p "$HOME/.config/zsh" "$HOME/.local/state/zsh" "$HOME/.cache/zsh" "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
 # The projects folder the gmake targets are gated on (the Makefile stops
 # outside it): created once, and never over a folder of yours - mkdir -p's
 # own rule.

@@ -82,6 +82,9 @@ public sealed partial class BuildViewModel : BaseViewModel
     private bool _showRecipe;
 
     [ObservableProperty]
+    private bool _showGeneralOptions = true;
+
+    [ObservableProperty]
     private bool _canTrashDockerfile;
 
     [ObservableProperty]
@@ -427,17 +430,18 @@ public sealed partial class BuildViewModel : BaseViewModel
             context = Path.GetDirectoryName(buildPath) ?? string.Empty;
         }
 
+        bool recipe = buildType == WslBuildType.Recipe;
         BuildDto dto = new()
         {
             Name = Name.Trim(),
-            User = RunOnboarding ? User.Trim() : string.Empty,
+            User = !recipe && RunOnboarding ? User.Trim() : string.Empty,
             BuildType = buildType,
             BuildPath = buildPath,
             Context = context,
-            Onboarding = RunOnboarding && OnboardingIndex >= 0 ? _onboardings[OnboardingIndex].Path : string.Empty,
+            Onboarding = !recipe && RunOnboarding && OnboardingIndex >= 0 ? _onboardings[OnboardingIndex].Path : string.Empty,
             Packs = [.. picked],
-            KeepImage = SaveImage,
-            RegisterDocker = RegisterDocker,
+            KeepImage = !recipe && SaveImage,
+            RegisterDocker = !recipe && RegisterDocker,
         };
 
         Result = dto;
@@ -501,6 +505,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         ShowImage = RoadIndex == 1;
         ShowRegistry = RoadIndex == 2;
         ShowRecipe = RoadIndex == 3;
+        ShowGeneralOptions = RoadIndex != 3;
         ValidateUser();
     }
 

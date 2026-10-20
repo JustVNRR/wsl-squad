@@ -83,11 +83,13 @@
                         <Button Grid.Column="3" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashRecipe}" ToolTip="Delete the selected recipe" Click="OnDeleteSource" Tag="Recipes"/>
                     </Grid>
                     <TextBlock x:Name="GuiRecipeError" Text="{Binding RecipeError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
-                    <CheckBox Content="Save image locally" IsChecked="{Binding SaveImage, Mode=TwoWay}" Margin="0,10,0,0" Foreground="{DynamicResource AppForegroundBrush}"/>
                 </StackPanel>
-                <CheckBox Content="Add Docker Desktop support (will be restarted)" IsChecked="{Binding RegisterDocker, Mode=TwoWay}" Margin="0,12,0,0" Foreground="{DynamicResource AppForegroundBrush}"/>
-                <CheckBox Content="Run onboarding shell" IsChecked="{Binding RunOnboarding, Mode=TwoWay}" Margin="0,12,0,0" Foreground="{DynamicResource AppForegroundBrush}"/>
-                <StackPanel IsEnabled="{Binding RunOnboarding}">
+                <CheckBox Content="Add Docker Desktop support (will be restarted)" IsChecked="{Binding RegisterDocker, Mode=TwoWay}" Margin="0,12,0,0" Foreground="{DynamicResource AppForegroundBrush}"
+                          Visibility="{Binding ShowGeneralOptions, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <CheckBox Content="Run onboarding shell" IsChecked="{Binding RunOnboarding, Mode=TwoWay}" Margin="0,12,0,0" Foreground="{DynamicResource AppForegroundBrush}"
+                          Visibility="{Binding ShowGeneralOptions, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <StackPanel IsEnabled="{Binding RunOnboarding}"
+                            Visibility="{Binding ShowGeneralOptions, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock Margin="0,10,0,0" Text="Onboarding:"/>
                     <Grid Margin="0,6,0,0">
                         <Grid.ColumnDefinitions>

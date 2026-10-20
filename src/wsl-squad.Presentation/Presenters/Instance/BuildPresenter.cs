@@ -363,6 +363,14 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                     break;
                 }
 
+                case "done":
+                {
+                    done = true;
+                    stack.Clear();
+
+                    break;
+                }
+
                 default:
                     stack.Clear();
                     break;
@@ -423,6 +431,11 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
     private string NextAfterPacks(int onboardingCount, BuildRoad road)
     {
+        if (road.Type == WslBuildType.Recipe)
+        {
+            return "done";
+        }
+
         if (onboardingCount == 0)
         {
             View.ShowNoOnboarding();

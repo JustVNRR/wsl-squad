@@ -9,21 +9,26 @@
 
   <Target Name="CopyRunner" AfterTargets="Build">
     <ItemGroup>
-      <RunnerFiles Include="$(RepositoryRoot)bin\wsl-squad.UI.Runner\$(Configuration)\$(TargetFramework)\**\*" />
+      <RunnerFiles Include="$(RunnerOutputDir)**\*" Exclude="$(RunnerOutputDir)win-x64\**\*" />
     </ItemGroup>
+    <Error Condition="!Exists('$(RunnerOutputDir)wsl-squad.UI.Runner.dll')" Text="The build runner is missing: $(RunnerOutputDir). Build wsl-squad.UI.Runner first." />
+    <RemoveDir Directories="$(OutDir)runner" />
     <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(OutDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="CopyRunnerOnPublish" AfterTargets="Publish">
     <ItemGroup>
-      <RunnerFiles Include="$(RepositoryRoot)bin\wsl-squad.UI.Runner\$(Configuration)\$(TargetFramework)\**\*" />
+      <RunnerFiles Include="$(RunnerOutputDir)**\*" Exclude="$(RunnerOutputDir)win-x64\**\*" />
     </ItemGroup>
+    <Error Condition="!Exists('$(RunnerOutputDir)wsl-squad.UI.Runner.dll')" Text="The build runner is missing: $(RunnerOutputDir). Build wsl-squad.UI.Runner first." />
+    <RemoveDir Directories="$(PublishDir)runner" />
     <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(PublishDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <RunnerOutputDir>$(RepositoryRoot)artifacts\bin\wsl-squad.UI.Runner\$(Configuration)\$(TargetFramework)\</RunnerOutputDir>
     <RootNamespace>wsl_squad.UI.Wpf</RootNamespace>
     <AssemblyName>wsl-squad.gui</AssemblyName>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>

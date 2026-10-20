@@ -81,6 +81,42 @@ public class BuildViewModelTests
     }
 
     [Fact]
+    public void Recipe_build_ignores_image_registration_and_onboarding_options()
+    {
+        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
+        {
+            Dockerfiles = [],
+            Onboardings = [],
+            Recipes =
+            [
+                new WslBuildSourceDto
+                {
+                    Name = "default",
+                    Path = "/catalog/default",
+                    Family = "debian",
+                },
+            ],
+        });
+        BuildViewModel viewModel = Create();
+        viewModel.Name = "alpha";
+        viewModel.RoadIndex = 3;
+        viewModel.SaveImage = true;
+        viewModel.RegisterDocker = true;
+        viewModel.RunOnboarding = true;
+        _dialogs.BuildPacksAnswer = [];
+
+        viewModel.CreateCommand.Execute(null);
+
+        viewModel.ShowGeneralOptions.Should().BeFalse();
+        viewModel.Result.Should().NotBeNull();
+        viewModel.Result!.BuildType.Should().Be(WslBuildType.Recipe);
+        viewModel.Result.KeepImage.Should().BeFalse();
+        viewModel.Result.RegisterDocker.Should().BeFalse();
+        viewModel.Result.Onboarding.Should().BeEmpty();
+        viewModel.Result.User.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Refuses_a_taken_or_invalid_name()
     {
         _instance.Setup(service => service.GetAll()).Returns([new WslIndexDto { Name = "taken" }]);
