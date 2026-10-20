@@ -430,7 +430,7 @@ public sealed class ConfigRepository : IConfigRepository
             return;
         }
 
-        string source = Path.Combine(_distroTree, "build", fileName);
+        string source = Path.Combine(_distroTree, "ingredients", fileName);
 
         if (!File.Exists(source))
         {

@@ -11,7 +11,7 @@ public static class CatalogBootstrap
         foreach (string resource in assembly.GetManifestResourceNames())
         {
             if (!resource.StartsWith("packs/", StringComparison.Ordinal) &&
-                !resource.StartsWith("build/", StringComparison.Ordinal) &&
+                !resource.StartsWith("ingredients/", StringComparison.Ordinal) &&
                 !resource.StartsWith("recipes/", StringComparison.Ordinal) &&
                 !resource.StartsWith("fonts/", StringComparison.Ordinal))
             {

@@ -55,6 +55,6 @@ public class TerminalRepositoryTests
     {
         TerminalRepository repository = new(string.Empty);
 
-        repository.GetFragmentPath("alpha").Should().EndWith(Path.Combine("wsl-fleet", "alpha.json"));
+        repository.GetFragmentPath("alpha").Should().EndWith(Path.Combine("wsl-squad", "alpha.json"));
     }
 }

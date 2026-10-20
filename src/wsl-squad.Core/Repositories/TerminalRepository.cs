@@ -880,7 +880,7 @@ public sealed class TerminalRepository : ITerminalRepository
             "Microsoft",
             "Windows Terminal",
             "Fragments",
-            "wsl-fleet");
+            "wsl-squad");
     }
 
     private static WslColorSchemeDto ToSchemeDto(string name, JsonObject? scheme)

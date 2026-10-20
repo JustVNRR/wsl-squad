@@ -138,9 +138,9 @@ public sealed class InstanceRepository : IInstanceRepository
             return;
         }
 
-        AtomicFile.WriteJson(Path.Combine(folder, ".wsl-fleet"), new MarkerFile
+        AtomicFile.WriteJson(Path.Combine(folder, ".wsl-squad"), new MarkerFile
         {
-            Template = "wsl-fleet",
+            Template = "wsl-squad",
             Created = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             By = by,
         });
@@ -153,7 +153,7 @@ public sealed class InstanceRepository : IInstanceRepository
 
     public bool HasMarkerIn(string folder)
     {
-        return !string.IsNullOrEmpty(folder) && File.Exists(Path.Combine(folder, ".wsl-fleet"));
+        return !string.IsNullOrEmpty(folder) && File.Exists(Path.Combine(folder, ".wsl-squad"));
     }
 
     public IReadOnlyList<string> GetMarkedFolders()
@@ -168,7 +168,7 @@ public sealed class InstanceRepository : IInstanceRepository
         return
         [
             .. Directory.EnumerateDirectories(root)
-                .Where(directory => File.Exists(Path.Combine(directory, ".wsl-fleet")))
+                .Where(directory => File.Exists(Path.Combine(directory, ".wsl-squad")))
                 .Select(directory => Path.GetFileName(directory))
                 .Order(StringComparer.Ordinal),
         ];

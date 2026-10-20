@@ -120,7 +120,7 @@ public class FleetServiceTests
         importedFolder.Should().Be(Path.Combine(newRoot, "restored"));
         importedTar.Should().Be(Path.Combine(newRoot, "archives", "saved", "saved.tar.gz"));
         File.Exists(Path.Combine(newRoot, "restored", "instance.json")).Should().BeTrue();
-        File.Exists(Path.Combine(newRoot, "restored", ".wsl-fleet")).Should().BeTrue();
+        File.Exists(Path.Combine(newRoot, "restored", ".wsl-squad")).Should().BeTrue();
         File.Exists(Path.Combine(oldRoot, "restored", "instance.json")).Should().BeFalse();
     }
 }

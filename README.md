@@ -108,7 +108,7 @@ deleting the distro deletes all of it.
 └── .zshrc, modules, lib/, prompts/, cheatsheets/
 
 ~/.config/packs/             # A pack lands here, its files and its tool together:
-└── oh_my_cloud/             # added and removed by `.\wsl-fleet.ps1 manage_packs`.
+└── oh_my_cloud/             # added and removed by `wsl-squad manage_packs`.
                              # ~/.zshrc reads its zsh/ here, gmake its make/ - nothing is copied
 
 ~/projects/<project>/        # One directory per project

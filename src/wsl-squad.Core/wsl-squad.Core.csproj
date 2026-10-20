@@ -9,8 +9,8 @@
     <ItemGroup>
         <EmbeddedResource Include="Resources\packs\**\*"
                             LogicalName="packs/%(RecursiveDir)%(Filename)%(Extension)" />
-        <EmbeddedResource Include="Resources\build\**\*"
-                            LogicalName="build/%(RecursiveDir)%(Filename)%(Extension)" />
+        <EmbeddedResource Include="Resources\ingredients\**\*"
+                            LogicalName="ingredients/%(RecursiveDir)%(Filename)%(Extension)" />
         <EmbeddedResource Include="Resources\recipes\**\*"
                             LogicalName="recipes/%(RecursiveDir)%(Filename)%(Extension)" />
         <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf"

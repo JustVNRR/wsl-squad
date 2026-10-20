@@ -53,6 +53,24 @@ public class ConfigRepositoryTests
     }
 
     [Fact]
+    public void Seeds_dockerfiles_and_onboardings_from_ingredients()
+    {
+        using TemporaryDirectory temp = new();
+        _ = temp.Write("ingredients/Dockerfile", "FROM alpine:3.20\n");
+        _ = temp.Write("ingredients/onboarding.sh", "#!/bin/sh\n");
+        ConfigRepository repository = new(temp.Path, temp.Path);
+
+        SourceRow dockerfile = repository.GetDockerfiles().Should().ContainSingle().Subject;
+        SourceRow onboarding = repository.GetOnboardings().Should().ContainSingle().Subject;
+
+        dockerfile.Name.Should().Be("Dockerfile");
+        dockerfile.Path.Should().Be(temp.Combine("dockerfiles", "Dockerfile", "Dockerfile"));
+        onboarding.Name.Should().Be("onboarding");
+        onboarding.Path.Should().Be(temp.Combine("onboardings", "onboarding", "onboarding.sh"));
+        File.ReadAllText(dockerfile.Path).Should().Be("FROM alpine:3.20\n");
+    }
+
+    [Fact]
     public void Reads_recipes()
     {
         using TemporaryDirectory temp = new();

@@ -11,7 +11,7 @@
         <TextBlock Text="{Binding Lead}" TextWrapping="Wrap" FontWeight="SemiBold"/>
         <Border BorderBrush="{DynamicResource AppDividerBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
         <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppWarningBrush}"
-                   Text="The instance will be stopped before it is archived. Save your work before proceeding."/>
+                   Text="The instance will be stopped before it is archived.&#10;Save your work before proceeding."/>
         <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"
                    Visibility="{Binding TakenVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
                    Text="An archive with this name exists: it will be replaced."/>

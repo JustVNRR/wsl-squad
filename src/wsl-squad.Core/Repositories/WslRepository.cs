@@ -603,10 +603,10 @@ public sealed class WslRepository : IWslRepository
         }
 
         string script = "printf '%s\\n' " + ShellValue(location.User + " ALL=(ALL) NOPASSWD: ALL") +
-            " > /tmp/wsl-fleet-pack-sudo" +
-            " && chmod 0440 /tmp/wsl-fleet-pack-sudo" +
-            " && visudo -cf /tmp/wsl-fleet-pack-sudo > /dev/null" +
-            " && mv /tmp/wsl-fleet-pack-sudo /etc/sudoers.d/90-wsl-fleet-packs";
+            " > /tmp/wsl-squad-pack-sudo" +
+            " && chmod 0440 /tmp/wsl-squad-pack-sudo" +
+            " && visudo -cf /tmp/wsl-squad-pack-sudo > /dev/null" +
+            " && mv /tmp/wsl-squad-pack-sudo /etc/sudoers.d/90-wsl-squad-packs";
 
         (int code, _) = NativeCommand.RunWithInput(
             "wsl.exe",
@@ -622,7 +622,7 @@ public sealed class WslRepository : IWslRepository
         _ = RunInInstance(
             instanceName,
             "root",
-            ["rm", "-f", "/etc/sudoers.d/90-wsl-fleet-packs"],
+            ["rm", "-f", "/etc/sudoers.d/90-wsl-squad-packs"],
             string.Empty);
     }
 

@@ -331,7 +331,7 @@ public sealed class InstanceService : IInstanceService
                 "Docker Desktop is not running and could not be started.");
         }
 
-        string tag = $"wsl-fleet:{name}";
+        string tag = $"wsl-squad:{name}";
         string imageRef = dto.BuildPath ?? string.Empty;
 
         if (dto.BuildType is WslBuildType.Dockerfile or WslBuildType.Recipe)
