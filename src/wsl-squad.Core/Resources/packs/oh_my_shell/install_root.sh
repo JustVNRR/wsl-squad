@@ -40,6 +40,20 @@ apt_install() {
     wait "$apt_pid" || return 1
 }
 
+apt_refresh() {
+    printf 'Refreshing package lists... 0:00\n'
+    apt-get -qq update > /dev/null &
+    local apt_pid=$! i=0
+    while kill -0 "$apt_pid" 2>/dev/null; do
+        sleep 15
+        i=$((i + 15))
+        if kill -0 "$apt_pid" 2>/dev/null; then
+            printf 'Refreshing... %d:%02d\n' "$((i / 60))" "$((i % 60))"
+        fi
+    done
+    wait "$apt_pid" || return 1
+}
+
 # DEBIAN_FRONTEND, so that a package reconfigured on the way (tzdata and its
 # continent question) never stops the install to ask something.
 export DEBIAN_FRONTEND=noninteractive
@@ -65,7 +79,7 @@ done > "$here/installed-by-pack.txt"
 if [ -z "$missing" ]; then
     echo "Every declared package is already installed - nothing to fetch."
 else
-    apt-get -qq update
+    apt_refresh
 
     # A missing package with no candidate at all means the distribution keeps
     # the section that carries it switched off: Debian ships unrar in
@@ -92,7 +106,7 @@ else
             if [ -f /etc/apt/sources.list ]; then
                 sed -i -E '/^deb / { /non-free/! s/$/ contrib non-free non-free-firmware/ }' /etc/apt/sources.list
             fi
-            apt-get -qq update
+            apt_refresh
         fi
     fi
 
@@ -110,13 +124,13 @@ else
         curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
         chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        apt-get -qq update
+        apt_refresh
     fi
     if [ ! -f /etc/apt/keyrings/gierens.gpg ]; then
         echo "Registering the eza repository..."
         curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
         echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | tee /etc/apt/sources.list.d/gierens.list > /dev/null
-        apt-get -qq update
+        apt_refresh
     fi
 
     apt_install "${packages[@]}"

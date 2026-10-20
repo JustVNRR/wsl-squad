@@ -67,6 +67,7 @@ if ! command -v tldr >/dev/null 2>&1; then
     curl -fsSL "https://github.com/tealdeer-rs/tealdeer/releases/latest/download/tealdeer-linux-${release_arch}-musl" -o "$HOME/.local/bin/tldr"
     chmod +x "$HOME/.local/bin/tldr"
 fi
+tldr --update >/dev/null 2>&1 || echo "  (tldr cache left as it was)"
 
 # The shell's own files, into the home. --update=none: a file that is already
 # there is never replaced - the settings are the ones you have, and

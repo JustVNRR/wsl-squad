@@ -19,13 +19,18 @@ echo "============================================================"
 echo ""
 
 missing=""
-for package in adduser sudo tzdata whiptail; do
+for package in apt-utils adduser sudo tzdata whiptail; do
     dpkg-query -W -f '${Status}' "$package" 2>/dev/null | grep -q 'install ok installed' || missing="$missing $package"
 done
 if [ -n "$missing" ]; then
     export DEBIAN_FRONTEND=noninteractive
     echo "${C_CYAN}Installing the onboarding's own tools:$missing${C_RESET}"
     apt-get update -qq
+
+    case " $missing " in
+        *" apt-utils "*) apt-get install -y --no-install-recommends apt-utils ;;
+    esac
+
     read -ra needed <<< "$missing"
     apt-get install -y --no-install-recommends "${needed[@]}"
     echo ""
@@ -122,12 +127,56 @@ enabled=true
 appendWindowsPath=true
 WSLCONF
 
-su - "$NEW_USER" -c "tldr --update" || echo "${C_GREY}  (tldr cache left as it was)${C_RESET}"
+root_packs=/root/.config/packs
+if [ -d "$root_packs" ]; then
+    pack_names=()
+    for pack_path in "$root_packs"/*; do
+        if [ -d "$pack_path" ]; then
+            pack_names+=("$(basename "$pack_path")")
+        fi
+    done
 
-if [ "$SHELL_PATH" != /usr/bin/zsh ]; then
-    echo ""
-    echo "Please wait..."
+    if [ "${#pack_names[@]}" -gt 0 ]; then
+        echo ""
+        echo "${C_CYAN}Packs installed for root: ${pack_names[*]}${C_RESET}"
+        read -rp "${C_YELLOW}Install them for $NEW_USER? [Y/n] ${C_RESET}" INSTALL_PACKS
+
+        if [[ ! "$INSTALL_PACKS" =~ ^[Nn]$ ]]; then
+            user_home=$(getent passwd "$NEW_USER" | cut -d: -f6)
+            user_packs="$user_home/.config/packs"
+            mkdir -p "$user_packs"
+
+            ordered=()
+            for name in "${pack_names[@]}"; do
+                if [ "$name" = "oh_my_shell" ]; then
+                    ordered+=("$name")
+                fi
+            done
+            for name in "${pack_names[@]}"; do
+                if [ "$name" != "oh_my_shell" ]; then
+                    ordered+=("$name")
+                fi
+            done
+
+            for name in "${ordered[@]}"; do
+                cp -a "$root_packs/$name" "$user_packs/"
+                chown -R "$NEW_USER:$NEW_USER" "$user_packs/$name"
+
+                if [ -f "$user_packs/$name/install.sh" ]; then
+                    if ! su - "$NEW_USER" -c "cd '$user_packs/$name' && bash install.sh"; then
+                        echo "${C_YELLOW}[WARNING] The pack '$name' was not installed for $NEW_USER.${C_RESET}"
+                    fi
+                fi
+            done
+        fi
+    fi
 fi
 
 rm -f /root/onboarding.sh
+
+read -rp "${C_YELLOW}Open a shell as $NEW_USER now? [Y/n] ${C_RESET}" SWITCH_USER
+if [[ ! "$SWITCH_USER" =~ ^[Nn]$ ]]; then
+    exec su - "$NEW_USER"
+fi
+
 exit 0
