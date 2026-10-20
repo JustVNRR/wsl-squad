@@ -30,34 +30,28 @@ public partial class MainWindow : Views.ChromeWindow
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-#pragma warning disable IDE0031, S1121
-        _viewModel?.LookChanged -= OnLookChanged;
-
         if (_viewModel is not null)
         {
+            _viewModel.LookChanged -= OnLookChanged;
             _viewModel.Rows.CollectionChanged -= OnRowsChanged;
         }
 
         _viewModel = DataContext as MainWindowViewModel;
-        _viewModel?.LookChanged += OnLookChanged;
 
         if (_viewModel is not null)
         {
+            _viewModel.LookChanged += OnLookChanged;
             _viewModel.Rows.CollectionChanged += OnRowsChanged;
         }
-#pragma warning restore IDE0031, S1121
     }
 
     private void OnClosed(object? sender, EventArgs e)
     {
-#pragma warning disable IDE0031, S1121
-        _viewModel?.LookChanged -= OnLookChanged;
-
         if (_viewModel is not null)
         {
+            _viewModel.LookChanged -= OnLookChanged;
             _viewModel.Rows.CollectionChanged -= OnRowsChanged;
         }
-#pragma warning restore IDE0031, S1121
     }
 
     private void OnRowsChanged(object? sender, NotifyCollectionChangedEventArgs e)

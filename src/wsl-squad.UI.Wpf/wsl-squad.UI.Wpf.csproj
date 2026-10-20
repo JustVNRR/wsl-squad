@@ -31,6 +31,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);S6605;IDE0017;IDE0305;IDE0270;S3267;CA1869</NoWarn>
   </PropertyGroup>
 </Project>

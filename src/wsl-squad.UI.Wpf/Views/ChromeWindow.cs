@@ -1,17 +1,20 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 
 namespace wsl_squad.UI.Wpf.Views;
 
-public class ChromeWindow : Window
+public partial class ChromeWindow : Window
 {
     private const string _frameTag = "wsl-frame";
+    private const uint _monitorDefaultToNearest = 0x00000002;
     private bool _framed;
     private bool _centered;
 
@@ -58,7 +61,7 @@ public class ChromeWindow : Window
         };
 
         Content = frame;
-        MouseLeftButtonDown += OnMouseLeftButtonDown;
+        PreviewMouseLeftButtonDown += OnPreviewMouseLeftButtonDown;
         Opacity = 0;
         ContentRendered += OnContentRendered;
     }
@@ -92,7 +95,7 @@ public class ChromeWindow : Window
         return ShowDialog();
     }
 
-    private void CenterOnOwnerOrScreen()
+    private void CenterOnMainScreen()
     {
         if (_centered || WindowState != WindowState.Normal)
         {
@@ -101,12 +104,64 @@ public class ChromeWindow : Window
 
         _centered = true;
 
-        Rect area = Owner is { IsVisible: true } owner
-            ? new Rect(owner.Left, owner.Top, owner.ActualWidth, owner.ActualHeight)
-            : SystemParameters.WorkArea;
+        Window? reference = Application.Current?.MainWindow;
 
-        Left = area.Left + Math.Max(0, (area.Width - ActualWidth) / 2);
-        Top = area.Top + Math.Max(0, (area.Height - ActualHeight) / 2);
+        if (reference is null || ReferenceEquals(reference, this))
+        {
+            reference = Owner;
+        }
+
+        if (reference is not null && TryGetWorkArea(reference, out Rect area))
+        {
+            CenterIn(area);
+
+            return;
+        }
+
+        CenterIn(SystemParameters.WorkArea);
+    }
+
+    private void CenterIn(Rect area)
+    {
+        double left = area.Left + ((area.Width - ActualWidth) / 2);
+        double top = area.Top + ((area.Height - ActualHeight) / 2);
+
+        Left = Math.Max(area.Left, Math.Min(left, area.Right - ActualWidth));
+        Top = Math.Max(area.Top, Math.Min(top, area.Bottom - ActualHeight));
+    }
+
+    private static bool TryGetWorkArea(Window reference, out Rect area)
+    {
+        area = default;
+        IntPtr handle = new WindowInteropHelper(reference).Handle;
+
+        if (handle == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        IntPtr monitor = MonitorFromWindow(handle, _monitorDefaultToNearest);
+
+        if (monitor == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        MonitorInfo info = new() { Size = Marshal.SizeOf<MonitorInfo>() };
+
+        if (!GetMonitorInfo(monitor, ref info))
+        {
+            return false;
+        }
+
+        DpiScale dpi = VisualTreeHelper.GetDpi(reference);
+        area = new Rect(
+            info.Work.Left / dpi.DpiScaleX,
+            info.Work.Top / dpi.DpiScaleY,
+            (info.Work.Right - info.Work.Left) / dpi.DpiScaleX,
+            (info.Work.Bottom - info.Work.Top) / dpi.DpiScaleY);
+
+        return true;
     }
 
     private DropShadowEffect NewGlow()
@@ -120,18 +175,13 @@ public class ChromeWindow : Window
         };
     }
 
-    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        DependencyObject? node = e.OriginalSource as DependencyObject;
-
-        while (node is not null && !ReferenceEquals(node, this))
+        if (e.LeftButton != MouseButtonState.Pressed ||
+            IsInteractive(e.OriginalSource as DependencyObject) ||
+            IsInteractive(e.Source as DependencyObject))
         {
-            if (node is ButtonBase or TextBoxBase or ScrollBar or ComboBox)
-            {
-                return;
-            }
-
-            node = VisualTreeHelper.GetParent(node);
+            return;
         }
 
         try
@@ -144,9 +194,29 @@ public class ChromeWindow : Window
         }
     }
 
+    private bool IsInteractive(DependencyObject? node)
+    {
+        while (node is not null && !ReferenceEquals(node, this))
+        {
+            if (node is ButtonBase or TextBoxBase or PasswordBox or RangeBase or ItemsControl or Thumb or Popup or ComboBox)
+            {
+                return true;
+            }
+
+            node = node switch
+            {
+                Visual => VisualTreeHelper.GetParent(node) ?? LogicalTreeHelper.GetParent(node),
+                ContentElement content => ContentOperations.GetParent(content) ?? LogicalTreeHelper.GetParent(node),
+                _ => LogicalTreeHelper.GetParent(node),
+            };
+        }
+
+        return false;
+    }
+
     private void OnContentRendered(object? sender, EventArgs e)
     {
-        CenterOnOwnerOrScreen();
+        CenterOnMainScreen();
 
         if (!AnimateOnShow)
         {
@@ -160,5 +230,30 @@ public class ChromeWindow : Window
         };
 
         BeginAnimation(OpacityProperty, fade);
+    }
+
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo lpmi);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public NativeRect Monitor;
+        public NativeRect Work;
+        public uint Flags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
     }
 }
