@@ -378,31 +378,6 @@ public sealed partial class BuildViewModel : BaseViewModel
             return;
         }
 
-        string family = RoadIndex switch
-        {
-            0 when DockerfileIndex >= 0 => _dockerfiles[DockerfileIndex].Family ?? string.Empty,
-            3 when RecipeIndex >= 0 => _recipes[RecipeIndex].Family ?? string.Empty,
-            _ => string.Empty,
-        };
-
-        IReadOnlyList<WslBuildPackDto> packs;
-
-        try
-        {
-            packs = _instance.GetBuildPacks();
-        }
-        catch (InvalidOperationException)
-        {
-            packs = [];
-        }
-
-        IReadOnlyList<string>? picked = _dialogs.ShowBuildPacks(Name.Trim(), family, packs);
-
-        if (picked is null)
-        {
-            return;
-        }
-
         WslBuildType buildType;
         string? buildPath;
         string? context = null;
@@ -439,7 +414,6 @@ public sealed partial class BuildViewModel : BaseViewModel
             BuildPath = buildPath,
             Context = context,
             Onboarding = !recipe && RunOnboarding && OnboardingIndex >= 0 ? _onboardings[OnboardingIndex].Path : string.Empty,
-            Packs = [.. picked],
             KeepImage = !recipe && SaveImage,
             RegisterDocker = !recipe && RegisterDocker,
         };

@@ -32,8 +32,6 @@ public interface IInstanceService
 
     public void ExportRecipe(ExportRecipeDto dto);
 
-    public IReadOnlyList<WslBuildPackDto> GetBuildPacks();
-
     public BuildResponseDto Build(BuildDto dto);
 
     public OpenResponseDto Open(string instanceName);

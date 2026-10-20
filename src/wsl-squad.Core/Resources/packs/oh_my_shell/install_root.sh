@@ -11,6 +11,8 @@
 # already in place and the whole script is a quiet no-op.
 
 set -euo pipefail
+export LANG=C
+export LC_ALL=C
 
 here=$(cd "$(dirname "$0")" && pwd)
 declared=$(sed -n 's/^PACK_PACKAGES *:=[[:space:]]*//p' "$here/pack.conf")
@@ -76,9 +78,7 @@ for added in $missing; do
     echo "$added"
 done > "$here/installed-by-pack.txt"
 
-if [ -z "$missing" ]; then
-    echo "Every declared package is already installed - nothing to fetch."
-else
+if [ -n "$missing" ]; then
     apt_refresh
 
     # A missing package with no candidate at all means the distribution keeps

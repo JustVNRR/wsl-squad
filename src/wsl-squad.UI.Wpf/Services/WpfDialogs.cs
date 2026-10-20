@@ -42,16 +42,6 @@ public sealed class WpfDialogs : IDialogService
         return viewModel.Result;
     }
 
-    public IReadOnlyList<string>? ShowBuildPacks(
-        string name,
-        string family,
-        IReadOnlyList<WslBuildPackDto> packs)
-    {
-        BuildPacksWindow window = new(name, family, packs);
-
-        return DialogHost.Show(window) == true ? window.Result : null;
-    }
-
     public PackDuplicateResult? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken)
     {
         PackDuplicateViewModel viewModel = new(source, blurb, taken);
@@ -134,7 +124,7 @@ public sealed class WpfDialogs : IDialogService
         ProcessStartInfo start = new()
         {
             UseShellExecute = true,
-            WorkingDirectory = directory,
+            WorkingDirectory = Path.GetTempPath(),
         };
 
         if (File.Exists(executable))

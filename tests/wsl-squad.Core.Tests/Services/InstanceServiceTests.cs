@@ -76,6 +76,61 @@ public class InstanceServiceTests
     }
 
     [Fact]
+    public void Opens_a_bare_root_shell_while_the_onboarding_is_pending_and_no_profile_exists()
+    {
+        _wsl.Setup(wsl => wsl.RunInInstance(
+                "alpha",
+                "root",
+                It.IsAny<IReadOnlyList<string>>(),
+                string.Empty))
+            .Returns(0);
+
+        OpenResponseDto response = _service.Open("alpha");
+
+        response.Profile.Should().BeFalse();
+        _wsl.Verify(wsl => wsl.OpenBareShellAsRoot("alpha"), Times.Once);
+        _wsl.Verify(wsl => wsl.OpenProfile(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Opens_the_themed_profile_while_the_onboarding_is_pending()
+    {
+        _wsl.Setup(wsl => wsl.RunInInstance(
+                "alpha",
+                "root",
+                It.IsAny<IReadOnlyList<string>>(),
+                string.Empty))
+            .Returns(0);
+        _terminal.Setup(terminal => terminal.HasWslProfile("alpha")).Returns(true);
+
+        OpenResponseDto response = _service.Open("alpha");
+
+        response.Profile.Should().BeTrue();
+        _terminal.Verify(terminal => terminal.TouchSettings(), Times.Once);
+        _wsl.Verify(wsl => wsl.OpenProfile("alpha"), Times.Once);
+        _wsl.Verify(wsl => wsl.OpenBareShellAsRoot(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Opens_the_terminal_profile_once_the_onboarding_is_done()
+    {
+        _wsl.Setup(wsl => wsl.RunInInstance(
+                "alpha",
+                "root",
+                It.IsAny<IReadOnlyList<string>>(),
+                string.Empty))
+            .Returns(1);
+        _terminal.Setup(terminal => terminal.HasWslProfile("alpha")).Returns(true);
+
+        OpenResponseDto response = _service.Open("alpha");
+
+        response.Profile.Should().BeTrue();
+        _terminal.Verify(terminal => terminal.TouchSettings(), Times.Once);
+        _wsl.Verify(wsl => wsl.OpenProfile("alpha"), Times.Once);
+        _wsl.Verify(wsl => wsl.OpenBareShellAsRoot(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void Refuses_to_archive_without_room()
     {
         _archives.Setup(archives => archives.GetFolder("alpha_archive")).Returns("/archives/alpha_archive");

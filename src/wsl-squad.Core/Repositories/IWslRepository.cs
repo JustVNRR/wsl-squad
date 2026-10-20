@@ -28,6 +28,8 @@ public interface IWslRepository
 
     public void OpenBareShell(string instanceName);
 
+    public void OpenBareShellAsRoot(string instanceName);
+
     public int RunInInstance(string instanceName, string? asUser, IReadOnlyList<string> arguments, string? workingDirectory);
 
     public IReadOnlyList<string> GetInInstance(string instanceName, IReadOnlyList<string> arguments);
@@ -36,9 +38,7 @@ public interface IWslRepository
 
     public string GetFamily(string instanceName);
 
-    public void SaveOnboardingScript(string instanceName, string source);
-
-    public void RunOnboarding(string instanceName, string asUser, bool interactive = false);
+    public void SaveOnboardingScript(string instanceName, string source, string? asUser = null);
 
     public IReadOnlyList<string> GetInstalledPacks(string instanceName);
 

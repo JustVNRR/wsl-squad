@@ -18,11 +18,11 @@ RUN touch /etc/skel/.zshrc \
 
 COPY onboarding.sh /root/onboarding.sh
 RUN chmod 755 /root/onboarding.sh \
-    && echo /root/onboarding.sh >> /root/.bashrc \
+    && echo 'exec /root/onboarding.sh' >> /root/.bashrc \
     && printf '%s\n' \
         'export ZDOTDIR="/root/.config/zsh"' \
         'skip_global_compinit=1' \
-        '[[ -o interactive ]] && [ -x /root/onboarding.sh ] && /root/onboarding.sh' \
+        '[[ -o interactive ]] && [ -x /root/onboarding.sh ] && exec /root/onboarding.sh' \
         > /root/.zshenv
 
 CMD ["/bin/bash"]

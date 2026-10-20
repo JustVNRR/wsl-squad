@@ -120,14 +120,12 @@ public class PresenterTests
                 {
                     Name = "ubuntu",
                     Path = "/catalog/ubuntu/Dockerfile",
-                    Family = "debian",
                 },
             ],
             Onboardings = [],
             Recipes = [],
         });
         service.Setup(s => s.GetAllSavedImages()).Returns([]);
-        service.Setup(s => s.GetBuildPacks()).Returns([]);
         service.Setup(s => s.StartDocker()).Returns(true);
         service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
         {
@@ -469,9 +467,7 @@ public class PresenterTests
 
         public BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows) => rows.FirstOrDefault();
 
-        public IReadOnlyList<WslBuildPackDto>? AskPacks(string name, IReadOnlyList<WslBuildPackDto> packs, IReadOnlyList<int> checkedIndexes, string note) => [];
-
-        public bool? AskRunOnboarding(bool isRecipe) => false;
+        public bool? AskRunOnboarding() => false;
 
         public BuildSourceChoice? AskOnboarding(IReadOnlyList<BuildSourceChoice> rows) => rows.FirstOrDefault();
 
@@ -486,8 +482,6 @@ public class PresenterTests
         public void ShowAbort(IReadOnlyList<string> lines) { }
 
         public void ShowUnknownRegistry(string reference, string why) { }
-
-        public void ShowNoPackChosen() { }
 
         public void ShowNoOnboarding() { }
 

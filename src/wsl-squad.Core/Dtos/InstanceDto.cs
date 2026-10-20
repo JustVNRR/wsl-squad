@@ -30,20 +30,7 @@ public sealed record WslBuildSourceDto
 
     public string? Path { get; init; }
 
-    public string? Family { get; init; }
-
     public bool Uploaded { get; init; }
-}
-
-public sealed record WslBuildPackDto
-{
-    public string? Name { get; init; }
-
-    public string? Family { get; init; }
-
-    public string? Description { get; init; }
-
-    public bool Shell { get; init; }
 }
 
 public sealed record GetBuildSourcesResponseDto
@@ -121,8 +108,6 @@ public sealed record BuildDto
     public string? ColourScheme { get; init; }
 
     public WslIconDto? Icon { get; init; }
-
-    public List<string> Packs { get; init; } = [];
 
     public bool KeepImage { get; init; } = true;
 

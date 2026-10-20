@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 
 namespace wsl_squad.UI.Wpf.Services;
 
@@ -50,6 +51,7 @@ public static class DialogHost
             {
                 main!.Show();
                 _ = main.Activate();
+                _ = main.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
             }
         }
     }

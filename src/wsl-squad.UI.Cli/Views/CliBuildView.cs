@@ -56,37 +56,17 @@ public sealed class CliBuildView : CliViewBase, IBuildView
         return Pick(label, rows, row => row.Name);
     }
 
-    public IReadOnlyList<WslBuildPackDto>? AskPacks(
-        string name,
-        IReadOnlyList<WslBuildPackDto> packs,
-        IReadOnlyList<int> checkedIndexes,
-        string note)
-    {
-        return Checklist(
-            $"Packs for '{name}'",
-            packs,
-            pack => $"{pack.Name,-12} [{pack.Family}] {pack.Description}",
-            checkedIndexes,
-            note);
-    }
-
-    public void ShowNoPackChosen()
-    {
-        Write(string.Empty);
-        Write("[OK] No pack selected.", ConsoleTone.Success);
-    }
-
     public void ShowNoOnboarding()
     {
         Write(string.Empty);
         Write("  No onboarding shell under 'assets\\onboardings' - the instance will be built without one.", ConsoleTone.Muted);
     }
 
-    public bool? AskRunOnboarding(bool isRecipe)
+    public bool? AskRunOnboarding()
     {
         Write(string.Empty);
 
-        return AskConfirmation("Run the onboarding shell?", defaultNo: isRecipe);
+        return AskConfirmation("Run the onboarding shell?", defaultNo: false);
     }
 
     public BuildSourceChoice? AskOnboarding(IReadOnlyList<BuildSourceChoice> rows)

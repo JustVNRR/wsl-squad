@@ -16,8 +16,6 @@ public interface IConfigRepository
 
     public string CreateRecipe(string name);
 
-    public string ReadRecipeFamily(string? path);
-
     public string CopyRecipe(string kind, string source, string fileName);
 
     public void RemoveRecipe(string path);

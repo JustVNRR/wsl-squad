@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace wsl_squad.Core.Repositories;
 
-public sealed record SourceRow(string Name, string Path, DateTime Modified, string Family);
+public sealed record SourceRow(string Name, string Path, DateTime Modified);
 
 public sealed class ConfigRepository : IConfigRepository
 {
@@ -127,8 +127,7 @@ public sealed class ConfigRepository : IConfigRepository
             rows.Add(new SourceRow(
                 Path.GetFileName(slot),
                 slot,
-                Directory.GetLastWriteTime(slot),
-                ReadRecipeFamily(Path.Combine(slot, "Dockerfile"))));
+                Directory.GetLastWriteTime(slot)));
         }
 
         return rows;
@@ -142,61 +141,6 @@ public sealed class ConfigRepository : IConfigRepository
         _ = Directory.CreateDirectory(slot);
 
         return slot;
-    }
-
-    public string ReadRecipeFamily(string? path)
-    {
-        if (string.IsNullOrEmpty(path) || !File.Exists(path))
-        {
-            return string.Empty;
-        }
-
-        string? @base = null;
-
-        foreach (string line in File.ReadLines(path))
-        {
-            int from = line.IndexOf("FROM", StringComparison.OrdinalIgnoreCase);
-
-            if (from < 0)
-            {
-                continue;
-            }
-
-            string[] words = line[from..]
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            if (words.Length < 2 || !words[0].Equals("FROM", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            @base = words[1];
-
-            for (int index = 2; index < words.Length; index++)
-            {
-                if (!words[index].StartsWith("--", StringComparison.Ordinal))
-                {
-                    @base = words[index];
-
-                    break;
-                }
-            }
-
-            break;
-        }
-
-        if (string.IsNullOrEmpty(@base))
-        {
-            return string.Empty;
-        }
-
-        string name = @base.Split('@')[0].Split(':')[0].ToLowerInvariant();
-        name = name.Split('/')[^1];
-
-        return name is "debian" or "ubuntu" or "linuxmint" or "mint" or "kali" or "pop" or "raspbian"
-            or "elementary" or "zorin" or "parrot" or "deepin" or "neon"
-            ? "debian"
-            : name;
     }
 
     public string CopyRecipe(string kind, string source, string fileName)
@@ -355,11 +299,7 @@ public sealed class ConfigRepository : IConfigRepository
 
     private List<SourceRow> ReadDockerfileRows()
     {
-        return
-        [
-            .. ReadSourceRows("dockerfiles", "Dockerfile")
-                .Select(row => row with { Family = ReadRecipeFamily(row.Path) }),
-        ];
+        return ReadSourceRows("dockerfiles", "Dockerfile");
     }
 
     private static IReadOnlyList<string> ReadFontNames(string root)
@@ -416,8 +356,7 @@ public sealed class ConfigRepository : IConfigRepository
             rows.Add(new SourceRow(
                 Path.GetFileName(slot),
                 path,
-                File.GetLastWriteTime(path),
-                string.Empty));
+                File.GetLastWriteTime(path)));
         }
 
         return rows;

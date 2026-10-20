@@ -24,7 +24,6 @@ public class BuildViewModelTests
                 {
                     Name = "ubuntu (01/01 12:00)",
                     Path = "/catalog/ubuntu/Dockerfile",
-                    Family = "debian",
                 },
             ],
             Onboardings =
@@ -39,10 +38,6 @@ public class BuildViewModelTests
         });
         _instance.Setup(service => service.GetAllSavedImages()).Returns([]);
         _instance.Setup(service => service.GetAll()).Returns([]);
-        _instance.Setup(service => service.GetBuildPacks()).Returns(
-        [
-            new WslBuildPackDto { Name = "tools", Family = "shell", Description = "Tools" },
-        ]);
         _instance.Setup(service => service.IsRegistryImageValid(It.IsAny<string>()))
             .Returns(new IsRegistryImageValidResponseDto { Valid = true });
     }
@@ -65,7 +60,6 @@ public class BuildViewModelTests
         BuildViewModel viewModel = Create();
         viewModel.Name = "alpha";
         viewModel.User = "alice";
-        _dialogs.BuildPacksAnswer = ["tools"];
 
         viewModel.CreateCommand.Execute(null);
 
@@ -76,7 +70,6 @@ public class BuildViewModelTests
         viewModel.Result.BuildPath.Should().Be("/catalog/ubuntu/Dockerfile");
         viewModel.Result.Context.Should().Be("/catalog/ubuntu");
         viewModel.Result.Onboarding.Should().Be("/catalog/setup/onboarding.sh");
-        viewModel.Result.Packs.Should().Equal("tools");
         viewModel.Result.RegisterDocker.Should().BeTrue();
     }
 
@@ -93,7 +86,6 @@ public class BuildViewModelTests
                 {
                     Name = "default",
                     Path = "/catalog/default",
-                    Family = "debian",
                 },
             ],
         });
@@ -103,7 +95,6 @@ public class BuildViewModelTests
         viewModel.SaveImage = true;
         viewModel.RegisterDocker = true;
         viewModel.RunOnboarding = true;
-        _dialogs.BuildPacksAnswer = [];
 
         viewModel.CreateCommand.Execute(null);
 

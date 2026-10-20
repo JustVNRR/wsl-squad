@@ -12,8 +12,6 @@ public sealed class TestDialogService : IDialogService
 
     public string? RecipeNameAnswer { get; set; }
 
-    public IReadOnlyList<string>? BuildPacksAnswer { get; set; } = [];
-
     public PackDuplicateResult? PackDuplicateAnswer { get; set; }
 
     public string? RootMoveAnswer { get; set; }
@@ -70,11 +68,6 @@ public sealed class TestDialogService : IDialogService
     public string? ShowRecipeName()
     {
         return RecipeNameAnswer;
-    }
-
-    public IReadOnlyList<string>? ShowBuildPacks(string name, string family, IReadOnlyList<WslBuildPackDto> packs)
-    {
-        return BuildPacksAnswer;
     }
 
     public PackDuplicateResult? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken)

@@ -12,7 +12,8 @@ Every action is available both as a GUI and as a CLI.
 ## Features
 
 - **Build an instance** - from a recipe, a Dockerfile, a saved image, or a
-  registry reference - with an onboarding script and the packs it should carry
+  registry reference - with an onboarding script that runs on the first shell
+  and offers the packs to install
 - **Manage the packs** of an instance, from the catalogue
 - **The recipes themselves** - Dockerfiles, onboarding scripts, recipes:
   uploaded, edited, deleted - and the saved images
@@ -158,7 +159,7 @@ deleting the distro deletes all of it.
 | `PACK_PACKAGES` | the apt packages it installs |
 | `PACK_OUTSIDE_APT` | the tools it installs outside apt, in `~/.local` |
 | `PACK_IDENTIFYING_VARS` | the variables refused in a shared `.env.global` |
-| `PACK_WELCOME` | the hint `build` prints after the build, when this pack was chosen |
+| `PACK_WELCOME` | the hint the onboarding prints once this pack is installed |
 ```
 ---
 

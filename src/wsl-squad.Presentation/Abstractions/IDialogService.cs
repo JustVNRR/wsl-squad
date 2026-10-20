@@ -13,8 +13,6 @@ public interface IDialogService
 
     public string? ShowRecipeName();
 
-    public IReadOnlyList<string>? ShowBuildPacks(string name, string family, IReadOnlyList<WslBuildPackDto> packs);
-
     public PackDuplicateResult? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken);
 
     public string? ShowRootMove(string current);

@@ -161,8 +161,7 @@ public sealed class InstanceService : IInstanceService
         SourceRow row = new(
             Path.GetFileName(target),
             target,
-            Directory.GetLastWriteTime(target),
-            string.Empty);
+            Directory.GetLastWriteTime(target));
 
         return FormatSourceRows([row])[0];
     }
@@ -258,8 +257,7 @@ public sealed class InstanceService : IInstanceService
         SourceRow row = new(
             Path.GetFileName(Path.GetDirectoryName(target) ?? string.Empty),
             target,
-            File.GetLastWriteTime(target),
-            fileName == "Dockerfile" ? _configRepository.ReadRecipeFamily(target) : string.Empty);
+            File.GetLastWriteTime(target));
 
         return FormatSourceRows([row])[0];
     }
@@ -284,24 +282,6 @@ public sealed class InstanceService : IInstanceService
         ArgumentNullException.ThrowIfNull(dto);
 
         _configRepository.ExportRecipe(dto.Path ?? string.Empty, dto.Target ?? string.Empty);
-    }
-
-    public IReadOnlyList<WslBuildPackDto> GetBuildPacks()
-    {
-        List<WslBuildPackDto> rows = [];
-
-        foreach (WslPack pack in ReadCatalog().OfferedFor(string.Empty))
-        {
-            rows.Add(new WslBuildPackDto
-            {
-                Name = pack.Name,
-                Family = pack.Family,
-                Description = pack.Description,
-                Shell = pack.Name == "oh_my_shell",
-            });
-        }
-
-        return rows;
     }
 
     public BuildResponseDto Build(BuildDto dto)
@@ -401,9 +381,7 @@ public sealed class InstanceService : IInstanceService
 
         if (!string.IsNullOrEmpty(dto.Onboarding))
         {
-            _wslRepository.SaveOnboardingScript(name, dto.Onboarding);
-            _wslRepository.RunOnboarding(name, user ?? "root", dto.Interactive);
-            _wslRepository.Terminate(name);
+            _wslRepository.SaveOnboardingScript(name, dto.Onboarding, user);
         }
         else
         {
@@ -457,18 +435,6 @@ public sealed class InstanceService : IInstanceService
             warnings.AddRange(WaitDockerClient(name));
         }
 
-        if (dto.Packs.Count > 0)
-        {
-            try
-            {
-                warnings.AddRange(InstallChosenPacks(name, dto.Packs, dto.Interactive));
-            }
-            catch (InvalidOperationException exception)
-            {
-                warnings.Add($"not installed - {exception.Message}");
-            }
-        }
-
         WslRecipeStatus status = WslRecipeStatus.Ok;
 
         if (warnings.Count > 0)
@@ -486,7 +452,22 @@ public sealed class InstanceService : IInstanceService
 
     public OpenResponseDto Open(string instanceName)
     {
-        if (_terminalRepository.HasWslProfile(instanceName))
+        bool onboardingPending =
+            _wslRepository.RunInInstance(
+                instanceName,
+                "root",
+                ["test", "-x", "/root/onboarding.sh"],
+                string.Empty) == 0;
+        bool hasProfile = _terminalRepository.HasWslProfile(instanceName);
+
+        if (onboardingPending && !hasProfile)
+        {
+            _wslRepository.OpenBareShellAsRoot(instanceName);
+
+            return new OpenResponseDto { InstanceName = instanceName, Profile = false };
+        }
+
+        if (hasProfile)
         {
             _terminalRepository.TouchSettings();
             _wslRepository.OpenProfile(instanceName);
@@ -1305,51 +1286,6 @@ public sealed class InstanceService : IInstanceService
             ];
     }
 
-    private List<string> InstallChosenPacks(string name, IReadOnlyList<string> chosen, bool interactive)
-    {
-        WslPackCatalog catalog = ReadCatalog();
-        string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
-
-        foreach (string packName in catalog.ResolveSelection(chosen, []))
-        {
-            WslPack? pack = catalog.GetPack(packName);
-
-            if (pack is null)
-            {
-                continue;
-            }
-
-            PackStep result = InstallPack(name, pack, errorLog, interactive);
-
-            if (result.Step is "installed" or "declined")
-            {
-                continue;
-            }
-
-            List<string> notes = [$"'{result.Pack}' installation failed."];
-
-            IReadOnlyList<string> now = _wslRepository.GetInstalledPacks(name);
-            List<string> skipped = [];
-
-            foreach (string wanted in chosen)
-            {
-                if (wanted != result.Pack && !now.Contains(wanted))
-                {
-                    skipped.Add(wanted);
-                }
-            }
-
-            if (skipped.Count > 0)
-            {
-                notes.Add($"{string.Join(", ", skipped)} installation skipped.");
-            }
-
-            return notes;
-        }
-
-        return [];
-    }
-
     private WslPackCatalog ReadCatalog()
     {
         return new WslPackCatalog { Packs = _packCatalogRepository.GetAllPacks() };
@@ -1452,7 +1388,6 @@ public sealed class InstanceService : IInstanceService
             {
                 Name = $"{name} ({row.Modified.ToString("dd'/'MM HH:mm", CultureInfo.InvariantCulture)})",
                 Path = row.Path,
-                Family = row.Family,
                 Uploaded = uploaded,
             });
         }

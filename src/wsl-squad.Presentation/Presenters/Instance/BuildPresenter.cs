@@ -21,13 +21,11 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
     {
         GetBuildSourcesResponseDto sources;
         IReadOnlyList<WslDockerImageDto> images;
-        IReadOnlyList<WslBuildPackDto> packs;
 
         try
         {
             sources = _service.GetBuildSources();
             images = _service.GetAllSavedImages();
-            packs = _service.GetBuildPacks();
         }
         catch (InvalidOperationException exception)
         {
@@ -40,8 +38,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         BuildRoad? road = null;
         string buildPath = string.Empty;
         string context = string.Empty;
-        string family = string.Empty;
-        IReadOnlyList<string> packNames = [];
         string onboarding = string.Empty;
         string user = string.Empty;
         bool keep = false;
@@ -119,8 +115,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                     {
                         WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
                             image.Name ?? string.Empty,
-                            image.Path ?? string.Empty,
-                            null))],
+                            image.Path ?? string.Empty))],
                         WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
                         _ => [.. sources.Dockerfiles.Select(ToChoice)],
                     };
@@ -175,9 +170,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                     }
                     else
                     {
-                        stack.Push(packs.Count > 0
-                            ? "packs"
-                            : NextAfterPacks(sources.Onboardings.Count, road!));
+                        stack.Push(NextAfterSource(sources.Onboardings.Count, road!));
                     }
 
                     break;
@@ -189,8 +182,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                     {
                         WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
                             image.Name ?? string.Empty,
-                            image.Path ?? string.Empty,
-                            null))],
+                            image.Path ?? string.Empty))],
                         WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
                         _ => [.. sources.Dockerfiles.Select(ToChoice)],
                     };
@@ -203,58 +195,15 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         break;
                     }
 
-                    SelectSource(picked, road.Type, ref buildPath, ref context, ref family);
-                    stack.Push(packs.Count > 0
-                        ? "packs"
-                        : NextAfterPacks(sources.Onboardings.Count, road));
-
-                    break;
-                }
-
-                case "packs":
-                {
-                    IReadOnlyList<WslBuildPackDto> offered = family.Length > 0
-                        ? [.. packs.Where(pack => pack.Family == family)]
-                        : packs;
-                    string note = family.Length > 0
-                        ? string.Empty
-                        : "This recipe's system cannot be read - a pack made for another one will fail to install.";
-                    List<int> checkedIndexes = [];
-
-                    for (int index = 0; index < offered.Count; index++)
-                    {
-                        if (family.Length > 0 &&
-                            offered[index].Shell &&
-                            offered[index].Family == family)
-                        {
-                            checkedIndexes.Add(index);
-                        }
-                    }
-
-                    IReadOnlyList<WslBuildPackDto>? chosen = View.AskPacks(name, offered, checkedIndexes, note);
-
-                    if (chosen is null)
-                    {
-                        _ = stack.Pop();
-
-                        break;
-                    }
-
-                    packNames = [.. chosen.Select(pack => pack.Name ?? string.Empty)];
-
-                    if (packNames.Count == 0)
-                    {
-                        View.ShowNoPackChosen();
-                    }
-
-                    stack.Push(NextAfterPacks(sources.Onboardings.Count, road!));
+                    SelectSource(picked, road.Type, ref buildPath, ref context);
+                    stack.Push(NextAfterSource(sources.Onboardings.Count, road));
 
                     break;
                 }
 
                 case "onboarding":
                 {
-                    bool? run = View.AskRunOnboarding(road!.Type == WslBuildType.Recipe);
+                    bool? run = View.AskRunOnboarding();
 
                     if (run is null)
                     {
@@ -266,7 +215,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                     if (run == false)
                     {
                         onboarding = string.Empty;
-                        stack.Push(NextAfterOnboarding(road));
+                        stack.Push(NextAfterOnboarding(road!));
 
                         break;
                     }
@@ -392,7 +341,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             BuildPath = buildPath,
             Context = context,
             Onboarding = onboarding,
-            Packs = [.. packNames],
             KeepImage = keep,
             RegisterDocker = register,
             Interactive = true,
@@ -429,7 +377,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         }
     }
 
-    private string NextAfterPacks(int onboardingCount, BuildRoad road)
+    private string NextAfterSource(int onboardingCount, BuildRoad road)
     {
         if (road.Type == WslBuildType.Recipe)
         {
@@ -455,14 +403,12 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         BuildSourceChoice choice,
         WslBuildType type,
         ref string buildPath,
-        ref string context,
-        ref string family)
+        ref string context)
     {
         if (type == WslBuildType.Recipe)
         {
             context = choice.Path;
             buildPath = Path.Combine(context, "Dockerfile");
-            family = choice.Family ?? string.Empty;
         }
         else
         {
@@ -471,7 +417,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             if (type == WslBuildType.Dockerfile)
             {
                 context = Path.GetDirectoryName(buildPath) ?? string.Empty;
-                family = choice.Family ?? string.Empty;
             }
         }
     }
@@ -480,8 +425,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
     {
         return new BuildSourceChoice(
             source.Name ?? string.Empty,
-            source.Path ?? string.Empty,
-            source.Family);
+            source.Path ?? string.Empty);
     }
 
     private static IReadOnlyList<string> AbortLines(WslBuildType type)

@@ -41,7 +41,7 @@ public class ConfigRepositoryTests
     }
 
     [Fact]
-    public void Reads_dockerfile_sources_and_their_family()
+    public void Reads_dockerfile_sources()
     {
         using TemporaryDirectory temp = new();
         _ = temp.Write("dockerfiles/ubuntu/Dockerfile", "FROM --platform=linux/amd64 ubuntu:24.04\n");
@@ -49,7 +49,6 @@ public class ConfigRepositoryTests
 
         SourceRow row = repository.GetDockerfiles().Should().ContainSingle().Subject;
         row.Name.Should().Be("ubuntu");
-        row.Family.Should().Be("debian");
     }
 
     [Fact]
@@ -79,7 +78,6 @@ public class ConfigRepositoryTests
 
         SourceRow row = repository.GetRecipes().Should().ContainSingle().Subject;
         row.Name.Should().Be("alpine");
-        row.Family.Should().Be("alpine");
     }
 
     [Fact]
