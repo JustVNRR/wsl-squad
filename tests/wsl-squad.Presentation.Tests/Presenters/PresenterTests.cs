@@ -31,8 +31,6 @@ public class PresenterTests
 
         result.Status.Should().Be(ActionResultStatus.Ok);
         service.Verify(s => s.OpenPackManager("alpha"), Times.Once);
-        service.Verify(s => s.GetPacks(It.IsAny<string>()), Times.Never);
-        service.Verify(s => s.ManagePacks(It.IsAny<ManagePacksDto>()), Times.Never);
         view.ManagedPacks.Should().Equal("alpha");
     }
 

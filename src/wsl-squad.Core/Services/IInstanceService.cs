@@ -6,8 +6,6 @@ public interface IInstanceService
 {
     public IReadOnlyList<WslIndexDto> GetAll();
 
-    public WslIndexDto? GetByName(string name);
-
     public IReadOnlyList<WslOrphanDto> GetOrphans();
 
     public IReadOnlyList<string> GetRunningNames();
@@ -23,8 +21,6 @@ public interface IInstanceService
     public UnregisterDockerResponseDto UnregisterDocker(UnregisterDockerDto dto);
 
     public WslBuildSourceDto UploadRecipe(UploadRecipeDto dto);
-
-    public bool TestDocker();
 
     public bool StartDocker();
 
@@ -51,10 +47,6 @@ public interface IInstanceService
     public SetAppearanceResponseDto SetAppearance(SetAppearanceDto dto);
 
     public IReadOnlyList<WslColorSchemeDto> GetColorSchemes();
-
-    public GetPacksResponseDto GetPacks(string instanceName);
-
-    public ManagePacksResponseDto ManagePacks(ManagePacksDto dto);
 
     public void OpenPackManager(string instanceName);
 

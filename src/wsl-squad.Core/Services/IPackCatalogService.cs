@@ -6,11 +6,7 @@ public interface IPackCatalogService
 {
     public IReadOnlyList<WslPackDto> GetAllPacks();
 
-    public WslPackDto? GetPack(string packName);
-
     public string CreatePack(CreatePackDto dto);
-
-    public void SetPackDescription(SetPackDescriptionDto dto);
 
     public void DeletePack(string packName);
 

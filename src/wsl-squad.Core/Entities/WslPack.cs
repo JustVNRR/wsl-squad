@@ -68,8 +68,6 @@ public sealed class WslPack
         }
     }
 
-    public string? Welcome { get; set; }
-
     public WslPack WithName(string? name)
     {
         if (!string.IsNullOrEmpty(name))
@@ -109,16 +107,6 @@ public sealed class WslPack
         if (!string.IsNullOrEmpty(family))
         {
             Family = family;
-        }
-
-        return this;
-    }
-
-    public WslPack WithWelcome(string? text)
-    {
-        if (!string.IsNullOrEmpty(text))
-        {
-            Welcome = text;
         }
 
         return this;

@@ -141,8 +141,6 @@ public class MainWindowViewModelTests
         _viewModel.EditCommand.Execute("alpha");
 
         _instance.Verify(service => service.OpenPackManager("alpha"), Times.Once);
-        _instance.Verify(service => service.GetPacks(It.IsAny<string>()), Times.Never);
-        _instance.Verify(service => service.ManagePacks(It.IsAny<ManagePacksDto>()), Times.Never);
     }
 
     [Fact]

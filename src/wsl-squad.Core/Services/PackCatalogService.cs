@@ -37,14 +37,6 @@ public sealed class PackCatalogService : IPackCatalogService
         return rows;
     }
 
-    public WslPackDto? GetPack(string packName)
-    {
-        RefreshCatalog();
-        WslPack? pack = _catalog.GetPack(packName);
-
-        return pack is null ? null : _instanceMapper.ToPackDto(pack);
-    }
-
     public string CreatePack(CreatePackDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
@@ -60,14 +52,6 @@ public sealed class PackCatalogService : IPackCatalogService
         }
 
         return newName;
-    }
-
-    public void SetPackDescription(SetPackDescriptionDto dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        RequirePack(dto.PackName ?? string.Empty);
-        _packCatalogRepository.SavePackDescription(dto.PackName ?? string.Empty, dto.Description ?? string.Empty);
     }
 
     public void DeletePack(string packName)

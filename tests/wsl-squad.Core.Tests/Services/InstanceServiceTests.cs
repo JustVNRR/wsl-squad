@@ -237,94 +237,6 @@ public class InstanceServiceTests
     }
 
     [Fact]
-    public void Filters_pack_candidates_and_removable_packs()
-    {
-        _packs.Setup(repository => repository.GetAllPacks()).Returns(
-        [
-            new WslPack { Name = "new-pack", Family = "debian" },
-            new WslPack { Name = "other-family", Family = "arch" },
-            new WslPack { Name = "installed", Offered = false },
-        ]);
-        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns(["installed"]);
-        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
-
-        GetPacksResponseDto response = _service.GetPacks("alpha");
-
-        response.Candidate.Select(pack => pack.Name).Should().Equal("new-pack");
-        response.Removable.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void Offers_all_packs_when_none_are_installed()
-    {
-        _packs.Setup(repository => repository.GetAllPacks()).Returns(
-        [
-            new WslPack { Name = "shell", Family = "debian" },
-            new WslPack { Name = "tools", Family = "debian" },
-        ]);
-        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns([]);
-        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
-
-        GetPacksResponseDto response = _service.GetPacks("alpha");
-
-        response.Installed.Should().BeEmpty();
-        response.Removable.Should().BeEmpty();
-        response.Candidate.Select(pack => pack.Name).Should().Equal("shell", "tools");
-    }
-
-    [Fact]
-    public void Installs_a_pack_in_staging_before_promoting_it()
-    {
-        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base" }]);
-        _packs.Setup(repository => repository.GetFolder("base")).Returns("/catalog/base");
-        _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
-        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns([]);
-        _wsl.Setup(wsl => wsl.CopyPackIntoStaging("alpha", "/catalog/base", "base")).Returns(0);
-        _wsl.Setup(wsl => wsl.StagingPackHasFile("alpha", "base", "install_root.sh")).Returns(false);
-        _wsl.Setup(wsl => wsl.RunStagingPackScript("alpha", "base", "install.sh", false, It.IsAny<string?>(), false))
-            .Returns(0);
-        _wsl.Setup(wsl => wsl.PromotePack("alpha", "base")).Returns(0);
-
-        ManagePacksResponseDto response = _service.ManagePacks(new ManagePacksDto
-        {
-            InstanceName = "alpha",
-            ToAdd = ["base"],
-        });
-
-        response.Outcome.Should().Be("ok");
-        _wsl.Verify(wsl => wsl.CleanPackStaging("alpha"), Times.Once);
-        _wsl.Verify(wsl => wsl.CopyPackIntoStaging("alpha", "/catalog/base", "base"), Times.Once);
-        _wsl.Verify(wsl => wsl.RunStagingPackScript("alpha", "base", "install.sh", false, It.IsAny<string?>(), false), Times.Once);
-        _wsl.Verify(wsl => wsl.PromotePack("alpha", "base"), Times.Once);
-        _wsl.Verify(wsl => wsl.CopyPackIntoInstance(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        _wsl.Verify(wsl => wsl.RemovePackFromInstance(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
-    public void Discards_the_staging_folder_when_a_pack_fails_to_install()
-    {
-        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base" }]);
-        _packs.Setup(repository => repository.GetFolder("base")).Returns("/catalog/base");
-        _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
-        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns([]);
-        _wsl.Setup(wsl => wsl.CopyPackIntoStaging("alpha", "/catalog/base", "base")).Returns(0);
-        _wsl.Setup(wsl => wsl.StagingPackHasFile("alpha", "base", "install_root.sh")).Returns(true);
-        _wsl.Setup(wsl => wsl.RunStagingPackScript("alpha", "base", "install_root.sh", true, It.IsAny<string?>(), false))
-            .Returns(7);
-
-        ManagePacksResponseDto response = _service.ManagePacks(new ManagePacksDto
-        {
-            InstanceName = "alpha",
-            ToAdd = ["base"],
-        });
-
-        response.Outcome.Should().Be("failed");
-        response.Failed.Should().Equal("base");
-        _wsl.Verify(wsl => wsl.DiscardPackStaging("alpha", "base"), Times.Once);
-        _wsl.Verify(wsl => wsl.PromotePack(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
     public void Opens_the_pack_manager_from_the_catalog()
     {
         _packs.Setup(repository => repository.GetRoot()).Returns("/catalog/packs");
@@ -345,7 +257,6 @@ public class InstanceServiceTests
             "/catalog/packs"), Times.Once);
         _wsl.Verify(wsl => wsl.OpenPackManager("alpha", true), Times.Once);
         _terminal.Verify(terminal => terminal.TouchSettings(), Times.Once);
-        _wsl.Verify(wsl => wsl.GetInstalledPacks(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -396,26 +307,6 @@ public class InstanceServiceTests
         Action act = () => _service.OpenPackManager("alpha");
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*No pack*");
-    }
-
-    [Fact]
-    public void Refuses_to_remove_a_pack_required_by_another()
-    {
-        _packs.Setup(repository => repository.GetAllPacks()).Returns(
-        [
-            new WslPack { Name = "shell", Offered = false },
-            new WslPack { Name = "tools", Requires = ["shell"] },
-        ]);
-        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns(["shell", "tools"]);
-        _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
-
-        Action act = () => _service.ManagePacks(new ManagePacksDto
-        {
-            InstanceName = "alpha",
-            ToRemove = ["shell"],
-        });
-
-        act.Should().Throw<InvalidOperationException>().WithMessage("*required by tools*");
     }
 
     [Fact]

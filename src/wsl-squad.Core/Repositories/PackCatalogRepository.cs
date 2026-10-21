@@ -34,7 +34,7 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
         return _packsRoot;
     }
 
-    public string GetFolder(string packName)
+    private string GetFolder(string packName)
     {
         return Path.Combine(_packsRoot, packName);
     }
@@ -131,10 +131,6 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
             else if (TryValue(text, "PACK_FAMILY", out string family))
             {
                 _ = pack.WithFamily(family.ToLowerInvariant());
-            }
-            else if (TryValue(text, "PACK_WELCOME", out string welcome))
-            {
-                _ = pack.WithWelcome(welcome);
             }
         }
 

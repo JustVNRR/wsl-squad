@@ -81,35 +81,6 @@ public sealed class InstanceService : IInstanceService
         return rows;
     }
 
-    public WslIndexDto? GetByName(string name)
-    {
-        foreach (WslInstance distro in _wslRepository.GetAllDistros())
-        {
-            if (distro.Name != name || !_instanceRepository.HasMarker(name))
-            {
-                continue;
-            }
-
-            distro.Size = _instanceRepository.GetVhdxSize(name);
-
-            return _instanceMapper.ToIndexDto(distro);
-        }
-
-        foreach (WslInstance archive in _archiveRepository.GetAllArchives())
-        {
-            if (archive.Name != name)
-            {
-                continue;
-            }
-
-            archive.Size = _archiveRepository.GetTarSize(name);
-
-            return _instanceMapper.ToIndexDto(archive);
-        }
-
-        return null;
-    }
-
     public IReadOnlyList<WslOrphanDto> GetOrphans()
     {
         List<string> claimed = [];
@@ -268,11 +239,6 @@ public sealed class InstanceService : IInstanceService
             File.GetLastWriteTime(target));
 
         return FormatSourceRows([row])[0];
-    }
-
-    public bool TestDocker()
-    {
-        return _dockerRepository.TestRunning();
     }
 
     public bool StartDocker()
@@ -777,51 +743,6 @@ public sealed class InstanceService : IInstanceService
         return _terminalRepository.GetColorSchemes();
     }
 
-    public GetPacksResponseDto GetPacks(string instanceName)
-    {
-        WslPackCatalog catalog = ReadCatalog();
-        IReadOnlyList<string> installed = _wslRepository.GetInstalledPacks(instanceName);
-        string family = _wslRepository.GetFamily(instanceName);
-
-        List<WslPackDto> candidate = [];
-
-        foreach (WslPack pack in catalog.OfferedFor(family))
-        {
-            if (!installed.Contains(pack.Name))
-            {
-                candidate.Add(_instanceMapper.ToPackDto(pack));
-            }
-        }
-
-        List<string> removable = [];
-        List<WslPackDto> installedPacks = [];
-
-        foreach (string packName in installed)
-        {
-            WslPack? pack = catalog.GetPack(packName);
-
-            if (pack is not null && !pack.Offered)
-            {
-                continue;
-            }
-
-            removable.Add(packName);
-
-            if (pack is not null)
-            {
-                installedPacks.Add(_instanceMapper.ToPackDto(pack));
-            }
-        }
-
-        return new GetPacksResponseDto
-        {
-            Installed = [.. installed],
-            Candidate = candidate,
-            InstalledPacks = installedPacks,
-            Removable = removable,
-        };
-    }
-
     public void OpenPackManager(string instanceName)
     {
         WslInstance? stored = _instanceRepository.GetInstance(instanceName);
@@ -845,94 +766,6 @@ public sealed class InstanceService : IInstanceService
         }
 
         _wslRepository.OpenPackManager(instanceName, hasProfile);
-    }
-
-    public ManagePacksResponseDto ManagePacks(ManagePacksDto dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        string name = dto.InstanceName ?? string.Empty;
-        WslPackCatalog catalog = ReadCatalog();
-        string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
-
-        TryDeleteFile(errorLog);
-        _ = _wslRepository.CleanPackStaging(name);
-
-        IReadOnlyList<string> before = _wslRepository.GetInstalledPacks(name);
-        IReadOnlyList<string> toRemove = catalog.ResolveRemoval(before, dto.ToRemove, dto.ToAdd);
-        IReadOnlyList<PackRemovalConflict> conflicts = catalog.GetRemovalConflicts(before, toRemove, dto.ToAdd);
-
-        if (conflicts.Count > 0)
-        {
-            throw new InvalidOperationException(
-                $"'{conflicts[0].Name}' cannot be removed: required by {string.Join(" and ", conflicts[0].Blockers)}.");
-        }
-
-        foreach (string packName in dto.ToAdd)
-        {
-            WslPack? pack = catalog.GetPack(packName);
-
-            if (pack is null)
-            {
-                continue;
-            }
-
-            PackStep result = InstallPack(name, pack, errorLog, dto.Interactive);
-
-            if (result.Step is "installed" or "declined")
-            {
-                continue;
-            }
-
-            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name);
-
-            return new ManagePacksResponseDto
-            {
-                InstanceName = name,
-                Outcome = "failed",
-                ExitCode = result.ExitCode,
-                Failed = [result.Pack],
-                Installed = Subtract(after, before),
-            };
-        }
-
-        foreach (string packName in toRemove)
-        {
-            PackStep? result = RemoveOne(name, packName, errorLog, dto.Interactive);
-
-            if (result is null)
-            {
-                continue;
-            }
-
-            IReadOnlyList<string> after = _wslRepository.GetInstalledPacks(name);
-
-            return new ManagePacksResponseDto
-            {
-                InstanceName = name,
-                Outcome = "failed",
-                ExitCode = result.ExitCode,
-                Failed = [result.Pack],
-                Installed = Subtract(after, before),
-                Removed = Subtract(before, after),
-            };
-        }
-
-        if (toRemove.Count > 0)
-        {
-            _ = _wslRepository.RunOrphanCleanup(name);
-        }
-
-        IReadOnlyList<string> final = _wslRepository.GetInstalledPacks(name);
-
-        return new ManagePacksResponseDto
-        {
-            InstanceName = name,
-            Outcome = "ok",
-            ExitCode = 0,
-            Installed = Subtract(final, before),
-            Removed = Subtract(before, final),
-        };
     }
 
     public IReadOnlyList<WslDockerImageDto> GetAllSavedImages()
@@ -1361,11 +1194,6 @@ public sealed class InstanceService : IInstanceService
             ];
     }
 
-    private WslPackCatalog ReadCatalog()
-    {
-        return new WslPackCatalog { Packs = _packCatalogRepository.GetAllPacks() };
-    }
-
     private static IReadOnlyList<WslCommandDto> LiveCommands(
         string family,
         string docker,
@@ -1403,99 +1231,6 @@ public sealed class InstanceService : IInstanceService
                packs.Any(pack =>
                    pack.Offered &&
                    string.Equals(pack.Family, family, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private PackStep InstallPack(string name, WslPack pack, string errorLog, bool interactive = false)
-    {
-        int code = _wslRepository.CopyPackIntoStaging(name, _packCatalogRepository.GetFolder(pack.Name), pack.Name);
-
-        if (code != 0)
-        {
-            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
-
-            return new PackStep(pack.Name, "copy", code);
-        }
-
-        if (_wslRepository.StagingPackHasFile(name, pack.Name, "install_root.sh"))
-        {
-            int rootCode = _wslRepository.RunStagingPackScript(name, pack.Name, "install_root.sh", asRoot: true, errorLog, interactive);
-
-            if (rootCode != 0)
-            {
-                _ = _wslRepository.DiscardPackStaging(name, pack.Name);
-
-                return new PackStep(pack.Name, "root", rootCode);
-            }
-        }
-
-        bool sudoWindow = false;
-
-        try
-        {
-            sudoWindow = _wslRepository.OpenPackSudoWindow(name);
-            code = _wslRepository.RunStagingPackScript(name, pack.Name, "install.sh", asRoot: false, errorLog, interactive);
-        }
-        finally
-        {
-            if (sudoWindow)
-            {
-                _wslRepository.ClosePackSudoWindow(name);
-            }
-        }
-
-        if (code == 2)
-        {
-            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
-
-            return new PackStep(pack.Name, "declined", 0);
-        }
-
-        if (code != 0)
-        {
-            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
-
-            return new PackStep(pack.Name, "install", code);
-        }
-
-        int promoted = _wslRepository.PromotePack(name, pack.Name);
-
-        if (promoted != 0)
-        {
-            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
-
-            return new PackStep(pack.Name, "promote", promoted);
-        }
-
-        return new PackStep(pack.Name, "installed", 0);
-    }
-
-    private PackStep? RemoveOne(string name, string packName, string errorLog, bool interactive = false)
-    {
-        string catalogRemove = Path.Combine(_packCatalogRepository.GetFolder(packName), "remove.sh");
-
-        if (File.Exists(catalogRemove))
-        {
-            _ = _wslRepository.CopyPackFileIntoInstance(name, catalogRemove, packName, "remove.sh");
-        }
-
-        if (_wslRepository.PackHasFile(name, packName, "remove.sh"))
-        {
-            int code = _wslRepository.RunPackScript(name, packName, "remove.sh", asRoot: true, errorLog, interactive);
-
-            if (code != 0)
-            {
-                return new PackStep(packName, "remove", code);
-            }
-        }
-
-        int folderCode = _wslRepository.RemovePackFromInstance(name, packName);
-
-        return folderCode != 0 ? new PackStep(packName, "folder", folderCode) : null;
-    }
-
-    private static List<string> Subtract(IReadOnlyList<string> left, IReadOnlyList<string> right)
-    {
-        return [.. left.Where(name => !right.Contains(name))];
     }
 
     private static List<WslBuildSourceDto> FormatSourceRows(IReadOnlyList<SourceRow> rows)
@@ -1550,5 +1285,5 @@ public sealed class InstanceService : IInstanceService
         }
     }
 
-    private sealed record PackStep(string Pack, string Step, int ExitCode);
+
 }

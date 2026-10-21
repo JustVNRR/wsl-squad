@@ -223,43 +223,6 @@ public sealed record WslIconPairDto
     public string? TextColor { get; init; }
 }
 
-public sealed record GetPacksResponseDto
-{
-    public List<string> Installed { get; init; } = [];
-
-    public List<WslPackDto> Candidate { get; init; } = [];
-
-    public List<WslPackDto> InstalledPacks { get; init; } = [];
-
-    public List<string> Removable { get; init; } = [];
-}
-
-public sealed record ManagePacksDto
-{
-    public string? InstanceName { get; init; }
-
-    public List<string> ToAdd { get; init; } = [];
-
-    public List<string> ToRemove { get; init; } = [];
-
-    public bool Interactive { get; init; }
-}
-
-public sealed record ManagePacksResponseDto
-{
-    public string? InstanceName { get; init; }
-
-    public string? Outcome { get; init; }
-
-    public int ExitCode { get; init; }
-
-    public List<string> Installed { get; init; } = [];
-
-    public List<string> Removed { get; init; } = [];
-
-    public List<string> Failed { get; init; } = [];
-}
-
 public sealed record WslColorSchemeDto
 {
     public string? Name { get; init; }

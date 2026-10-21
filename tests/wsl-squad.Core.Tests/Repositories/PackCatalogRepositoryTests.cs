@@ -14,7 +14,7 @@ public class PackCatalogRepositoryTests
         using TemporaryDirectory temp = new();
         temp.Write(
             "packs/tools/pack.conf",
-            "PACK_DESCRIPTION := Tools pack\nPACK_REQUIRES := base\nPACK_VISIBLE := no\nPACK_FAMILY := Debian\nPACK_WELCOME := hello\n");
+            "PACK_DESCRIPTION := Tools pack\nPACK_REQUIRES := base\nPACK_VISIBLE := no\nPACK_FAMILY := Debian\n");
         PackCatalogRepository repository = new(temp.Combine("packs"));
 
         WslPack pack = repository.GetAllPacks().Should().ContainSingle().Subject;
@@ -23,7 +23,6 @@ public class PackCatalogRepositoryTests
         pack.Requires.Should().Equal("base");
         pack.Offered.Should().BeFalse();
         pack.Family.Should().Be("debian");
-        pack.Welcome.Should().Be("hello");
     }
 
     [Fact]

@@ -17,7 +17,7 @@ public sealed class ServiceFactory : IServiceFactory
         return new InstanceService(
             new InstanceRepository(config),
             new ArchiveRepository(config),
-            new WslRepository(distroTree),
+            new WslRepository(),
             new TerminalRepository(assets, drawIcon),
             new DockerRepository(assets),
             new PackCatalogRepository(Path.Combine(assets, "packs")),
@@ -53,7 +53,7 @@ public sealed class ServiceFactory : IServiceFactory
         ConfigRepository config = new(assets, distroTree);
         InstanceRepository instances = new(config);
         ArchiveRepository archives = new(config);
-        WslRepository wsl = new(distroTree);
+        WslRepository wsl = new();
         InstanceService service = new(
             instances,
             archives,

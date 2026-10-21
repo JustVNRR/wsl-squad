@@ -44,35 +44,4 @@ public interface IWslRepository
 
     public void SaveOnboardingScript(string instanceName, string source, string? asUser = null);
 
-    public IReadOnlyList<string> GetInstalledPacks(string instanceName);
-
-    public int CopyPackIntoInstance(string instanceName, string sourceFolder, string packName);
-
-    public int CopyPackIntoStaging(string instanceName, string sourceFolder, string packName);
-
-    public int CopyPackFileIntoInstance(string instanceName, string sourceFile, string packName, string fileName);
-
-    public int RunScriptInInstance(string instanceName, string workingDirectory, string script, bool asRoot, string? errorLog, bool interactive = false);
-
-    public int RunPackScript(string instanceName, string packName, string script, bool asRoot, string? errorLog, bool interactive = false);
-
-    public int RunStagingPackScript(string instanceName, string packName, string script, bool asRoot, string? errorLog, bool interactive = false);
-
-    public bool PackHasFile(string instanceName, string packName, string fileName);
-
-    public bool StagingPackHasFile(string instanceName, string packName, string fileName);
-
-    public int PromotePack(string instanceName, string packName);
-
-    public int DiscardPackStaging(string instanceName, string packName);
-
-    public int CleanPackStaging(string instanceName);
-
-    public int RemovePackFromInstance(string instanceName, string packName);
-
-    public bool OpenPackSudoWindow(string instanceName);
-
-    public void ClosePackSudoWindow(string instanceName);
-
-    public bool RunOrphanCleanup(string instanceName);
 }

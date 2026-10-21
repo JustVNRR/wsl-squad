@@ -19,10 +19,3 @@ public sealed record CreatePackDto
 
     public string? Description { get; init; }
 }
-
-public sealed record SetPackDescriptionDto
-{
-    public string? PackName { get; init; }
-
-    public string? Description { get; init; }
-}

@@ -8,8 +8,6 @@ public interface IPackCatalogRepository
 
     public string GetRoot();
 
-    public string GetFolder(string packName);
-
     public IReadOnlyList<WslPack> GetAllPacks();
 
     public void SavePackDescription(string packName, string description);
