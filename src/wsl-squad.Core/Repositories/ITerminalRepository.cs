@@ -7,8 +7,6 @@ public interface ITerminalRepository
 {
     public string GetFragmentPath(string instanceName);
 
-    public bool HasFragment(string instanceName);
-
     public void SaveFragment(string instanceName, string profileGuid, WslTheme theme);
 
     public void DeleteFragment(string instanceName);

@@ -67,11 +67,6 @@ public sealed class SetAppearancePresenter : BasePresenter<IAppearanceView>
             return ActionResult.Nok($"SetAppearance : {name} - {exception.Message}");
         }
 
-        if (!appearance.HasFragment)
-        {
-            View.ShowNoFragmentWarning();
-        }
-
         string font = appearance.Font ?? string.Empty;
         string scheme = appearance.ColourScheme ?? string.Empty;
         WslIconDto recipe = new()

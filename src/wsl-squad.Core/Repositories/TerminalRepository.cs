@@ -72,11 +72,6 @@ public sealed class TerminalRepository : ITerminalRepository
         return Path.Combine(FragmentsFolder(), $"{instanceName}.json");
     }
 
-    public bool HasFragment(string instanceName)
-    {
-        return File.Exists(GetFragmentPath(instanceName));
-    }
-
     public void SaveFragment(string instanceName, string profileGuid, WslTheme theme)
     {
         ArgumentNullException.ThrowIfNull(theme);

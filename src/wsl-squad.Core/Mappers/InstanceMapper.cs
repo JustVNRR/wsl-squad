@@ -43,7 +43,7 @@ public sealed class InstanceMapper : IInstanceMapper
         };
     }
 
-    public GetAppearanceResponseDto ToAppearanceResponse(WslTheme theme, bool hasFragment)
+    public GetAppearanceResponseDto ToAppearanceResponse(WslTheme theme)
     {
         ArgumentNullException.ThrowIfNull(theme);
 
@@ -52,7 +52,6 @@ public sealed class InstanceMapper : IInstanceMapper
             Font = theme.FontName,
             ColourScheme = theme.ColorScheme,
             Icon = ToIconDto(theme),
-            HasFragment = hasFragment,
             IconPath = theme.IconPath,
         };
     }

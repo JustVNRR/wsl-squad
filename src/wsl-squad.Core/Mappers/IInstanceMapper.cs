@@ -11,7 +11,7 @@ public interface IInstanceMapper
 
     public WslPackDto ToPackDto(WslPack pack);
 
-    public GetAppearanceResponseDto ToAppearanceResponse(WslTheme theme, bool hasFragment);
+    public GetAppearanceResponseDto ToAppearanceResponse(WslTheme theme);
 
     public WslTheme FromSetAppearanceDto(SetAppearanceDto dto);
 

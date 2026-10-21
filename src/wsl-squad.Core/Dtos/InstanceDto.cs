@@ -194,8 +194,6 @@ public sealed record GetAppearanceResponseDto
 
     public WslIconDto? Icon { get; init; }
 
-    public bool HasFragment { get; init; }
-
     public string? IconPath { get; init; }
 }
 

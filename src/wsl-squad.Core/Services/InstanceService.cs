@@ -667,7 +667,7 @@ public sealed class InstanceService : IInstanceService
             theme.IconPath = _instanceRepository.GetIconPath(instanceName);
         }
 
-        return _instanceMapper.ToAppearanceResponse(theme, _terminalRepository.HasFragment(instanceName));
+        return _instanceMapper.ToAppearanceResponse(theme);
     }
 
     public SetAppearanceResponseDto SetAppearance(SetAppearanceDto dto)

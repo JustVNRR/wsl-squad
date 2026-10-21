@@ -13,7 +13,6 @@ public class AppearanceViewModelTests
         SetAppearanceViewModel viewModel = Create();
 
         viewModel.Lead.Should().Be("ALPHA'S APPEARANCE.");
-        viewModel.NoFragment.Should().BeFalse();
         viewModel.IconText.Should().Be("AL");
         viewModel.PairLabels.Should().Contain("orange  (current)");
         viewModel.FontLabels.Should().Contain("VT323  (current)");
@@ -67,15 +66,7 @@ public class AppearanceViewModelTests
         viewModel.ImagePath.Should().BeEmpty();
     }
 
-    [Fact]
-    public void Appearance_warns_without_a_terminal_fragment()
-    {
-        SetAppearanceViewModel viewModel = Create(hasFragment: false);
-
-        viewModel.NoFragment.Should().BeTrue();
-    }
-
-    private static SetAppearanceViewModel Create(bool hasFragment = true)
+    private static SetAppearanceViewModel Create()
     {
         return new SetAppearanceViewModel(
             "alpha",
@@ -90,7 +81,6 @@ public class AppearanceViewModelTests
                     Bottom = "#B95E30",
                     TextColor = "#FFFFFF",
                 },
-                HasFragment = hasFragment,
                 IconPath = string.Empty,
             },
             ["VT323", "MesloLGS NF"],

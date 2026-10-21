@@ -26,10 +26,6 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{Binding Lead}" TextWrapping="Wrap" FontWeight="SemiBold"/>
                     <Border BorderBrush="{DynamicResource AppDividerBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
-                    <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
-                               Visibility="{Binding NoFragment, Converter={StaticResource BooleanToVisibilityConverter}}"
-                               Foreground="{DynamicResource AppWarningBrush}"
-                               Text="This instance has no Terminal profile of ours - nothing changed here would show."/>
                     <TextBlock Margin="0,12,0,0" Text="Icon text:"/>
                     <TextBox x:Name="TxtIconText" Text="{Binding IconText, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0" HorizontalAlignment="Left"
                              Background="{DynamicResource AppInputBackgroundBrush}"

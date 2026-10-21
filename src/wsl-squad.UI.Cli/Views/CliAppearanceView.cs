@@ -6,13 +6,6 @@ namespace wsl_squad.UI.Cli.Views;
 
 public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 {
-    public void ShowNoFragmentWarning()
-    {
-        Write(string.Empty);
-        Write("[WARNING] This instance has no Terminal profile of ours - the look would not show.", ConsoleTone.Warning);
-        Write("          Build it again, or set it by hand in Ctrl+,", ConsoleTone.Muted);
-    }
-
     public string? AskTheme(string name)
     {
         return Pick(

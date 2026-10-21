@@ -44,11 +44,10 @@ public class InstanceMapperTests
         WslTheme theme = WslTheme.Default("alpha");
         theme.SetIcon(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
 
-        GetAppearanceResponseDto dto = _mapper.ToAppearanceResponse(theme, hasFragment: true);
+        GetAppearanceResponseDto dto = _mapper.ToAppearanceResponse(theme);
 
         dto.Font.Should().Be("MesloLGS NF");
         dto.ColourScheme.Should().Be("One Half Dark");
-        dto.HasFragment.Should().BeTrue();
         dto.Icon!.Text.Should().Be("AL");
     }
 

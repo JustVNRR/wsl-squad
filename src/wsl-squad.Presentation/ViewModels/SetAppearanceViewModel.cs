@@ -43,7 +43,6 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
         InstanceName = name;
         _appearance = appearance;
         Lead = $"{name}'s appearance.".ToUpperInvariant();
-        NoFragment = !appearance.HasFragment;
 
         _iconText = appearance.Icon?.Text ?? string.Empty;
 
@@ -109,8 +108,6 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
     public string InstanceName { get; }
 
     public string Lead { get; }
-
-    public bool NoFragment { get; }
 
     public IReadOnlyList<LookPairRow> Pairs { get; }
 

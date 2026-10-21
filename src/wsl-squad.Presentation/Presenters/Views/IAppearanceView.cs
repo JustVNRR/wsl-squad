@@ -4,8 +4,6 @@ namespace wsl_squad.Presentation.Presenters.Views;
 
 public interface IAppearanceView : IPresenterViewBase
 {
-    public void ShowNoFragmentWarning();
-
     public string? AskTheme(string name);
 
     public string? AskFont(string name, IReadOnlyList<string> fonts, string current);
