@@ -1,4 +1,4 @@
 @echo off
 setlocal
-"%~dp0wsl-squad.cli.exe" %*
+"%~dp0cli\wsl-squad.cli.exe" %*
 exit /b %ERRORLEVEL%

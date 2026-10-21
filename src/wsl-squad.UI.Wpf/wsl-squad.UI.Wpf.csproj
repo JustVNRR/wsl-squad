@@ -2,33 +2,33 @@
 
   <ItemGroup>
     <ProjectReference Include="..\wsl-squad.Presentation\wsl-squad.Presentation.csproj" />
-    <ProjectReference Include="..\wsl-squad.UI.Runner\wsl-squad.UI.Runner.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\wsl-squad.UI.Cli\wsl-squad.UI.Cli.csproj" ReferenceOutputAssembly="false" Private="false" />
     <Resource Include="..\..\Assets\fonts\**\*.ttf" Link="Assets\Fonts\%(Filename)%(Extension)" />
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
-  <Target Name="CopyRunner" AfterTargets="Build">
+  <Target Name="CopyCli" AfterTargets="Build">
     <ItemGroup>
-      <RunnerFiles Include="$(RunnerOutputDir)**\*" Exclude="$(RunnerOutputDir)win-x64\**\*" />
+      <CliFiles Include="$(CliOutputDir)**\*" Exclude="$(CliOutputDir)win-x64\**\*" />
     </ItemGroup>
-    <Error Condition="!Exists('$(RunnerOutputDir)wsl-squad.UI.Runner.dll')" Text="The build runner is missing: $(RunnerOutputDir). Build wsl-squad.UI.Runner first." />
-    <RemoveDir Directories="$(OutDir)runner" />
-    <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(OutDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Error Condition="!Exists('$(CliOutputDir)wsl-squad.cli.dll')" Text="The CLI is missing: $(CliOutputDir). Build wsl-squad.UI.Cli first." />
+    <RemoveDir Directories="$(OutDir)cli" />
+    <Copy SourceFiles="@(CliFiles)" DestinationFiles="@(CliFiles->'$(OutDir)cli\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="CopyRunnerOnPublish" AfterTargets="Publish">
+  <Target Name="CopyCliOnPublish" AfterTargets="Publish">
     <ItemGroup>
-      <RunnerFiles Include="$(RunnerOutputDir)**\*" Exclude="$(RunnerOutputDir)win-x64\**\*" />
+      <CliFiles Include="$(CliOutputDir)**\*" Exclude="$(CliOutputDir)win-x64\**\*" />
     </ItemGroup>
-    <Error Condition="!Exists('$(RunnerOutputDir)wsl-squad.UI.Runner.dll')" Text="The build runner is missing: $(RunnerOutputDir). Build wsl-squad.UI.Runner first." />
-    <RemoveDir Directories="$(PublishDir)runner" />
-    <Copy SourceFiles="@(RunnerFiles)" DestinationFiles="@(RunnerFiles->'$(PublishDir)runner\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Error Condition="!Exists('$(CliOutputDir)wsl-squad.cli.dll')" Text="The CLI is missing: $(CliOutputDir). Build wsl-squad.UI.Cli first." />
+    <RemoveDir Directories="$(PublishDir)cli" />
+    <Copy SourceFiles="@(CliFiles)" DestinationFiles="@(CliFiles->'$(PublishDir)cli\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <RunnerOutputDir>$(RepositoryRoot)artifacts\bin\wsl-squad.UI.Runner\$(Configuration)\$(TargetFramework)\</RunnerOutputDir>
+    <CliOutputDir>$(RepositoryRoot)artifacts\bin\wsl-squad.UI.Cli\$(Configuration)\net10.0\</CliOutputDir>
     <RootNamespace>wsl_squad.UI.Wpf</RootNamespace>
     <AssemblyName>wsl-squad.gui</AssemblyName>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>

@@ -1,10 +1,12 @@
 using wsl_squad.Core.Services;
+using wsl_squad.UI.Cli;
+using wsl_squad.UI.Cli.Commands;
 using wsl_squad.UI.Cli.Composition;
 
-string? command = args.Length > 0 ? args[0] : null;
-string? name = args.Length > 1 ? args[1] : null;
 try
 {
+    CliInvocation invocation = CliInvocation.Parse(args);
+
     if (!WslService.IsAvailable())
     {
         await Console.Error.WriteLineAsync("WSL 2 is required but was not detected.");
@@ -14,7 +16,18 @@ try
         return 1;
     }
 
-    return new CliComposition().Run(command, name);
+    if (invocation.BuildRequest is not null)
+    {
+        return BuildRequestRunner.Run(invocation.BuildRequest);
+    }
+
+    return new CliComposition().Run(invocation.Command, invocation.Name);
+}
+catch (ArgumentException exception)
+{
+    await Console.Error.WriteLineAsync(exception.Message);
+
+    return 2;
 }
 catch (Exception exception)
 {

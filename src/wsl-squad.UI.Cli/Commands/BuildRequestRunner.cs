@@ -1,41 +1,14 @@
-using System.Diagnostics;
 using System.Text.Json;
 
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Drawing;
+using wsl_squad.UI.Cli.Composition;
 
-namespace wsl_squad.UI.Runner;
+namespace wsl_squad.UI.Cli.Commands;
 
-internal static class Runner
+public static class BuildRequestRunner
 {
-    public static int Run(string[] args)
-    {
-        try
-        {
-            if (args.Length == 0)
-            {
-                Console.WriteLine("Usage: wsl-squad.UI.Runner apply_build <request.json>");
-
-                return 1;
-            }
-
-            return args[0] switch
-            {
-                "apply_build" => ApplyBuild(args.Length > 1 ? args[1] : null),
-                _ => Fail($"Unknown runner command '{args[0]}'."),
-            };
-        }
-        catch (Exception exception)
-        {
-            Console.Error.WriteLine(exception);
-            Pause();
-
-            return 1;
-        }
-    }
-
-    private static int ApplyBuild(string? requestPath)
+    public static int Run(string requestPath)
     {
         if (string.IsNullOrWhiteSpace(requestPath) || !File.Exists(requestPath))
         {
@@ -65,7 +38,7 @@ internal static class Runner
         string name = request.Name;
         Console.WriteLine($"Building '{name}'...");
 
-        IInstanceService service = CreateService();
+        IInstanceService service = CliServices.Create().Instance;
         BuildResponseDto response;
 
         try
@@ -102,20 +75,6 @@ internal static class Runner
         return 0;
     }
 
-    private static IInstanceService CreateService()
-    {
-        string assets = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "wsl-squad");
-        _ = Directory.CreateDirectory(assets);
-        CatalogBootstrap.Ensure(assets);
-
-        ServiceFactory factory = new();
-        string root = factory.ResolveRoot(assets, assets);
-
-        return factory.CreateInstanceService(root, assets, assets, IconPainter.Draw);
-    }
-
     private static bool IsExternalFailure(Exception exception)
     {
         return exception is InvalidOperationException
@@ -148,9 +107,9 @@ internal static class Runner
         {
             File.Delete(path);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            Trace.TraceWarning($"[Runner] Could not delete temporary file '{path}': {ex.Message}");
+            Console.Error.WriteLine($"Could not delete the temporary build request '{path}': {exception.Message}");
         }
     }
 }

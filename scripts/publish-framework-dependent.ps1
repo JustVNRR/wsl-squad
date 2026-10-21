@@ -9,7 +9,7 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 $ArtifactsRoot = Join-Path $RepoRoot "artifacts"
 $PublishRoot = Join-Path $ArtifactsRoot "publish"
 $AppDir = Join-Path $PublishRoot "framework-dependent"
-$RunnerDir = Join-Path $AppDir "runner"
+$CliDir = Join-Path $AppDir "cli"
 
 if (Test-Path $AppDir) {
     Remove-Item $AppDir -Recurse -Force
@@ -45,16 +45,14 @@ function Publish-Project {
 
 Publish-Project "GUI" "src/wsl-squad.UI.Wpf/wsl-squad.UI.Wpf.csproj" $AppDir
 
-if (Test-Path $RunnerDir) {
-    Remove-Item $RunnerDir -Recurse -Force
+if (Test-Path $CliDir) {
+    Remove-Item $CliDir -Recurse -Force
 }
 
-Publish-Project "Runner" "src/wsl-squad.UI.Runner/wsl-squad.UI.Runner.csproj" $RunnerDir
-Publish-Project "CLI" "src/wsl-squad.UI.Cli/wsl-squad.UI.Cli.csproj" $AppDir
+Publish-Project "CLI" "src/wsl-squad.UI.Cli/wsl-squad.UI.Cli.csproj" $CliDir
 
 Write-Host ""
 Write-Host "Published to $AppDir"
 Write-Host "  GUI    : $(Join-Path $AppDir 'wsl-squad.gui.exe')"
-Write-Host "  CLI    : $(Join-Path $AppDir 'wsl-squad.cli.exe')"
-Write-Host "  Runner : $(Join-Path $RunnerDir 'wsl-squad.UI.Runner.exe')"
+Write-Host "  CLI    : $(Join-Path $CliDir 'wsl-squad.cli.exe')"
 Write-Host "Requires the .NET 10 Desktop Runtime."

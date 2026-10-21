@@ -4,7 +4,7 @@
 #endif
 #define AppPublisher "JustVNRR"
 #define GuiExe "wsl-squad.gui.exe"
-#define CliExe "wsl-squad.cli.exe"
+#define CliExe "cli\wsl-squad.cli.exe"
 
 ; 0 = framework-dependent, 1 = self-contained
 #define SelfContained 0
@@ -49,7 +49,6 @@ DialogFontSize=12
 [Files]
 #if SelfContained == 1
 Source: "{#PublishDir}\self-contained\gui\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
-Source: "{#PublishDir}\self-contained\cli\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 #else
 Source: "{#PublishDir}\framework-dependent\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 #endif

@@ -77,7 +77,6 @@ wsl-squad/
 │   ├── wsl-squad.Core/           # Entities, Dtos, Mappers, Repositories, Services, Resources
 │   ├── wsl-squad.Presentation/   # ViewModels, Presenters, Abstractions, Settings, Drawing
 │   ├── wsl-squad.UI.Cli/         # CLI menu, console views, composition root
-│   ├── wsl-squad.UI.Runner/      # console worker launched by the GUI
 │   └── wsl-squad.UI.Wpf/         # WPF views, themes, services, assets
 ├── tests/
 │   ├── wsl-squad.Core.Tests/

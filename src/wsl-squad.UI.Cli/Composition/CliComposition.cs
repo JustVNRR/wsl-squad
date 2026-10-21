@@ -1,6 +1,5 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Drawing;
 using wsl_squad.Presentation.Presenters;
 using wsl_squad.Presentation.Presenters.Fleet;
 using wsl_squad.Presentation.Presenters.Instance;
@@ -32,17 +31,10 @@ public sealed class CliComposition
 
     public CliComposition()
     {
-        string assets = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "wsl-squad");
-        _ = Directory.CreateDirectory(assets);
-        CatalogBootstrap.Ensure(assets);
-
-        ServiceFactory factory = new();
-        string root = factory.ResolveRoot(assets, assets);
-        IInstanceService instance = factory.CreateInstanceService(root, assets, assets, IconPainter.Draw);
-        IFleetService fleet = factory.CreateFleetService(root, assets, assets, IconPainter.Draw);
-        IPackCatalogService catalogue = factory.CreatePackCatalogService(assets, assets);
+        CliServices services = CliServices.Create();
+        IInstanceService instance = services.Instance;
+        IFleetService fleet = services.Fleet;
+        IPackCatalogService catalogue = services.Catalogue;
 
         _host = new ConsoleHost(_theme);
         CliFleetView fleetView = new();

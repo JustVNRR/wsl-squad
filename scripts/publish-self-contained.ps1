@@ -10,8 +10,7 @@ $ArtifactsRoot = Join-Path $RepoRoot "artifacts"
 $PublishRoot = Join-Path $ArtifactsRoot "publish"
 $OutputRoot = Join-Path $PublishRoot "self-contained"
 $GuiDir = Join-Path $OutputRoot "gui"
-$CliDir = Join-Path $OutputRoot "cli"
-$RunnerDir = Join-Path $GuiDir "runner"
+$CliDir = Join-Path $GuiDir "cli"
 
 if (Test-Path $OutputRoot) {
     Remove-Item $OutputRoot -Recurse -Force
@@ -48,15 +47,13 @@ function Publish-Project {
 
 Publish-Project "GUI" "src/wsl-squad.UI.Wpf/wsl-squad.UI.Wpf.csproj" $GuiDir
 
-if (Test-Path $RunnerDir) {
-    Remove-Item $RunnerDir -Recurse -Force
+if (Test-Path $CliDir) {
+    Remove-Item $CliDir -Recurse -Force
 }
 
-Publish-Project "Runner" "src/wsl-squad.UI.Runner/wsl-squad.UI.Runner.csproj" $RunnerDir
 Publish-Project "CLI" "src/wsl-squad.UI.Cli/wsl-squad.UI.Cli.csproj" $CliDir
 
 Write-Host ""
 Write-Host "Published to $OutputRoot"
 Write-Host "  GUI    : $(Join-Path $GuiDir 'wsl-squad.gui.exe')"
-Write-Host "  Runner : $(Join-Path $RunnerDir 'wsl-squad.UI.Runner.exe')"
 Write-Host "  CLI    : $(Join-Path $CliDir 'wsl-squad.cli.exe')"

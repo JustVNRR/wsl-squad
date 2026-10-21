@@ -81,7 +81,7 @@ In this mode:
 
 - the .NET runtime is not required;
 - the Desktop Runtime check is disabled;
-- files come from `artifacts\publish\self-contained\gui\*` and `artifacts\publish\self-contained\cli\*`.
+- files come from `artifacts\publish\self-contained\gui\*`, CLI included under `cli\`.
 
 ## Bundled .NET runtime
 
@@ -122,7 +122,7 @@ wsl-squad
 
 Without arguments, the command opens the CLI interactive menu. There is no `--help` option.
 
-The `.cmd` launches `wsl-squad.cli.exe` and propagates its exit code.
+The `.cmd` launches `cli\wsl-squad.cli.exe` and propagates its exit code.
 
 No `wsl-squad` launcher is created for the GUI; since the installation folder is on `PATH`, `wsl-squad.gui` can still be invoked, but the GUI normally starts from its shortcut.
 
@@ -183,7 +183,7 @@ The folder must appear **only once**.
 - The Start menu shortcut launches `wsl-squad.gui.exe`.
 - The desktop shortcut appears only if the corresponding task was selected.
 - The application icon is visible in Explorer.
-- `runner\wsl-squad.UI.Runner.exe` is present in the installation folder.
+- `cli\wsl-squad.cli.exe` is present in the installation folder.
 
 ### 6. Uninstall
 

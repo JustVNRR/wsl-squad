@@ -75,7 +75,7 @@ public sealed class WpfDialogs : IDialogService
 
         try
         {
-            using Process process = LaunchRunner($"apply_build \"{requestPath}\"", "build");
+            using Process process = LaunchBuildCli($"build --request \"{requestPath}\"");
             await process.WaitForExitAsync();
 
             return process.ExitCode;
@@ -100,35 +100,42 @@ public sealed class WpfDialogs : IDialogService
         return viewModel.Result;
     }
 
-    private static Process LaunchRunner(string arguments, string name)
+    private static Process LaunchBuildCli(string arguments)
     {
-        string directory = Path.Combine(AppContext.BaseDirectory, "runner");
-        string executable = Path.Combine(directory, "wsl-squad.UI.Runner.exe");
-        string assembly = Path.Combine(directory, "wsl-squad.UI.Runner.dll");
+        string[] directories =
+        [
+            Path.Combine(AppContext.BaseDirectory, "cli"),
+            AppContext.BaseDirectory,
+        ];
 
-        ProcessStartInfo start = new()
+        foreach (string directory in directories)
         {
-            UseShellExecute = true,
-            WorkingDirectory = Path.GetTempPath(),
-        };
+            string executable = Path.Combine(directory, "wsl-squad.cli.exe");
 
-        if (File.Exists(executable))
-        {
-            start.FileName = executable;
-            start.Arguments = arguments;
-        }
-        else if (File.Exists(assembly))
-        {
-            start.FileName = "dotnet";
-            start.Arguments = $"\"{assembly}\" {arguments}";
-        }
-        else
-        {
-            throw new InvalidOperationException($"The {name} runner is missing next to the application.");
+            if (File.Exists(executable))
+            {
+                return Process.Start(new ProcessStartInfo(executable)
+                {
+                    Arguments = arguments,
+                    UseShellExecute = true,
+                    WorkingDirectory = Path.GetTempPath(),
+                }) ?? throw new InvalidOperationException("The CLI could not be started.");
+            }
+
+            string assembly = Path.Combine(directory, "wsl-squad.cli.dll");
+
+            if (File.Exists(assembly))
+            {
+                return Process.Start(new ProcessStartInfo("dotnet")
+                {
+                    Arguments = $"\"{assembly}\" {arguments}",
+                    UseShellExecute = true,
+                    WorkingDirectory = Path.GetTempPath(),
+                }) ?? throw new InvalidOperationException("The CLI could not be started.");
+            }
         }
 
-        return Process.Start(start)
-            ?? throw new InvalidOperationException($"The {name} runner could not be started.");
+        throw new InvalidOperationException("The CLI is missing next to the application.");
     }
 
     public ArchiveDto? ShowArchive(ArchiveViewModel viewModel)

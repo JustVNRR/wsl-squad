@@ -3,7 +3,6 @@
     <Project Path="src/wsl-squad.Core/wsl-squad.Core.csproj" />
     <Project Path="src/wsl-squad.Presentation/wsl-squad.Presentation.csproj" />
     <Project Path="src/wsl-squad.UI.Cli/wsl-squad.UI.Cli.csproj" />
-    <Project Path="src/wsl-squad.UI.Runner/wsl-squad.UI.Runner.csproj" />
     <Project Path="src/wsl-squad.UI.Wpf/wsl-squad.UI.Wpf.csproj" />
   </Folder>
   <Folder Name="/tests/">
