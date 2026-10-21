@@ -785,6 +785,7 @@ public sealed class InstanceService : IInstanceService
         string errorLog = Path.Combine(_instanceRepository.GetFolder(name), "pack-errors.log");
 
         TryDeleteFile(errorLog);
+        _ = _wslRepository.CleanPackStaging(name);
 
         IReadOnlyList<string> before = _wslRepository.GetInstalledPacks(name);
         IReadOnlyList<string> toRemove = catalog.ResolveRemoval(before, dto.ToRemove, dto.ToAdd);
@@ -1293,22 +1294,22 @@ public sealed class InstanceService : IInstanceService
 
     private PackStep InstallPack(string name, WslPack pack, string errorLog, bool interactive = false)
     {
-        int code = _wslRepository.CopyPackIntoInstance(name, _packCatalogRepository.GetFolder(pack.Name), pack.Name);
+        int code = _wslRepository.CopyPackIntoStaging(name, _packCatalogRepository.GetFolder(pack.Name), pack.Name);
 
         if (code != 0)
         {
-            _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
+            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
 
             return new PackStep(pack.Name, "copy", code);
         }
 
-        if (_wslRepository.PackHasFile(name, pack.Name, "install_root.sh"))
+        if (_wslRepository.StagingPackHasFile(name, pack.Name, "install_root.sh"))
         {
-            int rootCode = _wslRepository.RunPackScript(name, pack.Name, "install_root.sh", asRoot: true, errorLog, interactive);
+            int rootCode = _wslRepository.RunStagingPackScript(name, pack.Name, "install_root.sh", asRoot: true, errorLog, interactive);
 
             if (rootCode != 0)
             {
-                _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
+                _ = _wslRepository.DiscardPackStaging(name, pack.Name);
 
                 return new PackStep(pack.Name, "root", rootCode);
             }
@@ -1319,7 +1320,7 @@ public sealed class InstanceService : IInstanceService
         try
         {
             sudoWindow = _wslRepository.OpenPackSudoWindow(name);
-            code = _wslRepository.RunPackScript(name, pack.Name, "install.sh", asRoot: false, errorLog, interactive);
+            code = _wslRepository.RunStagingPackScript(name, pack.Name, "install.sh", asRoot: false, errorLog, interactive);
         }
         finally
         {
@@ -1331,16 +1332,25 @@ public sealed class InstanceService : IInstanceService
 
         if (code == 2)
         {
-            _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
+            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
 
             return new PackStep(pack.Name, "declined", 0);
         }
 
         if (code != 0)
         {
-            _ = _wslRepository.RemovePackFromInstance(name, pack.Name);
+            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
 
             return new PackStep(pack.Name, "install", code);
+        }
+
+        int promoted = _wslRepository.PromotePack(name, pack.Name);
+
+        if (promoted != 0)
+        {
+            _ = _wslRepository.DiscardPackStaging(name, pack.Name);
+
+            return new PackStep(pack.Name, "promote", promoted);
         }
 
         return new PackStep(pack.Name, "installed", 0);

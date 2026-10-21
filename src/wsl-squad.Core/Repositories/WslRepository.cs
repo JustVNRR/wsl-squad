@@ -455,10 +455,32 @@ public sealed class WslRepository : IWslRepository
         return $"{location.Home}/.config/packs/{packName}";
     }
 
+    private static string PackStagingFolderPath(PackLocation location, string packName)
+    {
+        if (string.IsNullOrEmpty(packName))
+        {
+            throw new ArgumentException("A pack name is required.", nameof(packName));
+        }
+
+        return $"{location.Home}/.config/packs.staging/{packName}";
+    }
+
     public int CopyPackIntoInstance(string instanceName, string sourceFolder, string packName)
     {
         PackLocation location = ResolveLocation(instanceName);
-        string target = PackFolderPath(location, packName);
+
+        return CopyPackToPath(instanceName, sourceFolder, PackFolderPath(location, packName));
+    }
+
+    public int CopyPackIntoStaging(string instanceName, string sourceFolder, string packName)
+    {
+        PackLocation location = ResolveLocation(instanceName);
+
+        return CopyPackToPath(instanceName, sourceFolder, PackStagingFolderPath(location, packName));
+    }
+
+    private int CopyPackToPath(string instanceName, string sourceFolder, string target)
+    {
         int code = RunInInstance(instanceName, string.Empty, ["mkdir", "-p", target], string.Empty);
 
         if (code != 0)
@@ -588,7 +610,46 @@ public sealed class WslRepository : IWslRepository
         bool interactive = false)
     {
         PackLocation location = ResolveLocation(instanceName);
-        string target = PackFolderPath(location, packName);
+
+        return RunPackScriptAt(
+            instanceName,
+            location,
+            PackFolderPath(location, packName),
+            script,
+            asRoot,
+            errorLog,
+            interactive);
+    }
+
+    public int RunStagingPackScript(
+        string instanceName,
+        string packName,
+        string script,
+        bool asRoot,
+        string? errorLog,
+        bool interactive = false)
+    {
+        PackLocation location = ResolveLocation(instanceName);
+
+        return RunPackScriptAt(
+            instanceName,
+            location,
+            PackStagingFolderPath(location, packName),
+            script,
+            asRoot,
+            errorLog,
+            interactive);
+    }
+
+    private static int RunPackScriptAt(
+        string instanceName,
+        PackLocation location,
+        string target,
+        string script,
+        bool asRoot,
+        string? errorLog,
+        bool interactive)
+    {
         List<string> wslArguments = ["-d", instanceName];
 
         if (asRoot)
@@ -614,9 +675,90 @@ public sealed class WslRepository : IWslRepository
     public bool PackHasFile(string instanceName, string packName, string fileName)
     {
         PackLocation location = ResolveLocation(instanceName);
-        string target = $"{PackFolderPath(location, packName)}/{fileName}";
 
-        return RunInInstance(instanceName, string.Empty, ["test", "-f", target], string.Empty) == 0;
+        return PackHasFileAt(instanceName, PackFolderPath(location, packName), fileName);
+    }
+
+    public bool StagingPackHasFile(string instanceName, string packName, string fileName)
+    {
+        PackLocation location = ResolveLocation(instanceName);
+
+        return PackHasFileAt(instanceName, PackStagingFolderPath(location, packName), fileName);
+    }
+
+    private bool PackHasFileAt(string instanceName, string target, string fileName)
+    {
+        return RunInInstance(
+            instanceName,
+            string.Empty,
+            ["test", "-f", $"{target}/{fileName}"],
+            string.Empty) == 0;
+    }
+
+    public int PromotePack(string instanceName, string packName)
+    {
+        PackLocation location = ResolveLocation(instanceName);
+        string staging = PackStagingFolderPath(location, packName);
+        string final = PackFolderPath(location, packName);
+        string packsRoot = $"{location.Home}/.config/packs";
+
+        int code = RunInInstance(instanceName, string.Empty, ["mkdir", "-p", packsRoot], string.Empty);
+
+        if (code != 0)
+        {
+            return code;
+        }
+
+        code = RunInInstance(instanceName, "root", ["rm", "-rf", final], string.Empty);
+
+        if (code != 0)
+        {
+            return code;
+        }
+
+        code = RunInInstance(instanceName, "root", ["mv", staging, final], string.Empty);
+
+        if (code == 0)
+        {
+            if (location.User.Length > 0)
+            {
+                _ = RunInInstance(
+                    instanceName,
+                    "root",
+                    ["chown", "-R", location.User, final],
+                    string.Empty);
+            }
+
+            _ = RunInInstance(
+                instanceName,
+                "root",
+                ["find", final, "-name", "*.sh", "-exec", "chmod", "+x", "{}", "+"],
+                string.Empty);
+        }
+
+        return code;
+    }
+
+    public int DiscardPackStaging(string instanceName, string packName)
+    {
+        PackLocation location = ResolveLocation(instanceName);
+
+        return RunInInstance(
+            instanceName,
+            "root",
+            ["rm", "-rf", PackStagingFolderPath(location, packName)],
+            string.Empty);
+    }
+
+    public int CleanPackStaging(string instanceName)
+    {
+        PackLocation location = ResolveLocation(instanceName);
+
+        return RunInInstance(
+            instanceName,
+            "root",
+            ["rm", "-rf", $"{location.Home}/.config/packs.staging"],
+            string.Empty);
     }
 
     public int RemovePackFromInstance(string instanceName, string packName)

@@ -271,11 +271,15 @@ if [ -d "$pack_catalog" ]; then
 
             user_home=$(getent passwd "$NEW_USER" | cut -d: -f6)
             user_packs="$user_home/.config/packs"
+            user_staging="$user_home/.config/packs.staging"
             mkdir -p "$user_packs"
-            chown "$NEW_USER:$NEW_USER" "$user_home" "$user_home/.config" "$user_packs"
+            rm -rf "$user_staging"
+            mkdir -p "$user_staging"
+            chown "$NEW_USER:$NEW_USER" "$user_home" "$user_home/.config" "$user_packs" "$user_staging"
 
             for name in "${ordered[@]}"; do
                 source_pack="$pack_catalog/$name"
+                staging_pack="$user_staging/$name"
                 target_pack="$user_packs/$name"
 
                 if [ ! -d "$source_pack" ]; then
@@ -283,27 +287,34 @@ if [ -d "$pack_catalog" ]; then
                     continue
                 fi
 
-                rm -rf "$target_pack"
-                cp -a "$source_pack" "$target_pack"
-                chown -R "$NEW_USER:$NEW_USER" "$target_pack"
+                rm -rf "$staging_pack"
+                cp -a "$source_pack" "$staging_pack"
+                chown -R "$NEW_USER:$NEW_USER" "$staging_pack"
 
-                if [ -f "$target_pack/install_root.sh" ]; then
-                    if ! ( cd "$target_pack" && bash install_root.sh ); then
+                if [ -f "$staging_pack/install_root.sh" ]; then
+                    if ! ( cd "$staging_pack" && bash install_root.sh ); then
                         echo "${C_YELLOW}[WARNING] The root part of '$name' failed.${C_RESET}"
-                        rm -rf "$target_pack"
+                        rm -rf "$staging_pack"
                         continue
                     fi
                 fi
 
-                if [ -f "$target_pack/install.sh" ]; then
-                    if ! su - "$NEW_USER" -c "cd '$target_pack' && bash install.sh"; then
+                if [ -f "$staging_pack/install.sh" ]; then
+                    if ! su - "$NEW_USER" -c "cd '$staging_pack' && bash install.sh"; then
                         echo "${C_YELLOW}[WARNING] The pack '$name' was not installed for $NEW_USER.${C_RESET}"
-                        rm -rf "$target_pack"
+                        rm -rf "$staging_pack"
                         continue
                     fi
                 fi
 
-                chown -R "$NEW_USER:$NEW_USER" "$target_pack"
+                chown -R "$NEW_USER:$NEW_USER" "$staging_pack"
+                rm -rf "$target_pack"
+
+                if ! mv "$staging_pack" "$target_pack"; then
+                    echo "${C_YELLOW}[WARNING] The pack '$name' could not be moved into place.${C_RESET}"
+                    rm -rf "$staging_pack"
+                    continue
+                fi
 
                 welcome=$(sed -n 's/^PACK_WELCOME[[:space:]]*:=[[:space:]]*//p' "$target_pack/pack.conf" | head -n 1)
                 if [ -n "$welcome" ]; then
@@ -311,6 +322,7 @@ if [ -d "$pack_catalog" ]; then
                     echo "${C_CYAN}$welcome${C_RESET}"
                 fi
             done
+            rmdir "$user_staging" 2>/dev/null || true
         fi
     fi
 else

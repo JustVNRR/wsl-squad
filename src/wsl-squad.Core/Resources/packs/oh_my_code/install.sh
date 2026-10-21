@@ -48,7 +48,8 @@ else
         fi
     fi
 
-    echo "Installing Claude Code from Anthropic's own script (a few minutes)..."
+    echo "Installing Claude Code from Anthropic's own script"
+    echo "Please wait..."
     clean_path=$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     PATH=$clean_path curl -fsSL https://claude.ai/install.sh | PATH=$clean_path bash 2>&1 |
         LC_ALL=C tr -d '\200-\377'

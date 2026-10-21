@@ -196,6 +196,58 @@ public class InstanceServiceTests
     }
 
     [Fact]
+    public void Installs_a_pack_in_staging_before_promoting_it()
+    {
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base" }]);
+        _packs.Setup(repository => repository.GetFolder("base")).Returns("/catalog/base");
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
+        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns([]);
+        _wsl.Setup(wsl => wsl.CopyPackIntoStaging("alpha", "/catalog/base", "base")).Returns(0);
+        _wsl.Setup(wsl => wsl.StagingPackHasFile("alpha", "base", "install_root.sh")).Returns(false);
+        _wsl.Setup(wsl => wsl.RunStagingPackScript("alpha", "base", "install.sh", false, It.IsAny<string?>(), false))
+            .Returns(0);
+        _wsl.Setup(wsl => wsl.PromotePack("alpha", "base")).Returns(0);
+
+        ManagePacksResponseDto response = _service.ManagePacks(new ManagePacksDto
+        {
+            InstanceName = "alpha",
+            ToAdd = ["base"],
+        });
+
+        response.Outcome.Should().Be("ok");
+        _wsl.Verify(wsl => wsl.CleanPackStaging("alpha"), Times.Once);
+        _wsl.Verify(wsl => wsl.CopyPackIntoStaging("alpha", "/catalog/base", "base"), Times.Once);
+        _wsl.Verify(wsl => wsl.RunStagingPackScript("alpha", "base", "install.sh", false, It.IsAny<string?>(), false), Times.Once);
+        _wsl.Verify(wsl => wsl.PromotePack("alpha", "base"), Times.Once);
+        _wsl.Verify(wsl => wsl.CopyPackIntoInstance(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        _wsl.Verify(wsl => wsl.RemovePackFromInstance(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Discards_the_staging_folder_when_a_pack_fails_to_install()
+    {
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base" }]);
+        _packs.Setup(repository => repository.GetFolder("base")).Returns("/catalog/base");
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
+        _wsl.Setup(wsl => wsl.GetInstalledPacks("alpha")).Returns([]);
+        _wsl.Setup(wsl => wsl.CopyPackIntoStaging("alpha", "/catalog/base", "base")).Returns(0);
+        _wsl.Setup(wsl => wsl.StagingPackHasFile("alpha", "base", "install_root.sh")).Returns(true);
+        _wsl.Setup(wsl => wsl.RunStagingPackScript("alpha", "base", "install_root.sh", true, It.IsAny<string?>(), false))
+            .Returns(7);
+
+        ManagePacksResponseDto response = _service.ManagePacks(new ManagePacksDto
+        {
+            InstanceName = "alpha",
+            ToAdd = ["base"],
+        });
+
+        response.Outcome.Should().Be("failed");
+        response.Failed.Should().Equal("base");
+        _wsl.Verify(wsl => wsl.DiscardPackStaging("alpha", "base"), Times.Once);
+        _wsl.Verify(wsl => wsl.PromotePack(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void Refuses_to_remove_a_pack_required_by_another()
     {
         _packs.Setup(repository => repository.GetAllPacks()).Returns(
