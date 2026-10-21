@@ -63,21 +63,51 @@ public class PresenterTests
         service.Setup(s => s.GetOrphans()).Returns([]);
 
         TestFleetView view = new() { PickedInstance = "alpha" };
-        PresenterAction register = new("register", "Register", _ => ActionResult.Ok("r"));
         PresenterAction unregister = new("unregister", "Unregister", _ => ActionResult.Ok("u"));
         PresenterAction archive = new("archive", "Archive", _ => ActionResult.Ok("a"));
-        PresenterAction unregisterSlot = new("unregister", "Unregister", _ => ActionResult.Ok("u"));
-        BrowsePresenter presenter = new(service.Object, view, [archive, unregisterSlot], register, unregister, [archive]);
+        Dictionary<WslCommandKind, PresenterAction> actions = new()
+        {
+            [WslCommandKind.UnregisterDocker] = unregister,
+            [WslCommandKind.Archive] = archive,
+        };
+        BrowsePresenter presenter = new(service.Object, view, actions);
 
         presenter.AskInstances()!.Name.Should().Be("alpha");
         presenter.AskArchives()!.Name.Should().Be("old");
 
-        WslIndexDto live = new() { Name = "alpha", Docker = "yes" };
+        WslIndexDto live = new()
+        {
+            Name = "alpha",
+            Docker = "yes",
+            Commands = [new WslCommandDto { Kind = WslCommandKind.UnregisterDocker }],
+        };
         presenter.AskAction(live)!.Key.Should().Be("unregister");
 
         view.PickedInstance = null;
         presenter.AskInstances().Should().BeNull();
         presenter.Miss.Should().Be("cancelled");
+    }
+
+    [Fact]
+    public void Browse_only_offers_the_commands_the_row_carries()
+    {
+        Mock<IInstanceService> service = new();
+        TestFleetView view = new();
+        PresenterAction shell = new("shell", "Shell", _ => ActionResult.Ok("s"));
+        PresenterAction manage = new("manage_packs", "Manage packs", _ => ActionResult.Ok("m"));
+        Dictionary<WslCommandKind, PresenterAction> actions = new()
+        {
+            [WslCommandKind.Shell] = shell,
+            [WslCommandKind.ManagePacks] = manage,
+        };
+        BrowsePresenter presenter = new(service.Object, view, actions);
+        WslIndexDto row = new()
+        {
+            Name = "alpha",
+            Commands = [new WslCommandDto { Kind = WslCommandKind.Shell }],
+        };
+
+        presenter.AskAction(row)!.Key.Should().Be("shell");
     }
 
     [Fact]

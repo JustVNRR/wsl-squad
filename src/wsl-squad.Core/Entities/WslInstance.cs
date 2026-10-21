@@ -22,6 +22,8 @@ public sealed class WslInstance
 
     public string DefaultUser { get; set; } = "root";
 
+    public string Family { get; set; } = string.Empty;
+
     public bool IsArchive { get; set; }
 
     public WslTheme? Theme { get; set; }

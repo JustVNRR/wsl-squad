@@ -7,30 +7,17 @@ namespace wsl_squad.Presentation.Presenters.Fleet;
 public sealed class BrowsePresenter : BasePresenter<IFleetView>
 {
     private readonly IInstanceService _service;
+    private readonly IReadOnlyDictionary<WslCommandKind, PresenterAction> _actions;
 
     public BrowsePresenter(
         IInstanceService service,
         IFleetView view,
-        IReadOnlyList<PresenterAction> liveActions,
-        PresenterAction registerAction,
-        PresenterAction unregisterAction,
-        IReadOnlyList<PresenterAction> archiveActions)
+        IReadOnlyDictionary<WslCommandKind, PresenterAction> actions)
         : base(view)
     {
         _service = service;
-        LiveActions = liveActions;
-        RegisterAction = registerAction;
-        UnregisterAction = unregisterAction;
-        ArchiveActions = archiveActions;
+        _actions = actions;
     }
-
-    public IReadOnlyList<PresenterAction> LiveActions { get; }
-
-    public PresenterAction RegisterAction { get; }
-
-    public PresenterAction UnregisterAction { get; }
-
-    public IReadOnlyList<PresenterAction> ArchiveActions { get; }
 
     public string Miss { get; private set; } = string.Empty;
 
@@ -128,24 +115,18 @@ public sealed class BrowsePresenter : BasePresenter<IFleetView>
     {
         ArgumentNullException.ThrowIfNull(row);
 
-        if (row.IsArchive)
-        {
-            return View.PickAction($"Availables actions for '{row.Name}'", ArchiveActions);
-        }
-
-        PresenterAction docker = row.Docker == "yes" ? UnregisterAction : RegisterAction;
         List<PresenterAction> actions = [];
 
-        foreach (PresenterAction action in LiveActions)
+        foreach (WslCommandDto command in row.Commands)
         {
-            if (action.Key == "unregister")
+            if (_actions.TryGetValue(command.Kind, out PresenterAction? action))
             {
-                actions.Add(docker);
+                actions.Add(action);
             }
-
-            actions.Add(action);
         }
 
-        return View.PickAction($"Availables actions for '{row.Name}'", actions);
+        return actions.Count == 0
+            ? null
+            : View.PickAction($"Availables actions for '{row.Name}'", actions);
     }
 }

@@ -45,6 +45,8 @@ public sealed class InstanceRepository : IInstanceRepository
             instance.DefaultUser = saved.DefaultUser;
         }
 
+        instance.Family = Empty(saved.Family);
+
         if (saved.Theme is not null)
         {
             WslTheme theme = new()
@@ -95,6 +97,7 @@ public sealed class InstanceRepository : IInstanceRepository
             new InstanceFile
             {
                 DefaultUser = Empty(instance.DefaultUser),
+                Family = Empty(instance.Family),
                 Theme = block,
                 Docker = string.IsNullOrEmpty(docker) ? null : docker,
             });
@@ -243,6 +246,8 @@ public sealed class InstanceRepository : IInstanceRepository
     private sealed class InstanceFile
     {
         public string DefaultUser { get; set; } = string.Empty;
+
+        public string Family { get; set; } = string.Empty;
 
         public ThemeFile? Theme { get; set; }
 

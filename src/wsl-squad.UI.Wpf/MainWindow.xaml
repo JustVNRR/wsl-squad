@@ -65,65 +65,22 @@
                     <GridViewColumn Header="Action" Width="Auto">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Grid>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF2EA;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource ArchivedRowButton}"
-                                                ToolTip="Restore"/>
-                                        <Button Command="{Binding DataContext.DeleteArchiveCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource ArchivedRowButton}"
-                                                ToolTip="Delete"/>
-                                        <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF120;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Shell"/>
-                                        <Button Command="{Binding DataContext.RestartCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF01E;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Restart"/>
-                                        <Button Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF304;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Edit"/>
-                                        <Button Command="{Binding DataContext.AppearanceCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF53F;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Appearance"/>
-                                        <Button Command="{Binding DataContext.DuplicateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF0C5;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Duplicate"/>
-                                        <Button Command="{Binding DataContext.ArchiveCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF187;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Archive"/>
-                                        <Button Command="{Binding DataContext.CompactCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF066;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Compact"/>
-                                        <Button Command="{Binding DataContext.DockerCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF1B2;" FontFamily="{DynamicResource IconFace}"
-                                                Margin="0,0,4,0" Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Docker Desktop"/>
-                                        <Button Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}"
-                                                Background="Transparent"
-                                                Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
-                                                Style="{DynamicResource LiveRowButton}"
-                                                ToolTip="Remove"/>
-                                    </StackPanel>
-                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Commands}" HorizontalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding Glyph}" ToolTip="{Binding Tooltip}"
+                                                    Command="{Binding Command}" CommandParameter="{Binding Parameter}"
+                                                    Margin="0,0,4,0" Background="Transparent"
+                                                    Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="Transparent"
+                                                    FontFamily="{DynamicResource IconFace}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

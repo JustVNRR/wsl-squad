@@ -133,7 +133,8 @@ public partial class MainWindow : Views.ChromeWindow
             ? string.Empty
             : string.Join(
                 '\n',
-                _viewModel.Rows.Select(row => $"{row.Name}|{row.Size}|{row.IsArchive}"));
+                _viewModel.Rows.Select(row =>
+                    $"{row.Name}|{row.Size}|{row.IsArchive}|{string.Join(",", row.Commands.Select(command => command.Kind))}"));
     }
 
     private void FitCeiling()

@@ -77,6 +77,55 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task RunRowAsync(InstanceCommandParameter? request)
+    {
+        if (request is null || string.IsNullOrEmpty(request.Name))
+        {
+            return;
+        }
+
+        switch (request.Kind)
+        {
+            case WslCommandKind.Shell:
+                await OpenAsync(request.Name);
+                break;
+            case WslCommandKind.Restart:
+                await RestartAsync(request.Name);
+                break;
+            case WslCommandKind.ManagePacks:
+                Edit(request.Name);
+                break;
+            case WslCommandKind.Appearance:
+                await AppearanceAsync(request.Name);
+                break;
+            case WslCommandKind.Duplicate:
+                await DuplicateAsync(request.Name);
+                break;
+            case WslCommandKind.Archive:
+                await ArchiveAsync(request.Name);
+                break;
+            case WslCommandKind.Compact:
+                await CompactAsync(request.Name);
+                break;
+            case WslCommandKind.RegisterDocker:
+            case WslCommandKind.UnregisterDocker:
+                await DockerAsync(request.Name);
+                break;
+            case WslCommandKind.Remove:
+                await RemoveAsync(request.Name);
+                break;
+            case WslCommandKind.Restore:
+                await RestoreAsync(request.Name);
+                break;
+            case WslCommandKind.DeleteArchive:
+                await DeleteArchiveAsync(request.Name);
+                break;
+            default:
+                break;
+        }
+    }
+
+    [RelayCommand]
     private async Task AddAsync()
     {
         BuildViewModel viewModel = new(_instance, _dialogs);
@@ -489,7 +538,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                          .Where(row => row is not null)
                          .OrderBy(row => row.Name, StringComparer.Ordinal))
             {
-                Rows.Add(InstanceRowViewModel.From(row));
+                Rows.Add(InstanceRowViewModel.From(row, RunRowCommand));
             }
 
             SetStatus(

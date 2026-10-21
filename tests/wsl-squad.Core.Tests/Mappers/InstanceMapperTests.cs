@@ -20,7 +20,7 @@ public class InstanceMapperTests
             IsArchive = true,
         });
 
-        dto.Should().Be(new WslIndexDto { Name = "alpha", Size = 2048, IsArchive = true });
+        dto.Should().Be(new WslIndexDto { Name = "alpha", Size = 2048, IsArchive = true, Family = string.Empty });
     }
 
     [Fact]

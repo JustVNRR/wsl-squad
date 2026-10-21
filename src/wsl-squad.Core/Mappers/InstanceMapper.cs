@@ -14,6 +14,7 @@ public sealed class InstanceMapper : IInstanceMapper
             Name = instance.Name,
             Size = instance.Size,
             IsArchive = instance.IsArchive,
+            Family = instance.Family,
         };
     }
 

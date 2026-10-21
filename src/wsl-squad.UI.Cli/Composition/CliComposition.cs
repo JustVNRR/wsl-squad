@@ -1,3 +1,4 @@
+using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Drawing;
 using wsl_squad.Presentation.Presenters;
@@ -81,13 +82,23 @@ public sealed class CliComposition
         PresenterAction wslConfig = new("wslconfig", "open the Windows-wide WSL settings", _ => _wslConfig.Run());
         PresenterAction packs = new("availables packs", "edit, duplicate or delete a catalogue pack", _ => ActionResult.Ok("Settings : cancelled"));
 
-        BrowsePresenter browse = new(
-            instance,
-            fleetView,
-            [shell, restart, managePacks, theme, duplicate, archive, compact, remove],
-            register,
-            unregister,
-            [restore, deleteArchive]);
+        Dictionary<WslCommandKind, PresenterAction> actions = new()
+        {
+            [WslCommandKind.Shell] = shell,
+            [WslCommandKind.Restart] = restart,
+            [WslCommandKind.ManagePacks] = managePacks,
+            [WslCommandKind.Appearance] = theme,
+            [WslCommandKind.Duplicate] = duplicate,
+            [WslCommandKind.Archive] = archive,
+            [WslCommandKind.Compact] = compact,
+            [WslCommandKind.RegisterDocker] = register,
+            [WslCommandKind.UnregisterDocker] = unregister,
+            [WslCommandKind.Remove] = remove,
+            [WslCommandKind.Restore] = restore,
+            [WslCommandKind.DeleteArchive] = deleteArchive,
+        };
+
+        BrowsePresenter browse = new(instance, fleetView, actions);
 
         SettingsPresenter settings = new(catalogue, fleetView, [migrate, wslConfig, packs]);
         _navigation = new NavigationPresenter(browse, settings, fleetView);

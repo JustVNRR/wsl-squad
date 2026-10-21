@@ -45,6 +45,12 @@ public class InstanceServiceTests
         _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
         _docker.Setup(docker => docker.GetDesktopNames()).Returns(["alpha"]);
         _archives.Setup(archives => archives.GetAllArchives()).Returns([]);
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance
+        {
+            Name = "alpha",
+            Family = "debian",
+        });
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
 
         WslIndexDto row = _service.GetAll().Should().ContainSingle().Subject;
 
@@ -52,6 +58,77 @@ public class InstanceServiceTests
         row.Size.Should().Be(1024);
         row.Docker.Should().Be("yes");
         row.Path.Should().Be("/fleet/alpha");
+    }
+
+    [Fact]
+    public void Offers_manage_packs_when_the_family_has_a_catalog_pack()
+    {
+        SetupListedInstance("debian");
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
+
+        WslIndexDto row = _service.GetAll().Should().ContainSingle().Subject;
+
+        row.Family.Should().Be("debian");
+        row.Commands.Select(command => command.Kind).Should().Contain(WslCommandKind.ManagePacks);
+    }
+
+    [Fact]
+    public void Hides_manage_packs_when_the_family_has_no_catalog_pack()
+    {
+        SetupListedInstance("alpine");
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
+
+        WslIndexDto row = _service.GetAll().Should().ContainSingle().Subject;
+
+        row.Family.Should().Be("alpine");
+        row.Commands.Select(command => command.Kind).Should().NotContain(WslCommandKind.ManagePacks);
+    }
+
+    [Fact]
+    public void Hides_manage_packs_when_the_family_is_unknown()
+    {
+        SetupListedInstance(string.Empty);
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
+
+        WslIndexDto row = _service.GetAll().Should().ContainSingle().Subject;
+
+        row.Commands.Select(command => command.Kind).Should().NotContain(WslCommandKind.ManagePacks);
+    }
+
+    [Fact]
+    public void Lists_only_restore_and_delete_for_an_archive()
+    {
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _docker.Setup(docker => docker.GetDesktopNames()).Returns([]);
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([]);
+        _archives.Setup(archives => archives.GetAllArchives()).Returns(
+        [
+            new WslInstance { Name = "alpha_archive", IsArchive = true },
+        ]);
+        _archives.Setup(archives => archives.GetTarSize("alpha_archive")).Returns(1024);
+        _archives.Setup(archives => archives.GetFolder("alpha_archive")).Returns("/archives/alpha_archive");
+        _archives.Setup(archives => archives.GetCreatedAt("alpha_archive")).Returns(DateTime.Now);
+
+        WslIndexDto row = _service.GetAll().Should().ContainSingle().Subject;
+
+        row.Commands.Select(command => command.Kind).Should().Equal(
+            WslCommandKind.Restore,
+            WslCommandKind.DeleteArchive);
+    }
+
+    private void SetupListedInstance(string family)
+    {
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([new WslInstance { Name = "alpha" }]);
+        _instances.Setup(instances => instances.HasMarker("alpha")).Returns(true);
+        _instances.Setup(instances => instances.GetVhdxSize("alpha")).Returns(1024);
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns("/fleet/alpha");
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance
+        {
+            Name = "alpha",
+            Family = family,
+        });
+        _docker.Setup(docker => docker.GetDesktopNames()).Returns([]);
+        _archives.Setup(archives => archives.GetAllArchives()).Returns([]);
     }
 
     [Fact]
@@ -251,6 +328,12 @@ public class InstanceServiceTests
     public void Opens_the_pack_manager_from_the_catalog()
     {
         _packs.Setup(repository => repository.GetRoot()).Returns("/catalog/packs");
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance
+        {
+            Name = "alpha",
+            Family = "debian",
+        });
         _terminal.Setup(terminal => terminal.HasWslProfile("alpha")).Returns(true);
 
         _service.OpenPackManager("alpha");
@@ -269,12 +352,50 @@ public class InstanceServiceTests
     public void Opens_the_pack_manager_without_a_terminal_profile()
     {
         _packs.Setup(repository => repository.GetRoot()).Returns("/catalog/packs");
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance
+        {
+            Name = "alpha",
+            Family = "debian",
+        });
         _terminal.Setup(terminal => terminal.HasWslProfile("alpha")).Returns(false);
 
         _service.OpenPackManager("alpha");
 
         _wsl.Verify(wsl => wsl.OpenPackManager("alpha", false), Times.Once);
         _terminal.Verify(terminal => terminal.TouchSettings(), Times.Never);
+    }
+
+    [Fact]
+    public void Refuses_to_open_the_pack_manager_without_a_known_family()
+    {
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance { Name = "alpha" });
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
+
+        Action act = () => _service.OpenPackManager("alpha");
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*No pack*");
+        _wsl.Verify(wsl => wsl.SavePackManager(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>()), Times.Never);
+        _wsl.Verify(wsl => wsl.OpenPackManager(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public void Refuses_to_open_the_pack_manager_without_a_pack_for_the_family()
+    {
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance
+        {
+            Name = "alpha",
+            Family = "alpine",
+        });
+        _packs.Setup(repository => repository.GetAllPacks()).Returns([new WslPack { Name = "base", Family = "debian" }]);
+
+        Action act = () => _service.OpenPackManager("alpha");
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*No pack*");
     }
 
     [Fact]
@@ -349,6 +470,7 @@ public class InstanceServiceTests
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("alpha");
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
         _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
         _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
         _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
@@ -375,6 +497,9 @@ public class InstanceServiceTests
 
         response.Status.Should().Be(WslRecipeStatus.Warning);
         response.Messages.Should().Contain(message => message.Contains("the look failed", StringComparison.Ordinal));
+        _instances.Verify(instances => instances.SaveInstance(
+            It.Is<WslInstance>(instance => instance.Family == "debian"),
+            It.IsAny<string>()), Times.AtLeastOnce);
     }
 
     [Fact]

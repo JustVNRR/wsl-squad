@@ -68,6 +68,11 @@ distro_family() {
 }
 
 family=$(distro_family)
+if [ -z "$family" ]; then
+    echo "${C_RED}The instance's family could not be determined; no pack is offered.${C_RESET}"
+    read -rp "Press Enter to close... " _
+    exit 1
+fi
 
 default_user=$(awk -F= '/^[[:space:]]*default[[:space:]]*=/{gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); print $2; exit}' /etc/wsl.conf 2>/dev/null | tr -d '\r')
 [ -n "$default_user" ] || default_user=$(id -un)

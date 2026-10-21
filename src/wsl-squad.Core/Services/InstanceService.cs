@@ -43,6 +43,7 @@ public sealed class InstanceService : IInstanceService
     {
         List<WslIndexDto> rows = [];
         IReadOnlyList<string>? dockerNames = _dockerRepository.GetDesktopNames();
+        IReadOnlyList<WslPack> packs = _packCatalogRepository.GetAllPacks();
 
         foreach (WslInstance distro in _wslRepository.GetAllDistros())
         {
@@ -51,10 +52,16 @@ public sealed class InstanceService : IInstanceService
                 continue;
             }
 
+            WslInstance? stored = _instanceRepository.GetInstance(distro.Name);
+            string family = stored?.Family ?? string.Empty;
+            string docker = DockerState(dockerNames, distro.Name);
+
             distro.Size = _instanceRepository.GetVhdxSize(distro.Name);
             rows.Add(_instanceMapper.ToIndexDto(distro) with
             {
-                Docker = DockerState(dockerNames, distro.Name),
+                Family = family,
+                Docker = docker,
+                Commands = LiveCommands(family, docker, packs),
                 Path = _instanceRepository.GetFolder(distro.Name),
             });
         }
@@ -64,6 +71,7 @@ public sealed class InstanceService : IInstanceService
             archive.Size = _archiveRepository.GetTarSize(archive.Name);
             rows.Add(_instanceMapper.ToIndexDto(archive) with
             {
+                Commands = ArchiveCommands(),
                 Path = _archiveRepository.GetFolder(archive.Name),
                 Archived = _archiveRepository.GetCreatedAt(archive.Name)
                     .ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
@@ -359,7 +367,12 @@ public sealed class InstanceService : IInstanceService
 
         _instanceRepository.WriteMarker(name, "build");
 
-        WslInstance instance = new() { Name = name, DefaultUser = user ?? "root" };
+        WslInstance instance = new()
+        {
+            Name = name,
+            DefaultUser = user ?? "root",
+            Family = _wslRepository.GetFamily(name) ?? string.Empty,
+        };
         WslTheme theme = WslTheme.Default(name);
 
         if (!string.IsNullOrEmpty(dto.Font))
@@ -402,6 +415,8 @@ public sealed class InstanceService : IInstanceService
 
             instance.DefaultUser = imageUser.Length == 0 ? "root" : imageUser;
         }
+
+        _instanceRepository.SaveInstance(instance, string.Empty);
 
         List<string> warnings = [];
 
@@ -778,6 +793,15 @@ public sealed class InstanceService : IInstanceService
 
     public void OpenPackManager(string instanceName)
     {
+        WslInstance? stored = _instanceRepository.GetInstance(instanceName);
+        string family = stored?.Family ?? string.Empty;
+
+        if (!CanManagePacks(family, _packCatalogRepository.GetAllPacks()))
+        {
+            throw new InvalidOperationException(
+                $"No pack can be installed or removed on '{instanceName}'.");
+        }
+
         string script = CatalogBootstrap.ReadText("ingredients/manage-packs.sh");
         string cleanup = CatalogBootstrap.ReadText("packs/cleanup_orphans.sh");
         bool hasProfile = _terminalRepository.HasWslProfile(instanceName);
@@ -976,6 +1000,7 @@ public sealed class InstanceService : IInstanceService
                 Name = archiveName,
                 IsArchive = true,
                 DefaultUser = stored.DefaultUser,
+                Family = stored.Family,
                 Theme = theme,
             };
 
@@ -1058,6 +1083,7 @@ public sealed class InstanceService : IInstanceService
         {
             Name = name,
             DefaultUser = stored.DefaultUser,
+            Family = stored.Family,
             Theme = theme,
         };
 
@@ -1161,6 +1187,7 @@ public sealed class InstanceService : IInstanceService
             {
                 Name = copy,
                 DefaultUser = stored.DefaultUser,
+                Family = stored.Family,
                 Theme = theme,
             };
 
@@ -1306,6 +1333,45 @@ public sealed class InstanceService : IInstanceService
     private WslPackCatalog ReadCatalog()
     {
         return new WslPackCatalog { Packs = _packCatalogRepository.GetAllPacks() };
+    }
+
+    private static IReadOnlyList<WslCommandDto> LiveCommands(
+        string family,
+        string docker,
+        IReadOnlyList<WslPack> packs)
+    {
+        List<WslCommandKind> kinds = [WslCommandKind.Shell, WslCommandKind.Restart];
+
+        if (CanManagePacks(family, packs))
+        {
+            kinds.Add(WslCommandKind.ManagePacks);
+        }
+
+        kinds.Add(WslCommandKind.Appearance);
+        kinds.Add(WslCommandKind.Duplicate);
+        kinds.Add(WslCommandKind.Archive);
+        kinds.Add(WslCommandKind.Compact);
+        kinds.Add(docker == "yes" ? WslCommandKind.UnregisterDocker : WslCommandKind.RegisterDocker);
+        kinds.Add(WslCommandKind.Remove);
+
+        return [.. kinds.Select(kind => new WslCommandDto { Kind = kind })];
+    }
+
+    private static IReadOnlyList<WslCommandDto> ArchiveCommands()
+    {
+        return
+        [
+            new WslCommandDto { Kind = WslCommandKind.Restore },
+            new WslCommandDto { Kind = WslCommandKind.DeleteArchive },
+        ];
+    }
+
+    private static bool CanManagePacks(string family, IReadOnlyList<WslPack> packs)
+    {
+        return !string.IsNullOrEmpty(family) &&
+               packs.Any(pack =>
+                   pack.Offered &&
+                   string.Equals(pack.Family, family, StringComparison.OrdinalIgnoreCase));
     }
 
     private PackStep InstallPack(string name, WslPack pack, string errorLog, bool interactive = false)

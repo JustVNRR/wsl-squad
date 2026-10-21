@@ -1,5 +1,26 @@
 namespace wsl_squad.Core.Dtos;
 
+public enum WslCommandKind
+{
+    Shell,
+    Restart,
+    ManagePacks,
+    Appearance,
+    Duplicate,
+    Archive,
+    Compact,
+    RegisterDocker,
+    UnregisterDocker,
+    Remove,
+    Restore,
+    DeleteArchive,
+}
+
+public sealed record WslCommandDto
+{
+    public WslCommandKind Kind { get; init; }
+}
+
 public sealed record WslIndexDto
 {
     public string? Name { get; init; }
@@ -8,7 +29,11 @@ public sealed record WslIndexDto
 
     public bool IsArchive { get; init; }
 
+    public string? Family { get; init; }
+
     public string? Docker { get; init; }
+
+    public IReadOnlyList<WslCommandDto> Commands { get; init; } = [];
 
     public string Path { get; init; } = string.Empty;
 
