@@ -416,7 +416,38 @@ public sealed class InstanceService : IInstanceService
             instance.DefaultUser = imageUser.Length == 0 ? "root" : imageUser;
         }
 
-        _instanceRepository.SaveInstance(instance, string.Empty);
+        try
+        {
+            _instanceRepository.SaveInstance(instance, string.Empty);
+        }
+        catch (Exception exception)
+        {
+            try
+            {
+                _wslRepository.Unregister(name);
+            }
+            catch (Exception unregisterException) when (
+                unregisterException is InvalidOperationException or IOException or UnauthorizedAccessException)
+            {
+                Trace.TraceWarning($"[InstanceService] Could not unregister '{name}' after the instance file failed: {unregisterException.Message}");
+            }
+
+            try
+            {
+                if (Directory.Exists(installPath))
+                {
+                    Directory.Delete(installPath, recursive: true);
+                }
+            }
+            catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
+            {
+                Trace.TraceWarning($"[InstanceService] Could not remove '{installPath}' after the instance file failed: {cleanupException.Message}");
+            }
+
+            throw new InvalidOperationException(
+                $"The instance file could not be written for '{name}': {exception.Message}",
+                exception);
+        }
 
         List<string> warnings = [];
 

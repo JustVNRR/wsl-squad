@@ -503,6 +503,36 @@ public class InstanceServiceTests
     }
 
     [Fact]
+    public void Build_unregisters_the_instance_when_its_file_cannot_be_written()
+    {
+        using TemporaryDirectory temp = new();
+        string folder = temp.Combine("alpha");
+        _ = Directory.CreateDirectory(folder);
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
+        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
+        _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
+        _instances.Setup(instances => instances.SaveInstance(It.IsAny<WslInstance>(), It.IsAny<string>()))
+            .Throws(new IOException("disk full"));
+        _docker.Setup(docker => docker.TestRunning()).Returns(true);
+
+        Action act = () => _service.Build(new BuildDto
+        {
+            Name = "alpha",
+            BuildType = WslBuildType.Dockerfile,
+            BuildPath = "Dockerfile",
+            KeepImage = false,
+        });
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*instance file*disk full*");
+        _wsl.Verify(wsl => wsl.Unregister("alpha"), Times.Once);
+        Directory.Exists(folder).Should().BeFalse();
+        _terminal.Verify(terminal => terminal.SaveFragment(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<WslTheme>()), Times.Never);
+    }
+
+    [Fact]
     public void Build_survives_a_rootfs_tar_that_cannot_be_deleted()
     {
         using TemporaryDirectory temp = new();
