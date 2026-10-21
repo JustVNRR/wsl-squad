@@ -5,73 +5,8 @@ using wsl_squad.Presentation.ViewModels;
 
 namespace wsl_squad.Presentation.Tests.ViewModels;
 
-public class ManagePacksAndAppearanceTests
+public class AppearanceViewModelTests
 {
-    [Fact]
-    public void Manage_packs_tracks_additions_and_removals()
-    {
-        GetPacksResponseDto packs = new()
-        {
-            Installed = ["installed", "removable"],
-            Candidate = [new WslPackDto { Name = "candidate", Description = "New pack" }],
-            Removable = ["removable"],
-        };
-        ManagePacksViewModel viewModel = new(packs, "alpha");
-
-        viewModel.Lead.Should().Be("PACKS FOR 'ALPHA'");
-        viewModel.PackRows.Should().HaveCount(2);
-        viewModel.ApplyCommand.CanExecute(null).Should().BeFalse();
-
-        viewModel.PackRows[0].Checked = true;
-        viewModel.WillAdd.Should().Contain("candidate");
-        viewModel.ApplyCommand.CanExecute(null).Should().BeTrue();
-
-        viewModel.PackRows[1].Checked = false;
-        viewModel.WillRemove.Should().Contain("removable");
-
-        viewModel.ApplyCommand.Execute(null);
-
-        viewModel.Result.Should().NotBeNull();
-        viewModel.Result!.InstanceName.Should().Be("alpha");
-        viewModel.Result.ToAdd.Should().Equal("candidate");
-        viewModel.Result.ToRemove.Should().Equal("removable");
-    }
-
-    [Fact]
-    public void Installed_packs_keep_their_description()
-    {
-        GetPacksResponseDto packs = new()
-        {
-            Installed = ["oh_my_code"],
-            Removable = ["oh_my_code"],
-            InstalledPacks =
-            [
-                new WslPackDto
-                {
-                    Name = "oh_my_code",
-                    Description = "Claude Code (CLI)",
-                },
-            ],
-        };
-
-        ManagePacksViewModel viewModel = new(packs, "alpha");
-
-        _ = viewModel.PackRows.Should().ContainSingle();
-        _ = viewModel.PackRows[0].Label.Should().Contain("oh_my_code");
-        _ = viewModel.PackRows[0].Label.Should().Contain("Claude Code (CLI)");
-    }
-
-    [Fact]
-    public void Manage_packs_reports_an_empty_dialogue()
-    {
-        ManagePacksViewModel viewModel = new(
-            new GetPacksResponseDto { Installed = [], Candidate = [], Removable = [] },
-            "alpha");
-
-        viewModel.Empty().Should().BeTrue();
-        viewModel.PackRows.Should().BeEmpty();
-    }
-
     [Fact]
     public void Appearance_exposes_the_current_choices()
     {

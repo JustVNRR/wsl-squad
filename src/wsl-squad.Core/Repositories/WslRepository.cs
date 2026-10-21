@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Win32;
 
@@ -213,6 +214,79 @@ public sealed class WslRepository : IWslRepository
         });
     }
 
+    public void SavePackManager(string instanceName, string script, string cleanupScript, string catalogPath)
+    {
+        string normalized = NormalizeShell(script);
+        string cleanup = NormalizeShell(cleanupScript);
+        string catalog = Quote(ToWslPath(catalogPath));
+        string setup =
+            "cat > /root/manage-packs.sh <<'WSL_SQUAD_PACK_EOF'\n" +
+            normalized + "\nWSL_SQUAD_PACK_EOF\n" +
+            "cat > /root/manage-packs-cleanup.sh <<'WSL_SQUAD_CLEANUP_EOF'\n" +
+            cleanup + "\nWSL_SQUAD_CLEANUP_EOF\n" +
+            "chmod 755 /root/manage-packs.sh /root/manage-packs-cleanup.sh || exit 1\n" +
+            "printf '%s' " + catalog + " > /root/manage-packs.catalog\n";
+
+        (int exitCode, _) = NativeCommand.RunWithInput(
+            "wsl.exe",
+            ["-d", instanceName, "-u", "root", "--", "sh", "-s"],
+            setup,
+            includeError: true);
+
+        if (exitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"The pack manager could not be placed in '{instanceName}'.");
+        }
+    }
+
+    public void OpenPackManager(string instanceName, bool useProfile)
+    {
+        ProcessStartInfo start = new()
+        {
+            FileName = "wt.exe",
+            UseShellExecute = true,
+            WorkingDirectory = Path.GetTempPath(),
+        };
+
+        start.ArgumentList.Add("wsl.exe");
+        start.ArgumentList.Add("-d");
+        start.ArgumentList.Add(instanceName);
+        start.ArgumentList.Add("-u");
+        start.ArgumentList.Add("root");
+        start.ArgumentList.Add("--cd");
+        start.ArgumentList.Add("/root");
+        start.ArgumentList.Add("--");
+        start.ArgumentList.Add("/root/manage-packs.sh");
+
+        if (useProfile)
+        {
+            start.ArgumentList.Insert(0, instanceName);
+            start.ArgumentList.Insert(0, "-p");
+            Thread.Sleep(400);
+        }
+
+        try
+        {
+            if (Process.Start(start) is not null)
+            {
+                return;
+            }
+
+            Trace.TraceWarning("[WslRepository] Windows Terminal did not start.");
+        }
+        catch (Exception exception) when (exception is Win32Exception or FileNotFoundException)
+        {
+            Trace.TraceWarning($"[WslRepository] Windows Terminal could not be started: {exception.Message}");
+        }
+
+        _ = Process.Start(new ProcessStartInfo("wsl.exe")
+        {
+            Arguments = $"-d {instanceName} -u root --cd /root -- /root/manage-packs.sh",
+            UseShellExecute = true,
+        });
+    }
+
     public int RunInInstance(string instanceName, string? asUser, IReadOnlyList<string> arguments, string? workingDirectory)
     {
         List<string> wslArguments = ["-d", instanceName];
@@ -356,6 +430,13 @@ public sealed class WslRepository : IWslRepository
     private static string Quote(string value)
     {
         return "'" + value.Replace("'", "'\\''") + "'";
+    }
+
+    private static string NormalizeShell(string script)
+    {
+        return script
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace("\r", "\n", StringComparison.Ordinal);
     }
 
     public IReadOnlyList<string> GetInstalledPacks(string instanceName)

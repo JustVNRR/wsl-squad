@@ -16,6 +16,7 @@ public class EmbeddedResourcesTests
         ];
 
         _ = names.Should().Contain("ingredients/Dockerfile");
+        _ = names.Should().Contain("ingredients/manage-packs.sh");
         _ = names.Should().Contain("ingredients/onboarding.sh");
         _ = names.Should().Contain("packs/_oh_my_pack/pack.conf");
         _ = names.Should().Contain("packs/cleanup_orphans.sh");

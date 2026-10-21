@@ -136,21 +136,25 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void Editing_packs_opens_the_terminal_runner()
+    public void Editing_packs_opens_the_distro_manager()
     {
-        _instance.Setup(service => service.GetPacks("alpha")).Returns(new GetPacksResponseDto());
-        _dialogs.ManagePacksAnswer = new ManagePacksDto
-        {
-            InstanceName = "alpha",
-            ToAdd = ["docker"],
-        };
+        _viewModel.EditCommand.Execute("alpha");
+
+        _instance.Verify(service => service.OpenPackManager("alpha"), Times.Once);
+        _instance.Verify(service => service.GetPacks(It.IsAny<string>()), Times.Never);
+        _instance.Verify(service => service.ManagePacks(It.IsAny<ManagePacksDto>()), Times.Never);
+    }
+
+    [Fact]
+    public void Editing_packs_reports_a_manager_failure()
+    {
+        _instance.Setup(service => service.OpenPackManager("alpha"))
+            .Throws(new InvalidOperationException("no terminal"));
 
         _viewModel.EditCommand.Execute("alpha");
 
-        _dialogs.PackTerminal.Should().NotBeNull();
-        _dialogs.PackTerminal!.Value.InstanceName.Should().Be("alpha");
-        _dialogs.PackTerminal.Value.ToAdd.Should().Contain("docker");
-        _instance.Verify(service => service.ManagePacks(It.IsAny<ManagePacksDto>()), Times.Never);
+        _dialogs.Errors.Should().ContainSingle(entry =>
+            (entry.Message ?? string.Empty).Contains("no terminal", StringComparison.Ordinal));
     }
 
     [Fact]

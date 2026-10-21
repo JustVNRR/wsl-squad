@@ -4,6 +4,16 @@ namespace wsl_squad.Core.Services;
 
 public static class CatalogBootstrap
 {
+    public static string ReadText(string logicalName)
+    {
+        Assembly assembly = typeof(ServiceFactory).Assembly;
+        using Stream source = assembly.GetManifestResourceStream(logicalName)
+            ?? throw new InvalidOperationException($"The embedded resource '{logicalName}' is missing.");
+        using StreamReader reader = new(source);
+
+        return reader.ReadToEnd();
+    }
+
     public static void Ensure(string assetsRoot)
     {
         Assembly assembly = typeof(ServiceFactory).Assembly;

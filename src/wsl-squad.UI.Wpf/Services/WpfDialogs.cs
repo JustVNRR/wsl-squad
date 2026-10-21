@@ -100,21 +100,6 @@ public sealed class WpfDialogs : IDialogService
         return viewModel.Result;
     }
 
-    public ManagePacksDto? ShowManagePacks(ManagePacksViewModel viewModel)
-    {
-        _ = DialogHost.Show(new ManagePacksWindow(viewModel));
-
-        return viewModel.Result;
-    }
-
-    public void ShowPackTerminal(string instanceName, IReadOnlyList<string> toAdd, IReadOnlyList<string> toRemove)
-    {
-        string arguments =
-            $"apply_packs \"{instanceName}\" \"{string.Join(',', toAdd)}\" \"{string.Join(',', toRemove)}\"";
-
-        _ = LaunchRunner(arguments, "pack");
-    }
-
     private static Process LaunchRunner(string arguments, string name)
     {
         string directory = Path.Combine(AppContext.BaseDirectory, "runner");

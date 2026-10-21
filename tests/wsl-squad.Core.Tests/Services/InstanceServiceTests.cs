@@ -248,6 +248,36 @@ public class InstanceServiceTests
     }
 
     [Fact]
+    public void Opens_the_pack_manager_from_the_catalog()
+    {
+        _packs.Setup(repository => repository.GetRoot()).Returns("/catalog/packs");
+        _terminal.Setup(terminal => terminal.HasWslProfile("alpha")).Returns(true);
+
+        _service.OpenPackManager("alpha");
+
+        _wsl.Verify(wsl => wsl.SavePackManager(
+            "alpha",
+            It.Is<string>(script => script.Contains("Wsl Squad - pack manager", StringComparison.Ordinal)),
+            It.Is<string>(script => script.Contains("autoremove", StringComparison.Ordinal)),
+            "/catalog/packs"), Times.Once);
+        _wsl.Verify(wsl => wsl.OpenPackManager("alpha", true), Times.Once);
+        _terminal.Verify(terminal => terminal.TouchSettings(), Times.Once);
+        _wsl.Verify(wsl => wsl.GetInstalledPacks(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Opens_the_pack_manager_without_a_terminal_profile()
+    {
+        _packs.Setup(repository => repository.GetRoot()).Returns("/catalog/packs");
+        _terminal.Setup(terminal => terminal.HasWslProfile("alpha")).Returns(false);
+
+        _service.OpenPackManager("alpha");
+
+        _wsl.Verify(wsl => wsl.OpenPackManager("alpha", false), Times.Once);
+        _terminal.Verify(terminal => terminal.TouchSettings(), Times.Never);
+    }
+
+    [Fact]
     public void Refuses_to_remove_a_pack_required_by_another()
     {
         _packs.Setup(repository => repository.GetAllPacks()).Returns(

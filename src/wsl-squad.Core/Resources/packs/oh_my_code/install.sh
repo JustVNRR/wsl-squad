@@ -51,8 +51,30 @@ else
     echo "Installing Claude Code from Anthropic's own script"
     echo "Please wait..."
     clean_path=$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-    PATH=$clean_path curl -fsSL https://claude.ai/install.sh | PATH=$clean_path bash 2>&1 |
-        LC_ALL=C tr -d '\200-\377'
+    rm -rf "$HOME/.claude/downloads" "${XDG_CACHE_HOME:-$HOME/.cache}/claude"
+
+    heartbeat() {
+        while sleep 5; do
+            printf '...\n'
+        done
+    }
+    heartbeat &
+    heartbeat_pid=$!
+
+    if PATH=$clean_path curl -fsSL https://claude.ai/install.sh | PATH=$clean_path bash 2>&1 |
+        LC_ALL=C tr -d '\200-\377'; then
+        installer_status=0
+    else
+        installer_status=$?
+    fi
+
+    kill "$heartbeat_pid" 2>/dev/null || true
+    wait "$heartbeat_pid" 2>/dev/null || true
+
+    if [ "$installer_status" -ne 0 ]; then
+        echo "The Claude Code installation stopped (exit $installer_status)." >&2
+        exit "$installer_status"
+    fi
 fi
 
 # The dictionary of providers: seeded once, never written again. Mode 600 - the

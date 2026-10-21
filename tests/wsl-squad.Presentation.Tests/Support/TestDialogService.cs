@@ -24,10 +24,6 @@ public sealed class TestDialogService : IDialogService
 
     public SettingsOutcome? SettingsAnswer { get; set; }
 
-    public ManagePacksDto? ManagePacksAnswer { get; set; }
-
-    public (string InstanceName, IReadOnlyList<string> ToAdd, IReadOnlyList<string> ToRemove)? PackTerminal { get; private set; }
-
     public ArchiveDto? ArchiveAnswer { get; set; }
 
     public CompactDto? CompactAnswer { get; set; }
@@ -95,16 +91,6 @@ public sealed class TestDialogService : IDialogService
     public SettingsOutcome? ShowSettings(SettingsViewModel viewModel)
     {
         return SettingsAnswer;
-    }
-
-    public ManagePacksDto? ShowManagePacks(ManagePacksViewModel viewModel)
-    {
-        return ManagePacksAnswer;
-    }
-
-    public void ShowPackTerminal(string instanceName, IReadOnlyList<string> toAdd, IReadOnlyList<string> toRemove)
-    {
-        PackTerminal = (instanceName, [.. toAdd], [.. toRemove]);
     }
 
     public ArchiveDto? ShowArchive(ArchiveViewModel viewModel)

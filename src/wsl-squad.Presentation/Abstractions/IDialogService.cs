@@ -23,10 +23,6 @@ public interface IDialogService
 
     public SettingsOutcome? ShowSettings(SettingsViewModel viewModel);
 
-    public ManagePacksDto? ShowManagePacks(ManagePacksViewModel viewModel);
-
-    public void ShowPackTerminal(string instanceName, IReadOnlyList<string> toAdd, IReadOnlyList<string> toRemove);
-
     public ArchiveDto? ShowArchive(ArchiveViewModel viewModel);
 
     public CompactDto? ShowCompact(CompactViewModel viewModel);

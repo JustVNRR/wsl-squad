@@ -776,6 +776,22 @@ public sealed class InstanceService : IInstanceService
         };
     }
 
+    public void OpenPackManager(string instanceName)
+    {
+        string script = CatalogBootstrap.ReadText("ingredients/manage-packs.sh");
+        string cleanup = CatalogBootstrap.ReadText("packs/cleanup_orphans.sh");
+        bool hasProfile = _terminalRepository.HasWslProfile(instanceName);
+
+        _wslRepository.SavePackManager(instanceName, script, cleanup, _packCatalogRepository.GetRoot());
+
+        if (hasProfile)
+        {
+            _terminalRepository.TouchSettings();
+        }
+
+        _wslRepository.OpenPackManager(instanceName, hasProfile);
+    }
+
     public ManagePacksResponseDto ManagePacks(ManagePacksDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);

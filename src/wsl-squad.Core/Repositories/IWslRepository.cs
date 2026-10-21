@@ -30,6 +30,10 @@ public interface IWslRepository
 
     public void OpenBareShellAsRoot(string instanceName);
 
+    public void SavePackManager(string instanceName, string script, string cleanupScript, string catalogPath);
+
+    public void OpenPackManager(string instanceName, bool useProfile);
+
     public int RunInInstance(string instanceName, string? asUser, IReadOnlyList<string> arguments, string? workingDirectory);
 
     public IReadOnlyList<string> GetInInstance(string instanceName, IReadOnlyList<string> arguments);

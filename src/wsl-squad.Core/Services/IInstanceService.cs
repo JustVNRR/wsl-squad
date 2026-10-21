@@ -56,6 +56,8 @@ public interface IInstanceService
 
     public ManagePacksResponseDto ManagePacks(ManagePacksDto dto);
 
+    public void OpenPackManager(string instanceName);
+
     public IReadOnlyList<WslDockerImageDto> GetAllSavedImages();
 
     public IsRegistryImageValidResponseDto IsRegistryImageValid(string imageRef);

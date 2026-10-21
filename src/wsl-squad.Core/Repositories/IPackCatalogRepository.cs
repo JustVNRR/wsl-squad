@@ -6,6 +6,8 @@ public interface IPackCatalogRepository
 {
     public void SeedFrom(string sourceRoot);
 
+    public string GetRoot();
+
     public string GetFolder(string packName);
 
     public IReadOnlyList<WslPack> GetAllPacks();

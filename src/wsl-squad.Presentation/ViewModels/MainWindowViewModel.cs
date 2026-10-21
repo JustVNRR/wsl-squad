@@ -234,30 +234,9 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        GetPacksResponseDto packs;
-
         try
         {
-            packs = _instance.GetPacks(name);
-        }
-        catch (InvalidOperationException exception)
-        {
-            SetStatus($"ManagePacks : {name} - {exception.Message}", true);
-
-            return;
-        }
-
-        ManagePacksViewModel viewModel = new(packs, name);
-        ManagePacksDto? request = _dialogs.ShowManagePacks(viewModel);
-
-        if (request is null)
-        {
-            return;
-        }
-
-        try
-        {
-            _dialogs.ShowPackTerminal(name, request.ToAdd, request.ToRemove);
+            _instance.OpenPackManager(name);
         }
         catch (InvalidOperationException exception)
         {

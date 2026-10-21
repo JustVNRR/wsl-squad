@@ -29,6 +29,11 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
         }
     }
 
+    public string GetRoot()
+    {
+        return _packsRoot;
+    }
+
     public string GetFolder(string packName)
     {
         return Path.Combine(_packsRoot, packName);
