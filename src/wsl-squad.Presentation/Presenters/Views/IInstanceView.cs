@@ -2,8 +2,6 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.Presenters.Views;
 
-public sealed record PackChoice(string Name, string Description);
-
 public interface IInstanceView : IPresenterViewBase
 {
     public void ShowNoInstances();
@@ -48,18 +46,7 @@ public interface IInstanceView : IPresenterViewBase
 
     public void Show(DuplicateResponseDto response);
 
-    public void ShowNothingToChoose(string name);
-
-    public IReadOnlyList<string>? AskPacks(
-        string name,
-        IReadOnlyList<PackChoice> rows,
-        IReadOnlyList<int> checkedIndexes);
-
-    public void ShowNothingToDo(string name);
-
-    public void ShowPlan(IReadOnlyList<string> toAdd, IReadOnlyList<string> toRemove);
-
-    public void Show(ManagePacksResponseDto response);
+    public void ShowManagingPacks(string name);
 
     public void ShowOpening(string name);
 

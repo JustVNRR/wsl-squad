@@ -15,7 +15,7 @@ internal static class Runner
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Usage: wsl-squad.UI.Runner apply_build <request.json> | apply_packs <name> <add> <remove>");
+                Console.WriteLine("Usage: wsl-squad.UI.Runner apply_build <request.json>");
 
                 return 1;
             }
@@ -23,7 +23,6 @@ internal static class Runner
             return args[0] switch
             {
                 "apply_build" => ApplyBuild(args.Length > 1 ? args[1] : null),
-                "apply_packs" => ApplyPacks(args),
                 _ => Fail($"Unknown runner command '{args[0]}'."),
             };
         }
@@ -103,75 +102,6 @@ internal static class Runner
         return 0;
     }
 
-    private static int ApplyPacks(string[] args)
-    {
-        string name = args.Length > 1 ? args[1] : string.Empty;
-        string add = args.Length > 2 ? args[2] : string.Empty;
-        string remove = args.Length > 3 ? args[3] : string.Empty;
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return Fail("Packs : no instance name was given.");
-        }
-
-        Console.WriteLine($"Applying packs on '{name}'...");
-
-        List<string> toAdd = SplitPacks(add);
-        List<string> toRemove = SplitPacks(remove);
-
-        foreach (string pack in toAdd)
-        {
-            Console.WriteLine($"Installing '{pack}'...");
-        }
-
-        foreach (string pack in toRemove)
-        {
-            Console.WriteLine($"Removing '{pack}'...");
-        }
-
-        IInstanceService service = CreateService();
-        ManagePacksResponseDto response;
-
-        try
-        {
-            response = service.ManagePacks(new ManagePacksDto
-            {
-                InstanceName = name,
-                ToAdd = toAdd,
-                ToRemove = toRemove,
-                Interactive = true,
-            });
-        }
-        catch (Exception exception) when (IsExternalFailure(exception))
-        {
-            return Fail($"Packs : {name} - {exception.Message}");
-        }
-
-        foreach (string line in response.Installed)
-        {
-            Console.WriteLine($"  installed: {line}");
-        }
-
-        foreach (string line in response.Removed)
-        {
-            Console.WriteLine($"  removed:   {line}");
-        }
-
-        foreach (string line in response.Failed)
-        {
-            Console.WriteLine($"  FAILED:    {line}");
-        }
-
-        bool ok = response.ExitCode == 0;
-        Console.WriteLine(ok
-            ? $"Packs updated for '{name}'."
-            : $"Packs failed for '{name}' (exit {response.ExitCode}).");
-
-        Pause();
-
-        return ok ? 0 : 1;
-    }
-
     private static IInstanceService CreateService()
     {
         string assets = Path.Combine(
@@ -184,13 +114,6 @@ internal static class Runner
         string root = factory.ResolveRoot(assets, assets);
 
         return factory.CreateInstanceService(root, assets, assets, IconPainter.Draw);
-    }
-
-    private static List<string> SplitPacks(string value)
-    {
-        return string.IsNullOrWhiteSpace(value)
-            ? []
-            : [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
     }
 
     private static bool IsExternalFailure(Exception exception)

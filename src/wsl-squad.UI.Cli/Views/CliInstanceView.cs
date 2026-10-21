@@ -165,72 +165,10 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         Write($"==> '{response.CopyName}' created from '{response.SourceName}'.", ConsoleTone.Success);
     }
 
-    public void ShowNothingToChoose(string name)
+    public void ShowManagingPacks(string name)
     {
         Write(string.Empty);
-        Write($"[ABORT] No pack can be chosen for '{name}'.", ConsoleTone.Warning);
-    }
-
-    public IReadOnlyList<string>? AskPacks(
-        string name,
-        IReadOnlyList<PackChoice> rows,
-        IReadOnlyList<int> checkedIndexes)
-    {
-        IReadOnlyList<PackChoice>? picked = Checklist(
-            $"Packs for '{name}'",
-            rows,
-            row => $"{row.Name,-12} {row.Description}",
-            checkedIndexes);
-
-        return picked is null
-            ? null
-            : [.. picked.Select(row => row.Name)];
-    }
-
-    public void ShowNothingToDo(string name)
-    {
-        Write(string.Empty);
-        Write($"==> Nothing to change for '{name}'.", ConsoleTone.Muted);
-    }
-
-    public void ShowPlan(IReadOnlyList<string> toAdd, IReadOnlyList<string> toRemove)
-    {
-        Write(string.Empty);
-
-        if (toAdd.Count > 0)
-        {
-            Write($"  Will install : {string.Join(", ", toAdd)}", ConsoleTone.Info);
-        }
-
-        if (toRemove.Count > 0)
-        {
-            Write($"  Will remove  : {string.Join(", ", toRemove)}", ConsoleTone.Info);
-        }
-    }
-
-    public void Show(ManagePacksResponseDto response)
-    {
-        Write(string.Empty);
-        Write(
-            response.Outcome == "ok"
-                ? $"==> Packs of '{response.InstanceName}' updated."
-                : $"==> Packs of '{response.InstanceName}' failed (exit {response.ExitCode}).",
-            response.Outcome == "ok" ? ConsoleTone.Success : ConsoleTone.Error);
-
-        if (response.Installed.Count > 0)
-        {
-            Write($"    Installed: {string.Join(", ", response.Installed)}", ConsoleTone.Success);
-        }
-
-        if (response.Removed.Count > 0)
-        {
-            Write($"    Removed: {string.Join(", ", response.Removed)}", ConsoleTone.Muted);
-        }
-
-        if (response.Failed.Count > 0)
-        {
-            Write($"    Failed: {string.Join(", ", response.Failed)}", ConsoleTone.Error);
-        }
+        Write($"==> Opening the pack manager for '{name}'...", ConsoleTone.Info);
     }
 
     public void ShowOpening(string name)

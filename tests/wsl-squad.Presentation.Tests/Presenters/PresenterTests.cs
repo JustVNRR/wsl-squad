@@ -21,6 +21,36 @@ public class PresenterTests
     }
 
     [Fact]
+    public void Manage_packs_presenter_opens_the_distro_manager()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.GetAll()).Returns([new WslIndexDto { Name = "alpha" }]);
+        TestInstanceView view = new();
+
+        ActionResult result = new ManagePacksPresenter(service.Object, view).Run("alpha");
+
+        result.Status.Should().Be(ActionResultStatus.Ok);
+        service.Verify(s => s.OpenPackManager("alpha"), Times.Once);
+        service.Verify(s => s.GetPacks(It.IsAny<string>()), Times.Never);
+        service.Verify(s => s.ManagePacks(It.IsAny<ManagePacksDto>()), Times.Never);
+        view.ManagedPacks.Should().Equal("alpha");
+    }
+
+    [Fact]
+    public void Manage_packs_presenter_reports_a_manager_failure()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.GetAll()).Returns([new WslIndexDto { Name = "alpha" }]);
+        service.Setup(s => s.OpenPackManager("alpha")).Throws(new InvalidOperationException("no manager"));
+        TestInstanceView view = new();
+
+        ActionResult result = new ManagePacksPresenter(service.Object, view).Run("alpha");
+
+        result.Status.Should().Be(ActionResultStatus.Nok);
+        view.Errors.Should().ContainSingle(message => message.Contains("no manager", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Browse_filters_live_instances_and_archives()
     {
         Mock<IInstanceService> service = new();
@@ -373,9 +403,9 @@ public class PresenterTests
 
         public string? ArchiveName { get; set; } = "alpha_archive";
 
-        public IReadOnlyList<string>? Packs { get; set; } = [];
-
         public List<string> StopWarnings { get; } = [];
+
+        public List<string> ManagedPacks { get; } = [];
 
         public List<string> Errors { get; } = [];
 
@@ -396,8 +426,6 @@ public class PresenterTests
         public string? AskNewName() => NewName;
 
         public string? AskArchive(IReadOnlyList<WslIndexDto> archives) => ArchiveName;
-
-        public IReadOnlyList<string>? AskPacks(string name, IReadOnlyList<PackChoice> rows, IReadOnlyList<int> checkedIndexes) => Packs;
 
         public bool? Confirm(string question, bool defaultNo) => ConfirmAnswer;
 
@@ -437,13 +465,7 @@ public class PresenterTests
 
         public void Show(DuplicateResponseDto response) { }
 
-        public void ShowNothingToChoose(string name) { }
-
-        public void ShowNothingToDo(string name) { }
-
-        public void ShowPlan(IReadOnlyList<string> toAdd, IReadOnlyList<string> toRemove) { }
-
-        public void Show(ManagePacksResponseDto response) { }
+        public void ShowManagingPacks(string name) => ManagedPacks.Add(name);
 
         public void ShowOpening(string name) { }
 

@@ -67,7 +67,7 @@ public sealed class CliComposition
 
         PresenterAction shell = new("shell", "open a shell inside an instance", name => _open.Run(name));
         PresenterAction restart = new("restart", "restart an instance", name => _restart.Run(name));
-        PresenterAction managePacks = new("manage_packs", "choose the packs an instance should carry", name => _managePacks.Run(name));
+        PresenterAction managePacks = new("manage_packs", "open the pack manager inside an instance", name => _managePacks.Run(name));
         PresenterAction theme = new("theme", "choose the icon, font and colours", name => _appearance.Run(name));
         PresenterAction duplicate = new("duplicate", "copy an instance under another name", name => _duplicate.Run(name));
         PresenterAction archive = new("archive", "write an instance to a named archive", name => _archive.Run(name));
