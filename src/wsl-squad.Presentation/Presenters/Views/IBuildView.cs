@@ -8,37 +8,37 @@ public sealed record BuildRoad(WslBuildType Type, string Label);
 
 public interface IBuildView : IPresenterViewBase
 {
-    public string? AskInstanceName(string prompt);
+    string? AskInstanceName(string prompt);
 
-    public void ShowNameHint();
+    void ShowNameHint();
 
-    public BuildRoad? AskRoad();
+    BuildRoad? AskRoad();
 
-    public void ShowAbort(IReadOnlyList<string> lines);
+    void ShowAbort(IReadOnlyList<string> lines);
 
-    public string? AskRegistryReference(string prompt);
+    string? AskRegistryReference(string prompt);
 
-    public void ShowUnknownRegistry(string reference, string why);
+    void ShowUnknownRegistry(string reference, string why);
 
-    public BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows);
+    BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows);
 
-    public void ShowNoOnboarding();
+    void ShowNoOnboarding();
 
-    public bool? AskRunOnboarding();
+    bool? AskRunOnboarding();
 
-    public BuildSourceChoice? AskOnboarding(IReadOnlyList<BuildSourceChoice> rows);
+    BuildSourceChoice? AskOnboarding(IReadOnlyList<BuildSourceChoice> rows);
 
-    public void ShowBeforeAccount();
+    void ShowBeforeAccount();
 
-    public string? AskUserName(string prompt);
+    string? AskUserName(string prompt);
 
-    public void ShowUserHint();
+    void ShowUserHint();
 
-    public bool? AskKeepImage();
+    bool? AskKeepImage();
 
-    public bool? AskRegisterDocker(string name);
+    bool? AskRegisterDocker(string name);
 
-    public void ShowCancelled(string noun);
+    void ShowCancelled(string noun);
 
-    public void Show(BuildResponseDto response);
+    void Show(BuildResponseDto response);
 }

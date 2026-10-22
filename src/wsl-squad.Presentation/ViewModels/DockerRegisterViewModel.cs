@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using wsl_squad.Core.Dtos;
+
 namespace wsl_squad.Presentation.ViewModels;
 
 public sealed partial class DockerRegisterViewModel : BaseViewModel
@@ -21,13 +23,13 @@ public sealed partial class DockerRegisterViewModel : BaseViewModel
 
     public string Lead { get; }
 
-    public DockerDialogResult? Result { get; private set; }
+    public DockerDialogDto? Result { get; private set; }
 
     public IRelayCommand ConfirmCommand { get; }
 
     private void Confirm()
     {
-        Result = new DockerDialogResult(_name, Restart);
+        Result = new DockerDialogDto(_name, Restart);
         RequestClose();
     }
 }

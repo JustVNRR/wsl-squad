@@ -4,21 +4,21 @@ namespace wsl_squad.Core.Services;
 
 public interface IServiceFactory
 {
-    public IInstanceService CreateInstanceService(
+    IInstanceService CreateInstanceService(
         string root,
         string assets,
         string distroTree,
         Func<string, string, IconDrawing?, IconDrawing>? drawIcon = null);
 
-    public ILoggerService CreateLoggerService();
+    ILoggerService CreateLoggerService();
 
-    public string ResolveRoot(string assets, string distroTree);
+    string ResolveRoot(string assets, string distroTree);
 
-    public IFleetService CreateFleetService(
+    IFleetService CreateFleetService(
         string root,
         string assets,
         string distroTree,
         Func<string, string, IconDrawing?, IconDrawing>? drawIcon = null);
 
-    public IPackCatalogService CreatePackCatalogService(string assets, string distroTree);
+    IPackCatalogService CreatePackCatalogService(string assets, string distroTree);
 }

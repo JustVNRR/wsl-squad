@@ -124,7 +124,7 @@ public partial class SettingsWindow : ChromeWindow
 
         if (dialog.ShowDialog(this) == true)
         {
-            _viewModel.ExportTheme(new ExportThemeDto(_viewModel.ThemePathFor(name), dialog.FileName));
+            _viewModel.ExportTheme(dialog.FileName, _viewModel.ThemePathFor(name));
         }
     }
 

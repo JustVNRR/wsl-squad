@@ -56,6 +56,9 @@ public sealed partial class SettingsViewModel : BaseViewModel
     private bool _canTheme;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenPackCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DuplicatePackCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeletePackCommand))]
     private bool _canPack;
 
     public SettingsViewModel(
@@ -94,7 +97,6 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
 
         Fonts = [.. fonts.Select(name => new SettingsRow(name, name))];
-        FontLabels = [.. Fonts.Select(row => row.Label)];
         _fontIndex = Math.Max(0, Fonts.FindIndex(row => string.Equals(row.Name, theme.FontFamily, StringComparison.Ordinal)));
 
         List<int> sizes = [11, 13, 15, 17, 19];
@@ -107,7 +109,6 @@ public sealed partial class SettingsViewModel : BaseViewModel
         Sizes = [.. sizes.Select(size => new SettingsRow(
             size.ToString(System.Globalization.CultureInfo.InvariantCulture),
             size.ToString(System.Globalization.CultureInfo.InvariantCulture)))];
-        SizeLabels = [.. Sizes.Select(row => row.Label)];
         _sizeIndex = Math.Max(0, Sizes.FindIndex(row =>
             int.TryParse(row.Name, out int size) && size == theme.FontSize));
 
@@ -120,7 +121,6 @@ public sealed partial class SettingsViewModel : BaseViewModel
         sets.AddRange(themes);
 
         Colours = [.. sets.Select(name => new SettingsRow(name, name.Length == 0 ? "Default" : name))];
-        ColourLabels = [.. Colours.Select(row => row.Label)];
         _colourIndex = Math.Max(0, Colours.FindIndex(row =>
             string.Equals(row.Name, theme.ColourSet, StringComparison.Ordinal)));
 
@@ -136,7 +136,6 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
 
         Packs = PackRowsOf(packs);
-        PackLabels = [.. Packs.Select(row => row.Label)];
         _packIndex = Packs.Count > 0 ? 0 : -1;
         _canPack = _packIndex >= 0;
         _canTheme = HasRealTheme();
@@ -149,28 +148,19 @@ public sealed partial class SettingsViewModel : BaseViewModel
         UploadThemeCommand = new RelayCommand<string>(UploadTheme);
         DeleteThemeCommand = new RelayCommand<string>(DeleteTheme);
         OpenThemeCommand = new RelayCommand<string>(OpenTheme);
-        ExportThemeCommand = new RelayCommand<ExportThemeDto>(ExportTheme);
     }
 
     public string WslConfigPath { get; }
 
     public List<SettingsRow> Fonts { get; private set; }
 
-    public List<string> FontLabels { get; private set; }
-
     public List<SettingsRow> Sizes { get; private set; }
-
-    public List<string> SizeLabels { get; private set; }
 
     public List<SettingsRow> Colours { get; private set; }
 
-    public List<string> ColourLabels { get; private set; }
-
     public List<SettingsPackRow> Packs { get; private set; }
 
-    public List<string> PackLabels { get; private set; }
-
-    public SettingsOutcome? Result { get; private set; }
+    public SettingsDto? Result { get; private set; }
 
     public IRelayCommand CloseCommand { get; }
 
@@ -187,8 +177,6 @@ public sealed partial class SettingsViewModel : BaseViewModel
     public IRelayCommand<string> DeleteThemeCommand { get; }
 
     public IRelayCommand<string> OpenThemeCommand { get; }
-
-    public IRelayCommand<ExportThemeDto> ExportThemeCommand { get; }
 
     public string SelectedFont => Fonts.Count == 0 ? string.Empty : Fonts[Math.Clamp(FontIndex, 0, Fonts.Count - 1)].Name;
 
@@ -213,12 +201,14 @@ public sealed partial class SettingsViewModel : BaseViewModel
         Preview();
     }
 
+    partial void OnVariantChanged(string value)
+    {
+        Preview();
+    }
+
     partial void OnPackIndexChanged(int value)
     {
         CanPack = value >= 0;
-        OpenPackCommand.NotifyCanExecuteChanged();
-        DuplicatePackCommand.NotifyCanExecuteChanged();
-        DeletePackCommand.NotifyCanExecuteChanged();
     }
 
     public bool HasRealTheme()
@@ -247,11 +237,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
         List<SettingsRow> fonts = [.. Fonts, new SettingsRow(family, $"{family}  (just uploaded)")];
         Fonts = fonts;
-        FontLabels = [.. fonts.Select(row => row.Label)];
         OnPropertyChanged(nameof(Fonts));
-        OnPropertyChanged(nameof(FontLabels));
         FontIndex = fonts.Count - 1;
-        OnPropertyChanged(nameof(FontIndex));
 
         return family;
     }
@@ -294,14 +281,14 @@ public sealed partial class SettingsViewModel : BaseViewModel
         return _ui.ThemeFileFor(name);
     }
 
-    public void ExportTheme(ExportThemeDto? dto)
+    public void ExportTheme(string? target, string? source = null)
     {
-        if (dto is null || string.IsNullOrEmpty(dto.Target))
+        if (string.IsNullOrEmpty(target))
         {
             return;
         }
 
-        _ui.ExportTheme(dto.Source ?? ThemePathFor(SelectedColour), dto.Target);
+        _ui.ExportTheme(source ?? ThemePathFor(SelectedColour), target);
     }
 
     public void DeleteTheme(string? name)
@@ -324,11 +311,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
         int next = kept.Count > 0 ? Math.Min(ColourIndex, kept.Count - 1) : 0;
 
         Colours = kept;
-        ColourLabels = [.. kept.Select(row => row.Label)];
         OnPropertyChanged(nameof(Colours));
-        OnPropertyChanged(nameof(ColourLabels));
         ColourIndex = next;
-        OnPropertyChanged(nameof(ColourIndex));
         CanTheme = HasRealTheme();
         Preview();
     }
@@ -378,12 +362,12 @@ public sealed partial class SettingsViewModel : BaseViewModel
             return;
         }
 
-        PackDuplicateResult? answer = _dialogs.ShowPackDuplicate(
+        (string Name, string Description)? answer = _dialogs.ShowPackDuplicate(
             row.Name,
             row.Description,
             [.. Packs.Select(pack => pack.Name)]);
 
-        if (answer is null)
+        if (answer is not { } duplicate)
         {
             return;
         }
@@ -393,8 +377,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
             _ = _catalogue.CreatePack(new CreatePackDto
             {
                 SourceName = row.Name,
-                NewName = answer.Name,
-                Description = answer.Description,
+                NewName = duplicate.Name,
+                Description = duplicate.Description,
             });
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
@@ -404,7 +388,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
             return;
         }
 
-        RefreshPacks(answer.Name);
+        RefreshPacks(duplicate.Name);
     }
 
     public void DeletePack()
@@ -484,7 +468,15 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     private void Close()
     {
-        Result = new SettingsOutcome(SelectedFont, SelectedSize, SelectedColour, Variant, _newRoot);
+        Result = new SettingsDto(
+            new SetAppearanceDto
+            {
+                Font = SelectedFont,
+                FontSize = SelectedSize,
+                ColourScheme = SelectedColour,
+                Variant = Variant,
+            },
+            _newRoot);
         RequestClose();
     }
 
@@ -501,11 +493,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
         List<SettingsRow> rows = [.. Colours, new SettingsRow(name, $"{name}  (just uploaded)")];
         Colours = rows;
-        ColourLabels = [.. rows.Select(row => row.Label)];
         OnPropertyChanged(nameof(Colours));
-        OnPropertyChanged(nameof(ColourLabels));
         ColourIndex = rows.Count - 1;
-        OnPropertyChanged(nameof(ColourIndex));
         CanTheme = HasRealTheme();
     }
 
@@ -523,9 +512,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
 
         Packs = PackRowsOf(refreshed);
-        PackLabels = [.. Packs.Select(row => row.Label)];
         OnPropertyChanged(nameof(Packs));
-        OnPropertyChanged(nameof(PackLabels));
         PackIndex = Packs.Count > 0 ? 0 : -1;
 
         if (!string.IsNullOrEmpty(select))
@@ -538,7 +525,6 @@ public sealed partial class SettingsViewModel : BaseViewModel
             }
         }
 
-        OnPropertyChanged(nameof(PackIndex));
         CanPack = PackIndex >= 0;
     }
 

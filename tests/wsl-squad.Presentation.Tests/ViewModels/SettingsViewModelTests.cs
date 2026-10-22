@@ -45,11 +45,11 @@ public class SettingsViewModelTests
 
         viewModel.Root.Should().Be("/fleet");
         viewModel.WslConfigPath.Should().EndWith(".wslconfig");
-        viewModel.FontLabels.Should().Equal("Cascadia", "VT323");
+        viewModel.Fonts.Select(row => row.Label).Should().Equal("Cascadia", "VT323");
         viewModel.SelectedFont.Should().Be("Cascadia");
         viewModel.SelectedSize.Should().Be(13);
         viewModel.SelectedColour.Should().Be("amber");
-        viewModel.PackLabels.Should().Equal("tools (shell)");
+        viewModel.Packs.Select(row => row.Label).Should().Equal("tools (shell)");
         viewModel.CanPack.Should().BeTrue();
         viewModel.CanTheme.Should().BeTrue();
     }
@@ -62,9 +62,10 @@ public class SettingsViewModelTests
         viewModel.ColourIndex = 1;
         viewModel.FontIndex = 1;
         viewModel.SizeIndex = 2;
+        viewModel.Variant = "Light";
 
         _ui.Previewed.Should().NotBeEmpty();
-        _ui.Previewed[^1].Should().Be(("VT323", 15, "ice", "Dark"));
+        _ui.Previewed[^1].Should().Be(("VT323", 15, "ice", "Light"));
     }
 
     [Fact]
@@ -76,7 +77,15 @@ public class SettingsViewModelTests
 
         viewModel.CloseCommand.Execute(null);
 
-        viewModel.Result.Should().Be(new SettingsOutcome("Cascadia", 13, "amber", "Dark", null));
+        viewModel.Result.Should().Be(new SettingsDto(
+            new SetAppearanceDto
+            {
+                Font = "Cascadia",
+                FontSize = 13,
+                ColourScheme = "amber",
+                Variant = "Dark",
+            },
+            null));
         closed.Should().BeTrue();
     }
 
@@ -90,10 +99,9 @@ public class SettingsViewModelTests
         string? family = viewModel.UploadFont("/tmp/font.ttf");
 
         family.Should().Be("Cascadia Mono");
-        viewModel.FontLabels.Should().Contain("Cascadia Mono  (just uploaded)");
+        viewModel.Fonts.Select(row => row.Label).Should().Contain("Cascadia Mono  (just uploaded)");
         viewModel.SelectedFont.Should().Be("Cascadia Mono");
         changed.Should().Contain(nameof(SettingsViewModel.Fonts));
-        changed.Should().Contain(nameof(SettingsViewModel.FontLabels));
     }
 
     [Fact]
@@ -103,16 +111,16 @@ public class SettingsViewModelTests
 
         viewModel.DeleteTheme("amber");
 
-        viewModel.ColourLabels.Should().NotBeEmpty();
+        viewModel.Colours.Should().NotBeEmpty();
         viewModel.SelectedColour.Should().NotBeNullOrEmpty();
-        viewModel.ColourIndex.Should().BeInRange(0, viewModel.ColourLabels.Count - 1);
+        viewModel.ColourIndex.Should().BeInRange(0, viewModel.Colours.Count - 1);
     }
 
     [Fact]
     public void Duplicating_a_pack_creates_it_and_reloads_the_catalogue()
     {
         SettingsViewModel viewModel = Create();
-        _dialogs.PackDuplicateAnswer = new PackDuplicateResult("copy", "Copy");
+        _dialogs.PackDuplicateAnswer = ("copy", "Copy");
         _catalogue.Setup(catalogue => catalogue.GetAllPacks()).Returns(
         [
             new WslPackDto { Name = "tools", Family = "shell" },
@@ -123,7 +131,7 @@ public class SettingsViewModelTests
 
         _catalogue.Verify(catalogue => catalogue.CreatePack(It.Is<CreatePackDto>(dto =>
             dto.SourceName == "tools" && dto.NewName == "copy" && dto.Description == "Copy")), Times.Once);
-        viewModel.PackLabels.Should().Contain("copy (shell)");
+        viewModel.Packs.Select(row => row.Label).Should().Contain("copy (shell)");
     }
 
     [Fact]
@@ -136,7 +144,7 @@ public class SettingsViewModelTests
         viewModel.DeletePack();
 
         _catalogue.Verify(catalogue => catalogue.DeletePack("tools"), Times.Once);
-        viewModel.PackLabels.Should().BeEmpty();
+        viewModel.Packs.Should().BeEmpty();
         viewModel.CanPack.Should().BeFalse();
     }
 
@@ -196,7 +204,7 @@ public class SettingsViewModelTests
 
         viewModel.UploadTheme("/tmp/theme.xaml");
 
-        viewModel.ColourLabels.Should().Contain("mine  (just uploaded)");
+        viewModel.Colours.Select(row => row.Label).Should().Contain("mine  (just uploaded)");
         viewModel.SelectedColour.Should().Be("mine");
     }
 

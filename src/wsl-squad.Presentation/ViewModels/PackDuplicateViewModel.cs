@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using wsl_squad.Core.Validation;
+
 namespace wsl_squad.Presentation.ViewModels;
 
 public sealed partial class PackDuplicateViewModel : BaseViewModel
@@ -27,7 +29,7 @@ public sealed partial class PackDuplicateViewModel : BaseViewModel
 
     public string Lead { get; }
 
-    public PackDuplicateResult? Result { get; private set; }
+    public (string Name, string Description)? Result { get; private set; }
 
     public IRelayCommand ConfirmCommand { get; }
 
@@ -55,7 +57,7 @@ public sealed partial class PackDuplicateViewModel : BaseViewModel
             return;
         }
 
-        Result = new PackDuplicateResult(chosen, Description.Trim());
+        Result = (chosen, Description.Trim());
         RequestClose();
     }
 }

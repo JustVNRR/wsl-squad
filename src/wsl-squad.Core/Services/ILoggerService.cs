@@ -4,5 +4,5 @@ namespace wsl_squad.Core.Services;
 
 public interface ILoggerService
 {
-    public void Write(LogEntryDto entry);
+    void Write(LogEntryDto entry);
 }

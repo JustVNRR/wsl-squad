@@ -17,6 +17,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private readonly IUiThemeService _ui;
     private readonly IPackCatalogService _catalogue;
     private readonly IDialogService _dialogs;
+    private readonly IBuildLauncher _buildLauncher;
     private readonly ILoggerService _logger;
 
     [ObservableProperty]
@@ -40,6 +41,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         IUiThemeService ui,
         IPackCatalogService catalogue,
         IDialogService dialogs,
+        IBuildLauncher buildLauncher,
         ILoggerService logger)
     {
         _instance = instance;
@@ -47,6 +49,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _ui = ui;
         _catalogue = catalogue;
         _dialogs = dialogs;
+        _buildLauncher = buildLauncher;
         _logger = logger;
 
         UiThemeSettings theme = ui.GetTheme();
@@ -140,7 +143,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
         try
         {
-            int exitCode = await _dialogs.ShowBuildTerminalAsync(request);
+            int exitCode = await _buildLauncher.RunAsync(request);
             Load();
             SetStatus(
                 exitCode == 0
@@ -163,41 +166,47 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private async Task SettingsAsync()
     {
         SettingsViewModel viewModel = new(_ui, _catalogue, _fleet, _dialogs);
-        SettingsOutcome? outcome = _dialogs.ShowSettings(viewModel);
+        SettingsDto? outcome = _dialogs.ShowSettings(viewModel);
 
         if (outcome is null)
         {
             return;
         }
 
+        SetAppearanceDto appearance = outcome.Appearance;
+        string fontFamily = appearance.Font ?? string.Empty;
+        int fontSize = appearance.FontSize;
+        string colourSet = appearance.ColourScheme ?? string.Empty;
+        string variant = appearance.Variant ?? string.Empty;
+
         string previousFont = _ui.GetTheme().FontFamily;
         int previousSize = _ui.GetTheme().FontSize;
 
         try
         {
-            _ui.SetFontFamily(outcome.FontFamily);
-            _ui.SetFontSize(outcome.FontSize);
-            _ui.SetColorTheme(outcome.ColourSet);
-            _ui.SetVariant(outcome.Variant);
+            _ui.SetFontFamily(fontFamily);
+            _ui.SetFontSize(fontSize);
+            _ui.SetColorTheme(colourSet);
+            _ui.SetVariant(variant);
 
-            _ui.Preview(outcome.FontFamily, outcome.FontSize, outcome.ColourSet, outcome.Variant);
+            _ui.Preview(fontFamily, fontSize, colourSet, variant);
         }
         catch (InvalidOperationException exception)
         {
-            SetStatus($"Settings : {outcome.FontFamily}/{outcome.ColourSet} - {exception.Message}", true);
+            SetStatus($"Settings : {fontFamily}/{colourSet} - {exception.Message}", true);
 
             return;
         }
 
-        if (outcome.ColourSet.Length > 0)
+        if (colourSet.Length > 0)
         {
-            ColourSet = outcome.ColourSet;
+            ColourSet = colourSet;
         }
 
-        Variant = outcome.Variant;
+        Variant = variant;
 
-        if (previousSize != outcome.FontSize ||
-            !string.Equals(previousFont, outcome.FontFamily, StringComparison.Ordinal))
+        if (previousSize != fontSize ||
+            !string.Equals(previousFont, fontFamily, StringComparison.Ordinal))
         {
             LookChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -214,7 +223,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
         Load();
         SetStatus(
-            $"Window face: '{outcome.FontFamily}' at {outcome.FontSize} pt, theme '{(ColourSet.Length > 0 ? ColourSet : "default")}'. Popups follow on their next open.",
+            $"Window face: '{fontFamily}' at {fontSize} pt, theme '{(ColourSet.Length > 0 ? ColourSet : "default")}'. Popups follow on their next open.",
             false);
     }
 
@@ -433,7 +442,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        DockerDialogResult? answer = _dialogs.ShowDockerRegister(new DockerRegisterViewModel(name, state));
+        DockerDialogDto? answer = _dialogs.ShowDockerRegister(new DockerRegisterViewModel(name, state));
 
         if (answer is null)
         {

@@ -4,49 +4,49 @@ namespace wsl_squad.Core.Repositories;
 
 public interface IWslRepository
 {
-    public IReadOnlyList<WslInstance> GetAllDistros();
+    IReadOnlyList<WslInstance> GetAllDistros();
 
-    public string GetFolder(string distroName);
+    string GetFolder(string distroName);
 
-    public IReadOnlyList<string> GetRunningNames();
+    IReadOnlyList<string> GetRunningNames();
 
-    public void Import(string instanceName, string folder, string tarPath, bool interactive = false);
+    void Import(string instanceName, string folder, string tarPath, bool interactive = false);
 
-    public void Export(string instanceName, string tarPath, string format);
+    void Export(string instanceName, string tarPath, string format);
 
-    public void Unregister(string instanceName);
+    void Unregister(string instanceName);
 
-    public void Start(string instanceName);
+    void Start(string instanceName);
 
-    public void Terminate(string instanceName);
+    void Terminate(string instanceName);
 
-    public void TerminateQuietly(string instanceName);
+    void TerminateQuietly(string instanceName);
 
-    public void Compact(string instanceName);
+    void Compact(string instanceName);
 
-    public void OpenProfile(string instanceName);
+    void OpenProfile(string instanceName);
 
-    public void OpenBareShell(string instanceName);
+    void OpenBareShell(string instanceName);
 
-    public void OpenBareShellAsRoot(string instanceName);
+    void OpenBareShellAsRoot(string instanceName);
 
-    public void SavePackManager(
+    void SavePackManager(
         string instanceName,
         string script,
         string cleanupScript,
         string bootstrapScript,
         string catalogPath);
 
-    public void OpenPackManager(string instanceName, bool useProfile);
+    void OpenPackManager(string instanceName, bool useProfile);
 
-    public int RunInInstance(string instanceName, string? asUser, IReadOnlyList<string> arguments, string? workingDirectory);
+    int RunInInstance(string instanceName, string? asUser, IReadOnlyList<string> arguments, string? workingDirectory);
 
-    public IReadOnlyList<string> GetInInstance(string instanceName, IReadOnlyList<string> arguments);
+    IReadOnlyList<string> GetInInstance(string instanceName, IReadOnlyList<string> arguments);
 
-    public bool TestInInstance(string instanceName, IReadOnlyList<string> arguments);
+    bool TestInInstance(string instanceName, IReadOnlyList<string> arguments);
 
-    public string GetFamily(string instanceName);
+    string GetFamily(string instanceName);
 
-    public void SaveOnboardingScript(string instanceName, string source, string? asUser = null);
+    void SaveOnboardingScript(string instanceName, string source, string? asUser = null);
 
 }

@@ -4,50 +4,50 @@ namespace wsl_squad.Presentation.Presenters.Views;
 
 public interface IFleetView : IPresenterViewBase
 {
-    public void Clear();
+    void Clear();
 
-    public string? PickInstance(
+    string? PickInstance(
         IReadOnlyList<WslIndexDto> instances,
         IReadOnlyList<WslOrphanDto> orphans,
         IReadOnlyList<string> running);
 
-    public void ShowNoInstances(IReadOnlyList<WslOrphanDto> orphans);
+    void ShowNoInstances(IReadOnlyList<WslOrphanDto> orphans);
 
-    public string? PickArchive(IReadOnlyList<WslIndexDto> archives);
+    string? PickArchive(IReadOnlyList<WslIndexDto> archives);
 
-    public void ShowNoArchives();
+    void ShowNoArchives();
 
-    public PresenterAction? PickAction(string title, IReadOnlyList<PresenterAction> actions);
+    PresenterAction? PickAction(string title, IReadOnlyList<PresenterAction> actions);
 
-    public WslPackDto? PickPack(IReadOnlyList<WslPackDto> packs);
+    WslPackDto? PickPack(IReadOnlyList<WslPackDto> packs);
 
-    public void ShowNoPacks();
+    void ShowNoPacks();
 
-    public string? PickPackAction(string packName);
+    string? PickPackAction(string packName);
 
-    public string? AskName(string sourceName);
+    string? AskName(string sourceName);
 
-    public void ShowOpening(string name);
+    void ShowOpening(string name);
 
-    public void ShowDuplicated(string name);
+    void ShowDuplicated(string name);
 
-    public void ShowRemoved(string name);
+    void ShowRemoved(string name);
 
-    public void ShowDependents(string name, IReadOnlyList<string> dependents);
+    void ShowDependents(string name, IReadOnlyList<string> dependents);
 
-    public bool? Confirm(string question, bool defaultNo);
+    bool? Confirm(string question, bool defaultNo);
 
-    public string? AskTarget(string root);
+    string? AskTarget(string root);
 
-    public void ShowCancelled(string noun);
+    void ShowCancelled(string noun);
 
-    public void ShowSameFolder();
+    void ShowSameFolder();
 
-    public void ShowTargetProblem(string problem);
+    void ShowTargetProblem(string problem);
 
-    public void ShowLead();
+    void ShowLead();
 
-    public void Show(MigrateResponseDto response);
+    void Show(MigrateResponseDto response);
 
-    public void Show(WslConfigResponseDto response);
+    void Show(WslConfigResponseDto response);
 }

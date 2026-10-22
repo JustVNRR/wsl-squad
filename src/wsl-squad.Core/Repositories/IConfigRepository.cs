@@ -2,37 +2,37 @@ namespace wsl_squad.Core.Repositories;
 
 public interface IConfigRepository
 {
-    public IReadOnlyList<string> GetThemeNames();
+    IReadOnlyList<string> GetThemeNames();
 
-    public IReadOnlyList<string> GetFontNames();
+    IReadOnlyList<string> GetFontNames();
 
-    public IReadOnlyList<string> GetPromptFontNames();
+    IReadOnlyList<string> GetPromptFontNames();
 
-    public IReadOnlyList<SourceRow> GetDockerfiles();
+    IReadOnlyList<SourceRow> GetDockerfiles();
 
-    public IReadOnlyList<SourceRow> GetOnboardings();
+    IReadOnlyList<SourceRow> GetOnboardings();
 
-    public IReadOnlyList<SourceRow> GetRecipes();
+    IReadOnlyList<SourceRow> GetRecipes();
 
-    public string CreateRecipe(string name);
+    string CreateRecipe(string name);
 
-    public string CopyRecipe(string kind, string source, string fileName);
+    string CopyRecipe(string kind, string source, string fileName);
 
-    public void RemoveRecipe(string path);
+    void RemoveRecipe(string path);
 
-    public void ExportRecipe(string path, string target);
+    void ExportRecipe(string path, string target);
 
-    public string CopyFont(string source);
+    string CopyFont(string source);
 
-    public string CopyTheme(string source);
+    string CopyTheme(string source);
 
-    public void DeleteTheme(string name);
+    void DeleteTheme(string name);
 
-    public void OpenTheme(string name);
+    void OpenTheme(string name);
 
-    public string GetSavedRoot();
+    string GetSavedRoot();
 
-    public void SaveRoot(string root);
+    void SaveRoot(string root);
 
-    public string EnsureWslConfig();
+    string EnsureWslConfig();
 }

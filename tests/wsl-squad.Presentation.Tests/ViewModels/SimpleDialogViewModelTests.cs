@@ -135,7 +135,7 @@ public class SimpleDialogViewModelTests
         viewModel.Restart = false;
         viewModel.ConfirmCommand.Execute(null);
 
-        viewModel.Result.Should().Be(new DockerDialogResult("alpha", false));
+        viewModel.Result.Should().Be(new DockerDialogDto("alpha", false));
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class SimpleDialogViewModelTests
         viewModel.Description = " Copy ";
         viewModel.ConfirmCommand.Execute(null);
 
-        viewModel.Result.Should().Be(new PackDuplicateResult("tools-copy", "Copy"));
+        viewModel.Result.Should().Be(("tools-copy", "Copy"));
     }
 
     [Fact]

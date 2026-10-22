@@ -17,6 +17,7 @@ public class MainWindowViewModelTests
     private readonly Mock<IPackCatalogService> _catalogue = new();
     private readonly TestThemeService _ui = new();
     private readonly TestDialogService _dialogs = new();
+    private readonly TestBuildLauncher _buildLauncher = new();
     private readonly RecordingLogger _logger = new();
     private readonly MainWindowViewModel _viewModel;
 
@@ -44,6 +45,7 @@ public class MainWindowViewModelTests
             _ui,
             _catalogue.Object,
             _dialogs,
+            _buildLauncher,
             _logger);
     }
 
@@ -119,7 +121,7 @@ public class MainWindowViewModelTests
 
         await _viewModel.AddCommand.ExecuteAsync(null);
 
-        _dialogs.BuildTerminal.Should().Be(request);
+        _buildLauncher.Request.Should().Be(request);
         _instance.Verify(service => service.Build(It.IsAny<BuildDto>()), Times.Never);
     }
 
@@ -127,7 +129,7 @@ public class MainWindowViewModelTests
     public async Task Docker_registers_when_the_row_is_not_registered()
     {
         _viewModel.RefreshCommand.Execute(null);
-        _dialogs.DockerRegisterAnswer = new DockerDialogResult("alpha", true);
+        _dialogs.DockerRegisterAnswer = new DockerDialogDto("alpha", true);
 
         await _viewModel.DockerCommand.ExecuteAsync("alpha");
 
@@ -168,7 +170,15 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Settings_applies_the_outcome()
     {
-        _dialogs.SettingsAnswer = new SettingsOutcome("Cascadia", 13, "amber", "Dark", null);
+        _dialogs.SettingsAnswer = new SettingsDto(
+            new SetAppearanceDto
+            {
+                Font = "Cascadia",
+                FontSize = 13,
+                ColourScheme = "amber",
+                Variant = "Dark",
+            },
+            null);
 
         await _viewModel.SettingsCommand.ExecuteAsync(null);
 

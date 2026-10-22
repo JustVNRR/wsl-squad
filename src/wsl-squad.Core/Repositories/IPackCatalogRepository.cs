@@ -4,17 +4,17 @@ namespace wsl_squad.Core.Repositories;
 
 public interface IPackCatalogRepository
 {
-    public void SeedFrom(string sourceRoot);
+    void SeedFrom(string sourceRoot);
 
-    public string GetRoot();
+    string GetRoot();
 
-    public IReadOnlyList<WslPack> GetAllPacks();
+    IReadOnlyList<WslPack> GetAllPacks();
 
-    public void SavePackDescription(string packName, string description);
+    void SavePackDescription(string packName, string description);
 
-    public void CopyPack(string sourceName, string newName);
+    void CopyPack(string sourceName, string newName);
 
-    public void DeletePack(string packName);
+    void DeletePack(string packName);
 
-    public void OpenFolder(string packName);
+    void OpenFolder(string packName);
 }

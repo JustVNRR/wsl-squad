@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -22,13 +23,12 @@ public sealed class WpfThemeService : IUiThemeService
     private readonly string _settingsPath;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
-    private readonly ThemeService _palette;
     private readonly UiThemeSettings _settings;
+    private ResourceDictionary? _applied;
 
     public WpfThemeService(string assetsRoot)
     {
         _assetsRoot = assetsRoot;
-        _palette = new ThemeService(Path.Combine(assetsRoot, "themes"));
         string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _settingsPath = Path.Combine(local, "wsl-squad", "gui-settings.json");
         _settings = Load();
@@ -66,7 +66,7 @@ public sealed class WpfThemeService : IUiThemeService
 
     public void Preview(string fontFamily, int fontSize, string colourSet, string variant)
     {
-        _palette.Apply(colourSet, variant);
+        ApplyTheme(colourSet, variant);
         ApplyLook(fontFamily, fontSize);
         RefreshFrames();
     }
@@ -208,7 +208,7 @@ public sealed class WpfThemeService : IUiThemeService
 
     public void ApplyPalette()
     {
-        _palette.Apply(_settings.ColourSet, _settings.ColourVariant);
+        ApplyTheme(_settings.ColourSet, _settings.ColourVariant);
         RefreshFrames();
     }
 
@@ -232,6 +232,58 @@ public sealed class WpfThemeService : IUiThemeService
         {
             main.FontFamily = ChromeWindow.UiFont;
             main.FontSize = ChromeWindow.UiSize;
+        }
+    }
+
+    private void ApplyTheme(string colourSet, string variant)
+    {
+        ResourceDictionary? palette = LoadTheme(colourSet) ?? LoadTheme("phosphor");
+        ResourceDictionary chosen = palette?[variant] as ResourceDictionary
+            ?? palette?["Dark"] as ResourceDictionary
+            ?? [];
+
+        Collection<ResourceDictionary> merged = Application.Current.Resources.MergedDictionaries;
+
+        if (_applied is not null)
+        {
+            _ = merged.Remove(_applied);
+        }
+
+        merged.Add(chosen);
+        _applied = chosen;
+    }
+
+    private ResourceDictionary? LoadTheme(string colourSet)
+    {
+        try
+        {
+            string uploaded = Path.Combine(_assetsRoot, "themes", $"{colourSet}.xaml");
+
+            if (File.Exists(uploaded))
+            {
+                try
+                {
+                    return new ResourceDictionary
+                    {
+                        Source = new Uri(uploaded, UriKind.Absolute),
+                    };
+                }
+                catch (Exception exception) when (exception is XamlParseException or IOException)
+                {
+                    Trace.TraceWarning($"[WpfThemeService] Could not load uploaded theme '{uploaded}': {exception.Message}");
+                }
+            }
+
+            return new ResourceDictionary
+            {
+                Source = new Uri($"Themes/{colourSet}.xaml", UriKind.Relative),
+            };
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException or XamlParseException)
+        {
+            Trace.TraceWarning($"[WpfThemeService] Could not load theme '{colourSet}': {exception.Message}");
+
+            return null;
         }
     }
 

@@ -4,13 +4,13 @@ namespace wsl_squad.Core.Services;
 
 public interface IFleetService
 {
-    public string GetRoot();
+    string GetRoot();
 
-    public string SetRoot(string target);
+    string SetRoot(string target);
 
-    public IReadOnlyList<string> GetFleet();
+    IReadOnlyList<string> GetFleet();
 
-    public WslConfigResponseDto WslConfig();
+    WslConfigResponseDto WslConfig();
 
-    public MigrateResponseDto Migrate(string target);
+    MigrateResponseDto Migrate(string target);
 }

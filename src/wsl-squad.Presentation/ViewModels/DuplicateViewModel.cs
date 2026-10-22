@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using wsl_squad.Core.Dtos;
+using wsl_squad.Core.Validation;
 
 namespace wsl_squad.Presentation.ViewModels;
 

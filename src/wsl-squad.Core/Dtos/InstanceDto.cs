@@ -203,12 +203,18 @@ public sealed record SetAppearanceDto
 
     public string? Font { get; init; }
 
+    public int FontSize { get; init; }
+
     public string? ColourScheme { get; init; }
+
+    public string? Variant { get; init; }
 
     public WslIconDto? Icon { get; init; }
 
     public string? IconImage { get; init; }
 }
+
+public sealed record SettingsDto(SetAppearanceDto Appearance, string? NewRoot);
 
 public sealed record WslIconPairDto
 {
@@ -374,6 +380,8 @@ public sealed record UnregisterDockerResponseDto
 
     public string Restart { get; init; } = string.Empty;
 }
+
+public sealed record DockerDialogDto(string Name, bool Restart);
 
 public sealed record LogEntryDto
 {

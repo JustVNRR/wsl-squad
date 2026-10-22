@@ -5,37 +5,33 @@ namespace wsl_squad.Presentation.Abstractions;
 
 public interface IDialogService
 {
-    public bool Confirm(string title, string question, string? danger = null);
+    bool Confirm(string title, string question, string? danger = null);
 
-    public void ShowError(LogEntryDto entry);
+    void ShowError(LogEntryDto entry);
 
-    public void OpenPath(string path);
+    string? ShowRecipeName();
 
-    public string? ShowRecipeName();
+    (string Name, string Description)? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken);
 
-    public PackDuplicateResult? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken);
+    string? ShowRootMove(string current);
 
-    public string? ShowRootMove(string current);
+    BuildDto? ShowBuild(BuildViewModel viewModel);
 
-    public BuildDto? ShowBuild(BuildViewModel viewModel);
+    SettingsDto? ShowSettings(SettingsViewModel viewModel);
 
-    public Task<int> ShowBuildTerminalAsync(BuildDto request);
+    ArchiveDto? ShowArchive(ArchiveViewModel viewModel);
 
-    public SettingsOutcome? ShowSettings(SettingsViewModel viewModel);
+    CompactDto? ShowCompact(CompactViewModel viewModel);
 
-    public ArchiveDto? ShowArchive(ArchiveViewModel viewModel);
+    RemoveDto? ShowRemove(RemoveViewModel viewModel);
 
-    public CompactDto? ShowCompact(CompactViewModel viewModel);
+    RestoreDto? ShowRestore(RestoreViewModel viewModel);
 
-    public RemoveDto? ShowRemove(RemoveViewModel viewModel);
+    DuplicateDto? ShowDuplicate(DuplicateViewModel viewModel);
 
-    public RestoreDto? ShowRestore(RestoreViewModel viewModel);
+    string? ShowDeleteArchive(DeleteArchiveViewModel viewModel);
 
-    public DuplicateDto? ShowDuplicate(DuplicateViewModel viewModel);
+    DockerDialogDto? ShowDockerRegister(DockerRegisterViewModel viewModel);
 
-    public string? ShowDeleteArchive(DeleteArchiveViewModel viewModel);
-
-    public DockerDialogResult? ShowDockerRegister(DockerRegisterViewModel viewModel);
-
-    public SetAppearanceDto? ShowSetAppearance(SetAppearanceViewModel viewModel);
+    SetAppearanceDto? ShowSetAppearance(SetAppearanceViewModel viewModel);
 }

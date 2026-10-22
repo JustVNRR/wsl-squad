@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using wsl_squad.Core.Validation;
+
 namespace wsl_squad.Presentation.ViewModels;
 
 public sealed partial class RecipeNameViewModel : BaseViewModel

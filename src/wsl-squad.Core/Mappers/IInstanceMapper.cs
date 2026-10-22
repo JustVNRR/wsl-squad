@@ -5,15 +5,15 @@ namespace wsl_squad.Core.Mappers;
 
 public interface IInstanceMapper
 {
-    public WslIndexDto ToIndexDto(WslInstance instance);
+    WslIndexDto ToIndexDto(WslInstance instance);
 
-    public WslIconDto ToIconDto(WslTheme? theme);
+    WslIconDto ToIconDto(WslTheme? theme);
 
-    public WslPackDto ToPackDto(WslPack pack);
+    WslPackDto ToPackDto(WslPack pack);
 
-    public GetAppearanceResponseDto ToAppearanceResponse(WslTheme theme);
+    GetAppearanceResponseDto ToAppearanceResponse(WslTheme theme);
 
-    public WslTheme FromSetAppearanceDto(SetAppearanceDto dto);
+    WslTheme FromSetAppearanceDto(SetAppearanceDto dto);
 
-    public IconDrawing ToDrawing(WslIconDto icon);
+    IconDrawing ToDrawing(WslIconDto icon);
 }

@@ -2,8 +2,8 @@ using System.Diagnostics;
 
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
+using wsl_squad.Core.Validation;
 using wsl_squad.Presentation.Presenters.Views;
-using wsl_squad.Presentation.ViewModels;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 

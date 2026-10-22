@@ -1,7 +1,3 @@
-using System.Diagnostics;
-using System.IO;
-using System.Text.Json;
-
 using wsl_squad.Core.Dtos;
 using wsl_squad.Presentation.Abstractions;
 using wsl_squad.Presentation.ViewModels;
@@ -26,14 +22,6 @@ public sealed class WpfDialogs : IDialogService
         _ = DialogHost.Show(new ErrorWindow(viewModel));
     }
 
-    public void OpenPath(string path)
-    {
-        if (!string.IsNullOrEmpty(path))
-        {
-            _ = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-        }
-    }
-
     public string? ShowRecipeName()
     {
         RecipeNameViewModel viewModel = new();
@@ -42,7 +30,7 @@ public sealed class WpfDialogs : IDialogService
         return viewModel.Result;
     }
 
-    public PackDuplicateResult? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken)
+    public (string Name, string Description)? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken)
     {
         PackDuplicateViewModel viewModel = new(source, blurb, taken);
         _ = DialogHost.Show(new PackDuplicateWindow(viewModel));
@@ -65,77 +53,11 @@ public sealed class WpfDialogs : IDialogService
         return viewModel.Result;
     }
 
-    public async Task<int> ShowBuildTerminalAsync(BuildDto request)
-    {
-        string requestPath = Path.Combine(
-            Path.GetTempPath(),
-            $"wsl-squad-build-{Guid.NewGuid():N}.json");
-
-        await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(request));
-
-        try
-        {
-            using Process process = LaunchBuildCli($"build --request \"{requestPath}\"");
-            await process.WaitForExitAsync();
-
-            return process.ExitCode;
-        }
-        finally
-        {
-            try
-            {
-                File.Delete(requestPath);
-            }
-            catch (IOException ex)
-            {
-                Trace.TraceWarning($"[WpfDialogs] Could not delete temporary build request file '{requestPath}': {ex.Message}");
-            }
-        }
-    }
-
-    public SettingsOutcome? ShowSettings(SettingsViewModel viewModel)
+    public SettingsDto? ShowSettings(SettingsViewModel viewModel)
     {
         _ = DialogHost.Show(new SettingsWindow(viewModel));
 
         return viewModel.Result;
-    }
-
-    private static Process LaunchBuildCli(string arguments)
-    {
-        string[] directories =
-        [
-            Path.Combine(AppContext.BaseDirectory, "cli"),
-            AppContext.BaseDirectory,
-        ];
-
-        foreach (string directory in directories)
-        {
-            string executable = Path.Combine(directory, "wsl-squad.cli.exe");
-
-            if (File.Exists(executable))
-            {
-                return Process.Start(new ProcessStartInfo(executable)
-                {
-                    Arguments = arguments,
-                    UseShellExecute = true,
-                    WorkingDirectory = Path.GetTempPath(),
-                }) ?? throw new InvalidOperationException("The CLI could not be started.");
-            }
-
-            string assembly = Path.Combine(directory, "wsl-squad.cli.dll");
-
-            if (File.Exists(assembly))
-            {
-                return Process.Start(new ProcessStartInfo("dotnet")
-                {
-                    Arguments = $"\"{assembly}\" {arguments}",
-                    UseShellExecute = true,
-                    WorkingDirectory = Path.GetTempPath(),
-                }) ?? throw new InvalidOperationException("The CLI could not be started.");
-            }
-        }
-
-        throw new InvalidOperationException("The CLI is missing next to the application.");
     }
 
     public ArchiveDto? ShowArchive(ArchiveViewModel viewModel)
@@ -180,7 +102,7 @@ public sealed class WpfDialogs : IDialogService
         return viewModel.Result;
     }
 
-    public DockerDialogResult? ShowDockerRegister(DockerRegisterViewModel viewModel)
+    public DockerDialogDto? ShowDockerRegister(DockerRegisterViewModel viewModel)
     {
         _ = DialogHost.Show(new DockerRegisterWindow(viewModel));
 

@@ -12,17 +12,13 @@ public sealed class TestDialogService : IDialogService
 
     public string? RecipeNameAnswer { get; set; }
 
-    public PackDuplicateResult? PackDuplicateAnswer { get; set; }
+    public (string Name, string Description)? PackDuplicateAnswer { get; set; }
 
     public string? RootMoveAnswer { get; set; }
 
     public BuildDto? BuildAnswer { get; set; }
 
-    public BuildDto? BuildTerminal { get; private set; }
-
-    public int BuildTerminalExitCode { get; set; }
-
-    public SettingsOutcome? SettingsAnswer { get; set; }
+    public SettingsDto? SettingsAnswer { get; set; }
 
     public ArchiveDto? ArchiveAnswer { get; set; }
 
@@ -36,13 +32,11 @@ public sealed class TestDialogService : IDialogService
 
     public string? DeleteArchiveAnswer { get; set; }
 
-    public DockerDialogResult? DockerRegisterAnswer { get; set; }
+    public DockerDialogDto? DockerRegisterAnswer { get; set; }
 
     public SetAppearanceDto? SetAppearanceAnswer { get; set; }
 
     public List<LogEntryDto> Errors { get; } = [];
-
-    public List<string> OpenedPaths { get; } = [];
 
     public bool Confirm(string title, string question, string? danger = null)
     {
@@ -56,17 +50,12 @@ public sealed class TestDialogService : IDialogService
         Errors.Add(entry);
     }
 
-    public void OpenPath(string path)
-    {
-        OpenedPaths.Add(path);
-    }
-
     public string? ShowRecipeName()
     {
         return RecipeNameAnswer;
     }
 
-    public PackDuplicateResult? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken)
+    public (string Name, string Description)? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken)
     {
         return PackDuplicateAnswer;
     }
@@ -81,14 +70,7 @@ public sealed class TestDialogService : IDialogService
         return BuildAnswer;
     }
 
-    public Task<int> ShowBuildTerminalAsync(BuildDto request)
-    {
-        BuildTerminal = request;
-
-        return Task.FromResult(BuildTerminalExitCode);
-    }
-
-    public SettingsOutcome? ShowSettings(SettingsViewModel viewModel)
+    public SettingsDto? ShowSettings(SettingsViewModel viewModel)
     {
         return SettingsAnswer;
     }
@@ -123,7 +105,7 @@ public sealed class TestDialogService : IDialogService
         return DeleteArchiveAnswer;
     }
 
-    public DockerDialogResult? ShowDockerRegister(DockerRegisterViewModel viewModel)
+    public DockerDialogDto? ShowDockerRegister(DockerRegisterViewModel viewModel)
     {
         return DockerRegisterAnswer;
     }

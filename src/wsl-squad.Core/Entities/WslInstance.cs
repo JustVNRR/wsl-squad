@@ -1,3 +1,5 @@
+using wsl_squad.Core.Validation;
+
 namespace wsl_squad.Core.Entities;
 
 public sealed class WslInstance
@@ -9,7 +11,7 @@ public sealed class WslInstance
         get => _name;
         set
         {
-            if (!IsValidName(value))
+            if (!NameRules.IsValid(value))
             {
                 throw new ArgumentException(
                     $"'{value}' is not usable as an instance name (letters, digits, '.', '_' and '-' only).",
@@ -47,14 +49,4 @@ public sealed class WslInstance
             $"  * Packs             : {packs}");
     }
 
-    private static bool IsValidName(string value)
-    {
-        if (string.IsNullOrEmpty(value) || !char.IsAsciiLetterOrDigit(value[0]))
-        {
-            return false;
-        }
-
-        return value.All(character =>
-            char.IsAsciiLetterOrDigit(character) || character is '.' or '_' or '-');
-    }
 }

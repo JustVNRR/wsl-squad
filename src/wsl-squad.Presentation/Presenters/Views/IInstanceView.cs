@@ -4,101 +4,101 @@ namespace wsl_squad.Presentation.Presenters.Views;
 
 public interface IInstanceView : IPresenterViewBase
 {
-    public void ShowNoInstances();
+    void ShowNoInstances();
 
-    public string? AskOffered(IReadOnlyList<WslIndexDto> instances);
+    string? AskOffered(IReadOnlyList<WslIndexDto> instances);
 
-    public void ShowStopWarning(string name);
+    void ShowStopWarning(string name);
 
-    public bool? Confirm(string question, bool defaultNo);
+    bool? Confirm(string question, bool defaultNo);
 
-    public void ShowCancelled(string noun);
+    void ShowCancelled(string noun);
 
-    public void ShowReplacing(string archiveName);
+    void ShowReplacing(string archiveName);
 
-    public void ShowBackingUp(string name);
+    void ShowBackingUp(string name);
 
-    public void Show(ArchiveResponseDto response);
+    void Show(ArchiveResponseDto response);
 
-    public void ShowBeforeQuestions();
+    void ShowBeforeQuestions();
 
-    public void ShowNoArchive();
+    void ShowNoArchive();
 
-    public void ShowReplacingArchive(string name);
+    void ShowReplacingArchive(string name);
 
-    public void ShowCompacting(string name, bool archiveFirst);
+    void ShowCompacting(string name, bool archiveFirst);
 
-    public void Show(CompactResponseDto response);
+    void Show(CompactResponseDto response);
 
-    public void ShowNoName();
+    void ShowNoName();
 
-    public void ShowDeleting(string target);
+    void ShowDeleting(string target);
 
-    public void Show(DeleteArchiveResponseDto response);
+    void Show(DeleteArchiveResponseDto response);
 
-    public string? AskCopyName();
+    string? AskCopyName();
 
-    public void ShowNameHint();
+    void ShowNameHint();
 
-    public void ShowDiskWarning(string source);
+    void ShowDiskWarning(string source);
 
-    public void ShowDuplicating(string source, string copy);
+    void ShowDuplicating(string source, string copy);
 
-    public void Show(DuplicateResponseDto response);
+    void Show(DuplicateResponseDto response);
 
-    public void ShowManagingPacks(string name);
+    void ShowManagingPacks(string name);
 
-    public void ShowOpening(string name);
+    void ShowOpening(string name);
 
-    public void Show(OpenResponseDto response);
+    void Show(OpenResponseDto response);
 
-    public void ShowAlreadyRegistered(string name);
+    void ShowAlreadyRegistered(string name);
 
-    public void ShowNotRegistered(string name);
+    void ShowNotRegistered(string name);
 
-    public void ShowSettingsUnreadable();
+    void ShowSettingsUnreadable();
 
-    public void ShowNoCandidates();
+    void ShowNoCandidates();
 
-    public bool? AskRegister(string name);
+    bool? AskRegister(string name);
 
-    public bool? AskUnregister(string name);
+    bool? AskUnregister(string name);
 
-    public bool? AskRestartDocker();
+    bool? AskRestartDocker();
 
-    public void Show(RegisterDockerResponseDto response);
+    void Show(RegisterDockerResponseDto response);
 
-    public void Show(UnregisterDockerResponseDto response);
+    void Show(UnregisterDockerResponseDto response);
 
-    public void ShowDestructionGate(string name, string question);
+    void ShowDestructionGate(string name, string question);
 
-    public string? AskTypedName();
+    string? AskTypedName();
 
-    public void ShowGateClose();
+    void ShowGateClose();
 
-    public void ShowGateRefused();
+    void ShowGateRefused();
 
-    public void ShowGateOpened();
+    void ShowGateOpened();
 
-    public void ShowRemovingSteps();
+    void ShowRemovingSteps();
 
-    public void Show();
+    void Show();
 
-    public void ShowStoppingWarning(string name);
+    void ShowStoppingWarning(string name);
 
-    public bool? AskRestart();
+    bool? AskRestart();
 
-    public void ShowRestarting(string name);
+    void ShowRestarting(string name);
 
-    public void Show(RestartResponseDto response);
+    void Show(RestartResponseDto response);
 
-    public void ShowNoArchives();
+    void ShowNoArchives();
 
-    public string? AskArchive(IReadOnlyList<WslIndexDto> archives);
+    string? AskArchive(IReadOnlyList<WslIndexDto> archives);
 
-    public void ShowRestoring(string archiveName);
+    void ShowRestoring(string archiveName);
 
-    public string? AskNewName();
+    string? AskNewName();
 
-    public void Show(RestoreResponseDto response);
+    void Show(RestoreResponseDto response);
 }

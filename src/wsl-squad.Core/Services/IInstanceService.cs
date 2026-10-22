@@ -4,61 +4,61 @@ namespace wsl_squad.Core.Services;
 
 public interface IInstanceService
 {
-    public IReadOnlyList<WslIndexDto> GetAll();
+    IReadOnlyList<WslIndexDto> GetAll();
 
-    public IReadOnlyList<WslOrphanDto> GetOrphans();
+    IReadOnlyList<WslOrphanDto> GetOrphans();
 
-    public IReadOnlyList<string> GetRunningNames();
+    IReadOnlyList<string> GetRunningNames();
 
-    public GetBuildSourcesResponseDto GetBuildSources();
+    GetBuildSourcesResponseDto GetBuildSources();
 
-    public WslBuildSourceDto CreateRecipe(NewRecipeDto dto);
+    WslBuildSourceDto CreateRecipe(NewRecipeDto dto);
 
-    public void OpenInEditor(string path);
+    void OpenInEditor(string path);
 
-    public RegisterDockerResponseDto RegisterDocker(RegisterDockerDto dto);
+    RegisterDockerResponseDto RegisterDocker(RegisterDockerDto dto);
 
-    public UnregisterDockerResponseDto UnregisterDocker(UnregisterDockerDto dto);
+    UnregisterDockerResponseDto UnregisterDocker(UnregisterDockerDto dto);
 
-    public WslBuildSourceDto UploadRecipe(UploadRecipeDto dto);
+    WslBuildSourceDto UploadRecipe(UploadRecipeDto dto);
 
-    public bool StartDocker();
+    bool StartDocker();
 
-    public void DeleteRecipe(string path);
+    void DeleteRecipe(string path);
 
-    public void ExportRecipe(ExportRecipeDto dto);
+    void ExportRecipe(ExportRecipeDto dto);
 
-    public BuildResponseDto Build(BuildDto dto);
+    BuildResponseDto Build(BuildDto dto);
 
-    public OpenResponseDto Open(string instanceName);
+    OpenResponseDto Open(string instanceName);
 
-    public RestartResponseDto Restart(string instanceName);
+    RestartResponseDto Restart(string instanceName);
 
-    public void Remove(RemoveDto dto);
+    void Remove(RemoveDto dto);
 
-    public CompactResponseDto Compact(CompactDto dto);
+    CompactResponseDto Compact(CompactDto dto);
 
-    public IReadOnlyList<string> GetFonts();
+    IReadOnlyList<string> GetFonts();
 
-    public IReadOnlyList<WslIconPairDto> GetIconPairs();
+    IReadOnlyList<WslIconPairDto> GetIconPairs();
 
-    public GetAppearanceResponseDto GetAppearance(string instanceName);
+    GetAppearanceResponseDto GetAppearance(string instanceName);
 
-    public SetAppearanceResponseDto SetAppearance(SetAppearanceDto dto);
+    SetAppearanceResponseDto SetAppearance(SetAppearanceDto dto);
 
-    public IReadOnlyList<WslColorSchemeDto> GetColorSchemes();
+    IReadOnlyList<WslColorSchemeDto> GetColorSchemes();
 
-    public void OpenPackManager(string instanceName);
+    void OpenPackManager(string instanceName);
 
-    public IReadOnlyList<WslDockerImageDto> GetAllSavedImages();
+    IReadOnlyList<WslDockerImageDto> GetAllSavedImages();
 
-    public IsRegistryImageValidResponseDto IsRegistryImageValid(string imageRef);
+    IsRegistryImageValidResponseDto IsRegistryImageValid(string imageRef);
 
-    public ArchiveResponseDto Archive(ArchiveDto dto);
+    ArchiveResponseDto Archive(ArchiveDto dto);
 
-    public RestoreResponseDto Restore(RestoreDto dto);
+    RestoreResponseDto Restore(RestoreDto dto);
 
-    public DeleteArchiveResponseDto DeleteArchive(string archive);
+    DeleteArchiveResponseDto DeleteArchive(string archive);
 
-    public DuplicateResponseDto Duplicate(DuplicateDto dto);
+    DuplicateResponseDto Duplicate(DuplicateDto dto);
 }
