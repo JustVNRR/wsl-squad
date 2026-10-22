@@ -16,7 +16,7 @@ cleanup_state() {
     if [ -n "${staging_root:-}" ]; then
         rm -rf "$staging_root" 2>/dev/null || true
     fi
-    rm -f /root/manage-packs.sh /root/manage-packs.catalog /root/manage-packs-cleanup.sh 2>/dev/null || true
+    rm -f /root/manage-packs.sh /root/manage-packs.catalog /root/manage-packs-cleanup.sh /root/manage-packs-bootstrap.sh 2>/dev/null || true
 }
 
 trap cleanup_state EXIT
@@ -82,6 +82,7 @@ else
     user_home=$(awk -F: -v u="$default_user" '$1 == u { print $6; exit }' /etc/passwd | tr -d '\r')
 fi
 if [ -z "$user_home" ] || [ ! -d "$user_home" ]; then
+    user_home=""
     for candidate in /home/* /root; do
         if [ -d "$candidate/.config/packs" ]; then
             user_home="$candidate"
@@ -94,10 +95,9 @@ if [ -z "$user_home" ] || [ ! -d "$user_home" ]; then
         fi
     done
 fi
-if [ -z "$user_home" ]; then
-    echo "${C_RED}The instance did not say where its user's home is.${C_RESET}"
-    read -rp "Press Enter to close... " _
-    exit 1
+if [ -z "$user_home" ] || [ ! -d "$user_home" ]; then
+    default_user=root
+    user_home=/root
 fi
 
 packs_dir="$user_home/.config/packs"

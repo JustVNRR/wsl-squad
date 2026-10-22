@@ -188,17 +188,25 @@ public sealed class WslRepository : IWslRepository
         });
     }
 
-    public void SavePackManager(string instanceName, string script, string cleanupScript, string catalogPath)
+    public void SavePackManager(
+        string instanceName,
+        string script,
+        string cleanupScript,
+        string bootstrapScript,
+        string catalogPath)
     {
         string normalized = NormalizeShell(script);
         string cleanup = NormalizeShell(cleanupScript);
+        string bootstrap = NormalizeShell(bootstrapScript);
         string catalog = Quote(ToWslPath(catalogPath));
         string setup =
             "cat > /root/manage-packs.sh <<'WSL_SQUAD_PACK_EOF'\n" +
             normalized + "\nWSL_SQUAD_PACK_EOF\n" +
             "cat > /root/manage-packs-cleanup.sh <<'WSL_SQUAD_CLEANUP_EOF'\n" +
             cleanup + "\nWSL_SQUAD_CLEANUP_EOF\n" +
-            "chmod 755 /root/manage-packs.sh /root/manage-packs-cleanup.sh || exit 1\n" +
+            "cat > /root/manage-packs-bootstrap.sh <<'WSL_SQUAD_BOOTSTRAP_EOF'\n" +
+            bootstrap + "\nWSL_SQUAD_BOOTSTRAP_EOF\n" +
+            "chmod 755 /root/manage-packs.sh /root/manage-packs-cleanup.sh /root/manage-packs-bootstrap.sh || exit 1\n" +
             "printf '%s' " + catalog + " > /root/manage-packs.catalog\n";
 
         (int exitCode, _) = NativeCommand.RunWithInput(
@@ -231,7 +239,8 @@ public sealed class WslRepository : IWslRepository
         start.ArgumentList.Add("--cd");
         start.ArgumentList.Add("/root");
         start.ArgumentList.Add("--");
-        start.ArgumentList.Add("/root/manage-packs.sh");
+        start.ArgumentList.Add("/bin/sh");
+        start.ArgumentList.Add("/root/manage-packs-bootstrap.sh");
 
         if (useProfile)
         {
@@ -256,7 +265,7 @@ public sealed class WslRepository : IWslRepository
 
         _ = Process.Start(new ProcessStartInfo("wsl.exe")
         {
-            Arguments = $"-d {instanceName} -u root --cd /root -- /root/manage-packs.sh",
+            Arguments = $"-d {instanceName} -u root --cd /root -- /bin/sh /root/manage-packs-bootstrap.sh",
             UseShellExecute = true,
         });
     }

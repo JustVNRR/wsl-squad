@@ -756,9 +756,15 @@ public sealed class InstanceService : IInstanceService
 
         string script = CatalogBootstrap.ReadText("ingredients/manage-packs.sh");
         string cleanup = CatalogBootstrap.ReadText("packs/cleanup_orphans.sh");
+        string bootstrap = CatalogBootstrap.ReadText("ingredients/manage-packs-bootstrap.sh");
         bool hasProfile = _terminalRepository.HasWslProfile(instanceName);
 
-        _wslRepository.SavePackManager(instanceName, script, cleanup, _packCatalogRepository.GetRoot());
+        _wslRepository.SavePackManager(
+            instanceName,
+            script,
+            cleanup,
+            bootstrap,
+            _packCatalogRepository.GetRoot());
 
         if (hasProfile)
         {

@@ -254,6 +254,7 @@ public class InstanceServiceTests
             "alpha",
             It.Is<string>(script => script.Contains("Wsl Squad - pack manager", StringComparison.Ordinal)),
             It.Is<string>(script => script.Contains("autoremove", StringComparison.Ordinal)),
+            It.Is<string>(script => script.Contains("command -v bash", StringComparison.Ordinal)),
             "/catalog/packs"), Times.Once);
         _wsl.Verify(wsl => wsl.OpenPackManager("alpha", true), Times.Once);
         _terminal.Verify(terminal => terminal.TouchSettings(), Times.Once);
@@ -287,6 +288,7 @@ public class InstanceServiceTests
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*No pack*");
         _wsl.Verify(wsl => wsl.SavePackManager(
+            It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>(),
