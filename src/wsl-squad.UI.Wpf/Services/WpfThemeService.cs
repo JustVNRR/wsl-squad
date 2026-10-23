@@ -10,7 +10,6 @@ using System.Windows.Media;
 
 using wsl_squad.Core.Repositories;
 using wsl_squad.Presentation.Abstractions;
-using wsl_squad.Presentation.Settings;
 using wsl_squad.UI.Wpf.Views;
 
 namespace wsl_squad.UI.Wpf.Services;

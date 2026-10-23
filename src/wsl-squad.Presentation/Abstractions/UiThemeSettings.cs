@@ -1,4 +1,4 @@
-namespace wsl_squad.Presentation.Settings;
+namespace wsl_squad.Presentation.Abstractions;
 
 public sealed class UiThemeSettings
 {

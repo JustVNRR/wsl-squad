@@ -1,5 +1,4 @@
 using wsl_squad.Presentation.Abstractions;
-using wsl_squad.Presentation.Settings;
 
 namespace wsl_squad.Presentation.Tests.Support;
 

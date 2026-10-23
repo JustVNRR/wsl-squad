@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Abstractions;
-using wsl_squad.Presentation.Settings;
 using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.ViewModels;
