@@ -7,22 +7,22 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 public sealed class SetAppearancePresenter : BasePresenter<IAppearanceView>
 {
     private readonly IInstanceService _service;
-    private readonly SelectInstancePresenter _picker;
+    private readonly TargetSelector _selector;
 
-    public SetAppearancePresenter(IInstanceService service, IInstanceView instanceView, IAppearanceView view)
+    public SetAppearancePresenter(IInstanceService service, IAppearanceView view)
         : base(view)
     {
         _service = service;
-        _picker = new SelectInstancePresenter(instanceView);
+        _selector = new TargetSelector(service, view);
     }
 
     public ActionResult Run(string? target)
     {
-        IReadOnlyList<WslIndexDto> rows;
+        TargetSelection selection;
 
         try
         {
-            rows = _service.GetAll();
+            selection = _selector.Select(target, row => !row.IsArchive);
         }
         catch (InvalidOperationException exception)
         {
@@ -31,14 +31,17 @@ public sealed class SetAppearancePresenter : BasePresenter<IAppearanceView>
             return ActionResult.Nok($"SetAppearance : {exception.Message}");
         }
 
-        string name = _picker.Pick(target, rows);
-
-        if (name.Length == 0)
+        if (selection.Status == TargetSelectionStatus.None)
         {
-            return _picker.Miss == "none"
-                ? ActionResult.Nok("SetAppearance : no instance")
-                : ActionResult.Ok("SetAppearance : cancelled");
+            return ActionResult.Nok("SetAppearance : no instance");
         }
+
+        if (selection.Status == TargetSelectionStatus.Cancelled)
+        {
+            return ActionResult.Ok("SetAppearance : cancelled");
+        }
+
+        string name = selection.Name;
 
         GetAppearanceResponseDto appearance;
         IReadOnlyList<string> fonts;

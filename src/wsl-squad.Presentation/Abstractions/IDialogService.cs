@@ -31,7 +31,7 @@ public interface IDialogService
 
     string? ShowDeleteArchive(DeleteArchiveViewModel viewModel);
 
-    DockerDialogDto? ShowDockerRegister(DockerRegisterViewModel viewModel);
+    bool? ShowDockerRegister(DockerRegisterViewModel viewModel);
 
     SetAppearanceDto? ShowSetAppearance(SetAppearanceViewModel viewModel);
 }

@@ -346,13 +346,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             Interactive = true,
         };
 
-        if (!_service.StartDocker())
-        {
-            View.ShowAbort(["Docker is not responding.", "Start Docker Desktop, then try again."]);
-
-            return ActionResult.Nok("Build : Docker is not responding.");
-        }
-
         try
         {
             BuildResponseDto response = _service.Build(dto);

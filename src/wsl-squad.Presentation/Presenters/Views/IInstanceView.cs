@@ -2,12 +2,8 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.Presenters.Views;
 
-public interface IInstanceView : IPresenterViewBase
+public interface IInstanceView : IInstancePickerView
 {
-    void ShowNoInstances();
-
-    string? AskOffered(IReadOnlyList<WslIndexDto> instances);
-
     void ShowStopWarning(string name);
 
     bool? Confirm(string question, bool defaultNo);

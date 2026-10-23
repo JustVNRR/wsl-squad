@@ -40,10 +40,7 @@ public class SimpleDialogViewModelTests
     [Fact]
     public void Archive_returns_a_core_dto_and_sees_an_existing_archive()
     {
-        ArchiveViewModel viewModel = new("alpha",
-        [
-            new WslIndexDto { Name = "alpha_archive", IsArchive = true },
-        ]);
+        ArchiveViewModel viewModel = new("alpha", replacesArchive: true);
 
         viewModel.TakenVisible.Should().BeTrue();
         viewModel.Lead.Should().Be("BACK UP 'ALPHA' AS 'ALPHA_ARCHIVE'.");
@@ -61,8 +58,9 @@ public class SimpleDialogViewModelTests
     [Fact]
     public void Compact_carries_the_archive_choice()
     {
-        CompactViewModel viewModel = new("alpha") { ArchiveFirst = true };
+        CompactViewModel viewModel = new("alpha", replacesArchive: true) { ArchiveFirst = true };
 
+        viewModel.ReplacesArchive.Should().BeTrue();
         viewModel.ConfirmCommand.Execute(null);
 
         viewModel.Result.Should().Be(new CompactDto { InstanceName = "alpha", ArchiveFirst = true });
@@ -71,7 +69,7 @@ public class SimpleDialogViewModelTests
     [Fact]
     public void Duplicate_validates_the_target_name()
     {
-        DuplicateViewModel viewModel = new("alpha");
+        DuplicateViewModel viewModel = new("alpha", ["alpha"]);
 
         viewModel.Name.Should().Be("alpha-copy");
         viewModel.ConfirmCommand.CanExecute(null).Should().BeTrue();
@@ -80,10 +78,23 @@ public class SimpleDialogViewModelTests
         viewModel.NameError.Should().NotBeEmpty();
         viewModel.ConfirmCommand.CanExecute(null).Should().BeFalse();
 
+        viewModel.Name = "alpha";
+        viewModel.NameError.Should().Contain("already exists");
+        viewModel.ConfirmCommand.CanExecute(null).Should().BeFalse();
+
         viewModel.Name = "alpha-two";
         viewModel.ConfirmCommand.Execute(null);
 
         viewModel.Result.Should().Be(new DuplicateDto { SourceName = "alpha", CopyName = "alpha-two" });
+    }
+
+    [Fact]
+    public void Restore_rejects_a_name_already_in_use()
+    {
+        RestoreViewModel viewModel = new("alpha_archive", ["alpha"]) { Name = "alpha" };
+
+        viewModel.NameError.Should().Contain("already exists");
+        viewModel.ConfirmCommand.CanExecute(null).Should().BeFalse();
     }
 
     [Fact]
@@ -103,7 +114,7 @@ public class SimpleDialogViewModelTests
     [Fact]
     public void Restore_trims_the_new_name()
     {
-        RestoreViewModel viewModel = new("alpha_archive") { Name = "  alpha  " };
+        RestoreViewModel viewModel = new("alpha_archive", []) { Name = "  alpha  " };
 
         viewModel.ConfirmCommand.Execute(null);
 
@@ -135,7 +146,7 @@ public class SimpleDialogViewModelTests
         viewModel.Restart = false;
         viewModel.ConfirmCommand.Execute(null);
 
-        viewModel.Result.Should().Be(new DockerDialogDto("alpha", false));
+        viewModel.Result.Should().Be(false);
     }
 
     [Fact]

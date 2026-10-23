@@ -184,7 +184,6 @@ public class PresenterTests
             Recipes = [],
         });
         service.Setup(s => s.GetAllSavedImages()).Returns([]);
-        service.Setup(s => s.StartDocker()).Returns(true);
         service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
         {
             InstanceName = "alpha",
@@ -225,7 +224,6 @@ public class PresenterTests
             Recipes = [],
         });
         service.Setup(s => s.GetAllSavedImages()).Returns([]);
-        service.Setup(s => s.StartDocker()).Returns(true);
         service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
         {
             InstanceName = "alpha",

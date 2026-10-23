@@ -241,7 +241,7 @@ public sealed class InstanceService : IInstanceService
         return FormatSourceRows([row])[0];
     }
 
-    public bool StartDocker()
+    private bool StartDocker()
     {
         return _dockerRepository.TestRunning() || _dockerRepository.StartDesktop();
     }
@@ -1216,7 +1216,16 @@ public sealed class InstanceService : IInstanceService
         kinds.Add(WslCommandKind.Duplicate);
         kinds.Add(WslCommandKind.Archive);
         kinds.Add(WslCommandKind.Compact);
-        kinds.Add(docker == "yes" ? WslCommandKind.UnregisterDocker : WslCommandKind.RegisterDocker);
+
+        if (docker == "yes")
+        {
+            kinds.Add(WslCommandKind.UnregisterDocker);
+        }
+        else if (docker == "no")
+        {
+            kinds.Add(WslCommandKind.RegisterDocker);
+        }
+
         kinds.Add(WslCommandKind.Remove);
 
         return [.. kinds.Select(kind => new WslCommandDto { Kind = kind })];

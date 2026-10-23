@@ -4,56 +4,21 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class OpenPresenter : BasePresenter<IInstanceView>
+public sealed class OpenPresenter : InstanceTargetPresenterBase
 {
-    private readonly IInstanceService _service;
-    private readonly SelectInstancePresenter _picker;
-
     public OpenPresenter(IInstanceService service, IInstanceView view)
-        : base(view)
+        : base(service, view)
     {
-        _service = service;
-        _picker = new SelectInstancePresenter(view);
     }
 
-    public ActionResult Run(string? target)
+    protected override string OperationName => "Open";
+
+    protected override ActionResult ExecuteCore(string instanceName)
     {
-        IReadOnlyList<WslIndexDto> rows;
+        View.ShowOpening(instanceName);
+        OpenResponseDto response = Service.Open(instanceName);
+        View.Show(response);
 
-        try
-        {
-            rows = _service.GetAll();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Open : {exception.Message}");
-        }
-
-        string name = _picker.Pick(target, rows);
-
-        if (name.Length == 0)
-        {
-            return _picker.Miss == "none"
-                ? ActionResult.Nok("Open : no instance")
-                : ActionResult.Ok("Open : cancelled");
-        }
-
-        View.ShowOpening(name);
-
-        try
-        {
-            OpenResponseDto response = _service.Open(name);
-            View.Show(response);
-
-            return ActionResult.Ok($"Open : {name}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Open : {name} - {exception.Message}");
-        }
+        return ActionResult.Ok($"Open : {instanceName}");
     }
 }

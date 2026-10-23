@@ -5,42 +5,17 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class DuplicatePresenter : BasePresenter<IInstanceView>
+public sealed class DuplicatePresenter : InstanceTargetPresenterBase
 {
-    private readonly IInstanceService _service;
-    private readonly SelectInstancePresenter _picker;
-
     public DuplicatePresenter(IInstanceService service, IInstanceView view)
-        : base(view)
+        : base(service, view)
     {
-        _service = service;
-        _picker = new SelectInstancePresenter(view);
     }
 
-    public ActionResult Run(string? target)
+    protected override string OperationName => "Duplicate";
+
+    protected override ActionResult ExecuteCore(string instanceName)
     {
-        IReadOnlyList<WslIndexDto> rows;
-
-        try
-        {
-            rows = _service.GetAll();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Duplicate : {exception.Message}");
-        }
-
-        string source = _picker.Pick(target, rows);
-
-        if (source.Length == 0)
-        {
-            return _picker.Miss == "none"
-                ? ActionResult.Nok("Duplicate : no instance")
-                : ActionResult.Ok("Duplicate : cancelled");
-        }
-
         string copy;
 
         while (true)
@@ -64,7 +39,7 @@ public sealed class DuplicatePresenter : BasePresenter<IInstanceView>
             View.ShowNameHint();
         }
 
-        View.ShowDiskWarning(source);
+        View.ShowDiskWarning(instanceName);
 
         if (View.Confirm("Continue?", defaultNo: false) != true)
         {
@@ -73,24 +48,15 @@ public sealed class DuplicatePresenter : BasePresenter<IInstanceView>
             return ActionResult.Ok("Duplicate : cancelled");
         }
 
-        View.ShowDuplicating(source, copy);
+        View.ShowDuplicating(instanceName, copy);
 
-        try
+        DuplicateResponseDto response = Service.Duplicate(new DuplicateDto
         {
-            DuplicateResponseDto response = _service.Duplicate(new DuplicateDto
-            {
-                SourceName = source,
-                CopyName = copy,
-            });
-            View.Show(response);
+            SourceName = instanceName,
+            CopyName = copy,
+        });
+        View.Show(response);
 
-            return ActionResult.Ok($"Duplicate : {copy}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Duplicate : {source} - {exception.Message}");
-        }
+        return ActionResult.Ok($"Duplicate : {copy}");
     }
 }

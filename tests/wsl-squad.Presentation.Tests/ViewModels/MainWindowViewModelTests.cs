@@ -50,9 +50,9 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void Refresh_loads_the_root_and_the_rows()
+    public async Task Refresh_loads_the_root_and_the_rows()
     {
-        _viewModel.RefreshCommand.Execute(null);
+        await _viewModel.RefreshCommand.ExecuteAsync(null);
 
         _viewModel.Root.Should().Be("/fleet");
         _viewModel.Rows.Should().ContainSingle();
@@ -62,22 +62,22 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void Refresh_reports_an_empty_fleet()
+    public async Task Refresh_reports_an_empty_fleet()
     {
         _instance.Setup(service => service.GetAll()).Returns([]);
 
-        _viewModel.RefreshCommand.Execute(null);
+        await _viewModel.RefreshCommand.ExecuteAsync(null);
 
         _viewModel.Rows.Should().BeEmpty();
         _logger.Entries.Should().Contain(entry => entry.Message == "No WSL SQUAD instances found.");
     }
 
     [Fact]
-    public void Refresh_reports_a_read_error()
+    public async Task Refresh_reports_a_read_error()
     {
         _fleet.Setup(fleet => fleet.GetRoot()).Throws(new InvalidOperationException("gone"));
 
-        _viewModel.RefreshCommand.Execute(null);
+        await _viewModel.RefreshCommand.ExecuteAsync(null);
 
         _logger.Entries.Should().Contain(entry => entry.Level == "ERROR");
         _dialogs.Errors.Should().ContainSingle();
@@ -93,11 +93,35 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task A_busy_window_ignores_row_actions()
+    {
+        _viewModel.Busy = true;
+
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.Shell));
+
+        _viewModel.Free.Should().BeFalse();
+        _instance.Verify(service => service.Open(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task A_busy_window_ignores_add()
+    {
+        _viewModel.Busy = true;
+        _dialogs.BuildAnswer = new BuildDto { Name = "beta", BuildType = WslBuildType.Dockerfile, BuildPath = "/x" };
+
+        await _viewModel.AddCommand.ExecuteAsync(null);
+
+        _buildLauncher.Request.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Open_calls_the_instance_service()
     {
         _instance.Setup(service => service.Open("alpha")).Returns(new OpenResponseDto { InstanceName = "alpha" });
 
-        await _viewModel.OpenCommand.ExecuteAsync("alpha");
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.Shell));
 
         _instance.Verify(service => service.Open("alpha"), Times.Once);
     }
@@ -108,7 +132,8 @@ public class MainWindowViewModelTests
         ArchiveDto request = new() { InstanceName = "alpha", Format = "tar.gz", Permit = true };
         _dialogs.ArchiveAnswer = request;
 
-        await _viewModel.ArchiveCommand.ExecuteAsync("alpha");
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.Archive));
 
         _instance.Verify(service => service.Archive(request), Times.Once);
     }
@@ -128,30 +153,33 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Docker_registers_when_the_row_is_not_registered()
     {
-        _viewModel.RefreshCommand.Execute(null);
-        _dialogs.DockerRegisterAnswer = new DockerDialogDto("alpha", true);
+        await _viewModel.RefreshCommand.ExecuteAsync(null);
+        _dialogs.DockerRegisterAnswer = true;
 
-        await _viewModel.DockerCommand.ExecuteAsync("alpha");
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.RegisterDocker));
 
         _instance.Verify(service => service.RegisterDocker(It.Is<RegisterDockerDto>(dto =>
             dto.InstanceName == "alpha" && dto.Restart)), Times.Once);
     }
 
     [Fact]
-    public void Editing_packs_opens_the_distro_manager()
+    public async Task Editing_packs_opens_the_distro_manager()
     {
-        _viewModel.EditCommand.Execute("alpha");
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.ManagePacks));
 
         _instance.Verify(service => service.OpenPackManager("alpha"), Times.Once);
     }
 
     [Fact]
-    public void Editing_packs_reports_a_manager_failure()
+    public async Task Editing_packs_reports_a_manager_failure()
     {
         _instance.Setup(service => service.OpenPackManager("alpha"))
             .Throws(new InvalidOperationException("no terminal"));
 
-        _viewModel.EditCommand.Execute("alpha");
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.ManagePacks));
 
         _dialogs.Errors.Should().ContainSingle(entry =>
             (entry.Message ?? string.Empty).Contains("no terminal", StringComparison.Ordinal));
@@ -193,7 +221,8 @@ public class MainWindowViewModelTests
         RemoveDto request = new() { InstanceName = "alpha", ArchiveFirst = true };
         _dialogs.RemoveAnswer = request;
 
-        await _viewModel.RemoveCommand.ExecuteAsync("alpha");
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.Remove));
 
         _instance.Verify(service => service.Remove(request), Times.Once);
     }

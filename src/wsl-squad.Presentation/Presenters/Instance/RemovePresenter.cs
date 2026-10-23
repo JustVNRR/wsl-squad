@@ -4,49 +4,24 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class RemovePresenter : BasePresenter<IInstanceView>
+public sealed class RemovePresenter : InstanceTargetPresenterBase
 {
-    private readonly IInstanceService _service;
-    private readonly SelectInstancePresenter _picker;
-
     public RemovePresenter(IInstanceService service, IInstanceView view)
-        : base(view)
+        : base(service, view)
     {
-        _service = service;
-        _picker = new SelectInstancePresenter(view);
     }
 
-    public ActionResult Run(string? target)
+    protected override string OperationName => "Remove";
+
+    protected override ActionResult ExecuteCore(string instanceName)
     {
-        IReadOnlyList<WslIndexDto> rows;
-
-        try
-        {
-            rows = _service.GetAll();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Remove : {exception.Message}");
-        }
-
-        string name = _picker.Pick(target, rows);
-
-        if (name.Length == 0)
-        {
-            return _picker.Miss == "none"
-                ? ActionResult.Nok("Remove : no instance")
-                : ActionResult.Ok("Remove : cancelled");
-        }
-
         View.ShowDestructionGate(
-            name,
-            $"The WSL distribution '{name}' and ALL its data will be deleted:");
+            instanceName,
+            $"The WSL distribution '{instanceName}' and ALL its data will be deleted:");
         string? typed = View.AskTypedName();
         View.ShowGateClose();
 
-        if (typed != name)
+        if (typed != instanceName)
         {
             View.ShowGateRefused();
 
@@ -64,29 +39,20 @@ public sealed class RemovePresenter : BasePresenter<IInstanceView>
         }
 
         if (archiveFirst == true &&
-            rows.Any(row => row.IsArchive && row.Name == $"{name}_archive"))
+            Rows.Any(row => row.IsArchive && row.Name == $"{instanceName}_archive"))
         {
-            View.ShowReplacingArchive(name);
+            View.ShowReplacingArchive(instanceName);
         }
 
         View.ShowRemovingSteps();
 
-        try
+        Service.Remove(new RemoveDto
         {
-            _service.Remove(new RemoveDto
-            {
-                InstanceName = name,
-                ArchiveFirst = archiveFirst.Value,
-            });
-            View.Show();
+            InstanceName = instanceName,
+            ArchiveFirst = archiveFirst.Value,
+        });
+        View.Show();
 
-            return ActionResult.Ok($"Remove : {name}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Remove : {name} - {exception.Message}");
-        }
+        return ActionResult.Ok($"Remove : {instanceName}");
     }
 }

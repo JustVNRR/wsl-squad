@@ -1,5 +1,6 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
+using wsl_squad.Core.Validation;
 using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
@@ -7,13 +8,11 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 public sealed class UnregisterDockerPresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;
-    private readonly SelectInstancePresenter _picker;
 
     public UnregisterDockerPresenter(IInstanceService service, IInstanceView view)
         : base(view)
     {
         _service = service;
-        _picker = new SelectInstancePresenter(view);
     }
 
     public ActionResult Run(string? target)
@@ -32,7 +31,7 @@ public sealed class UnregisterDockerPresenter : BasePresenter<IInstanceView>
         }
 
         List<WslIndexDto> live = [.. rows.Where(row => !row.IsArchive)];
-        List<WslIndexDto> candidates = [.. live.Where(row => row.Docker == "yes")];
+        List<WslIndexDto> candidates = [.. live.Where(row => DockerRules.IsCandidate(row, register: false))];
         string name;
 
         if (!string.IsNullOrEmpty(target))
@@ -46,14 +45,16 @@ public sealed class UnregisterDockerPresenter : BasePresenter<IInstanceView>
                 return ActionResult.Nok("UnregisterDocker : no instance");
             }
 
-            if (row.Docker == "no")
+            DockerTargetStatus status = DockerRules.Status(row.Docker, register: false);
+
+            if (status == DockerTargetStatus.NotRegistered)
             {
                 View.ShowNotRegistered(target);
 
                 return ActionResult.Nok($"UnregisterDocker : {target}");
             }
 
-            if (row.Docker != "yes")
+            if (status != DockerTargetStatus.Eligible)
             {
                 View.ShowSettingsUnreadable();
 
@@ -66,7 +67,8 @@ public sealed class UnregisterDockerPresenter : BasePresenter<IInstanceView>
         {
             if (candidates.Count == 0)
             {
-                if (live.Count > 0 && live.TrueForAll(row => row.Docker == "unknown"))
+                if (live.Count > 0 &&
+                    live.TrueForAll(row => DockerRules.Status(row.Docker, register: false) == DockerTargetStatus.Unknown))
                 {
                     View.ShowSettingsUnreadable();
                 }
@@ -78,7 +80,7 @@ public sealed class UnregisterDockerPresenter : BasePresenter<IInstanceView>
                 return ActionResult.Nok("UnregisterDocker : none to unregister");
             }
 
-            name = _picker.Pick(string.Empty, candidates);
+            name = View.AskOffered(candidates) ?? string.Empty;
 
             if (name.Length == 0)
             {

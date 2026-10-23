@@ -28,29 +28,21 @@ public sealed class TestThemeService : IUiThemeService
         return Theme;
     }
 
-    public void SetFontFamily(string family)
+    public void Preview(UiThemeSettings settings)
     {
-        Theme.FontFamily = family;
+        Previewed.Add((settings.FontFamily, settings.FontSize, settings.ColourSet, settings.ColourVariant));
     }
 
-    public void SetFontSize(int size)
+    public void ApplyTheme(UiThemeSettings settings)
     {
-        Theme.FontSize = size;
-    }
-
-    public void SetColorTheme(string colourTheme)
-    {
-        Theme.ColourSet = colourTheme;
-    }
-
-    public void SetVariant(string variant)
-    {
-        Theme.ColourVariant = variant;
-    }
-
-    public void Preview(string fontFamily, int fontSize, string colourSet, string variant)
-    {
-        Previewed.Add((fontFamily, fontSize, colourSet, variant));
+        Theme = new UiThemeSettings
+        {
+            FontFamily = settings.FontFamily,
+            FontSize = settings.FontSize,
+            ColourSet = settings.ColourSet,
+            ColourVariant = settings.ColourVariant,
+        };
+        Preview(Theme);
     }
 
     public IReadOnlyList<string> GetColorThemes()

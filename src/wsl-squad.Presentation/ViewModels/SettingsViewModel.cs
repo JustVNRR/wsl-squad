@@ -218,7 +218,13 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     public void Preview()
     {
-        _ui.Preview(SelectedFont, SelectedSize, SelectedColour, Variant);
+        _ui.Preview(new UiThemeSettings
+        {
+            FontFamily = SelectedFont,
+            FontSize = SelectedSize,
+            ColourSet = SelectedColour,
+            ColourVariant = Variant,
+        });
     }
 
     public bool HasTheme(string name)

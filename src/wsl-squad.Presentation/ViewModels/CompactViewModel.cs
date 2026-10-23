@@ -12,14 +12,17 @@ public sealed partial class CompactViewModel : BaseViewModel
     [ObservableProperty]
     private bool _archiveFirst;
 
-    public CompactViewModel(string name)
+    public CompactViewModel(string name, bool replacesArchive)
     {
         _name = name;
+        ReplacesArchive = replacesArchive;
         Lead = $"Compacting '{name}'.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm);
     }
 
     public string Lead { get; }
+
+    public bool ReplacesArchive { get; }
 
     public CompactDto? Result { get; private set; }
 

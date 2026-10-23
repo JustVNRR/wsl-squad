@@ -6,6 +6,23 @@ namespace wsl_squad.UI.Cli.Views;
 
 public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 {
+    public void ShowNoInstances()
+    {
+        Write(string.Empty);
+        Write("[ABORT] No instance of this template is registered on this machine.", ConsoleTone.Error);
+        Write("        Build one with  wsl-squad build", ConsoleTone.Hint);
+    }
+
+    public string? AskOffered(IReadOnlyList<WslIndexDto> instances)
+    {
+        WslIndexDto? picked = Pick(
+            "Our Instances",
+            instances,
+            row => $"{row.Name,-30} {Size(row.Size),10}");
+
+        return picked?.Name;
+    }
+
     public string? AskTheme(string name)
     {
         return Pick(

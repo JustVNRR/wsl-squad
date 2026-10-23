@@ -102,7 +102,7 @@ public sealed class WpfDialogs : IDialogService
         return viewModel.Result;
     }
 
-    public DockerDialogDto? ShowDockerRegister(DockerRegisterViewModel viewModel)
+    public bool? ShowDockerRegister(DockerRegisterViewModel viewModel)
     {
         _ = DialogHost.Show(new DockerRegisterWindow(viewModel));
 

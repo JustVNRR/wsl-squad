@@ -2,7 +2,7 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.Presenters.Views;
 
-public interface IAppearanceView : IPresenterViewBase
+public interface IAppearanceView : IInstancePickerView
 {
     string? AskTheme(string name);
 

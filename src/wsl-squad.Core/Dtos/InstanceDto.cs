@@ -381,8 +381,6 @@ public sealed record UnregisterDockerResponseDto
     public string Restart { get; init; } = string.Empty;
 }
 
-public sealed record DockerDialogDto(string Name, bool Restart);
-
 public sealed record LogEntryDto
 {
     public DateTime When { get; init; }

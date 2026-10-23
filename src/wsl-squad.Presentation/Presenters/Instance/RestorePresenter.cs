@@ -7,20 +7,22 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 public sealed class RestorePresenter : BasePresenter<IInstanceView>
 {
     private readonly IInstanceService _service;
+    private readonly ArchiveSelector _selector;
 
     public RestorePresenter(IInstanceService service, IInstanceView view)
         : base(view)
     {
         _service = service;
+        _selector = new ArchiveSelector(service, view);
     }
 
     public ActionResult Run(string? target)
     {
-        IReadOnlyList<WslIndexDto> rows;
+        TargetSelection selection;
 
         try
         {
-            rows = _service.GetAll();
+            selection = _selector.Select(target);
         }
         catch (InvalidOperationException exception)
         {
@@ -29,30 +31,19 @@ public sealed class RestorePresenter : BasePresenter<IInstanceView>
             return ActionResult.Nok($"Restore : {exception.Message}");
         }
 
-        string archiveName = target ?? string.Empty;
-
-        if (archiveName.Length == 0)
+        if (selection.Status == TargetSelectionStatus.None)
         {
-            List<WslIndexDto> archives = [.. rows.Where(row => row.IsArchive)];
-
-            if (archives.Count == 0)
-            {
-                View.ShowNoArchives();
-
-                return ActionResult.Nok("Restore : there are no archives");
-            }
-
-            string? picked = View.AskArchive(archives);
-
-            if (string.IsNullOrEmpty(picked))
-            {
-                View.ShowCancelled("created");
-
-                return ActionResult.Ok("Restore : cancelled");
-            }
-
-            archiveName = picked;
+            return ActionResult.Nok("Restore : there are no archives");
         }
+
+        if (selection.Status == TargetSelectionStatus.Cancelled)
+        {
+            View.ShowCancelled("created");
+
+            return ActionResult.Ok("Restore : cancelled");
+        }
+
+        string archiveName = selection.Name;
 
         View.ShowRestoring(archiveName);
         string? name = View.AskNewName();

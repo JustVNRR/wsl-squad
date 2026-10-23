@@ -4,42 +4,17 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class CompactPresenter : BasePresenter<IInstanceView>
+public sealed class CompactPresenter : InstanceTargetPresenterBase
 {
-    private readonly IInstanceService _service;
-    private readonly SelectInstancePresenter _picker;
-
     public CompactPresenter(IInstanceService service, IInstanceView view)
-        : base(view)
+        : base(service, view)
     {
-        _service = service;
-        _picker = new SelectInstancePresenter(view);
     }
 
-    public ActionResult Run(string? target)
+    protected override string OperationName => "Compact";
+
+    protected override ActionResult ExecuteCore(string instanceName)
     {
-        IReadOnlyList<WslIndexDto> rows;
-
-        try
-        {
-            rows = _service.GetAll();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Compact : {exception.Message}");
-        }
-
-        string name = _picker.Pick(target, rows);
-
-        if (name.Length == 0)
-        {
-            return _picker.Miss == "none"
-                ? ActionResult.Nok("Compact : no instance")
-                : ActionResult.Ok("Compact : cancelled");
-        }
-
         View.ShowBeforeQuestions();
         bool? archiveFirst = View.Confirm("Archive it first?", defaultNo: false);
 
@@ -54,29 +29,20 @@ public sealed class CompactPresenter : BasePresenter<IInstanceView>
         {
             View.ShowNoArchive();
         }
-        else if (rows.Any(row => row.IsArchive && row.Name == $"{name}_archive"))
+        else if (Rows.Any(row => row.IsArchive && row.Name == $"{instanceName}_archive"))
         {
-            View.ShowReplacingArchive(name);
+            View.ShowReplacingArchive(instanceName);
         }
 
-        View.ShowCompacting(name, archiveFirst.Value);
+        View.ShowCompacting(instanceName, archiveFirst.Value);
 
-        try
+        CompactResponseDto response = Service.Compact(new CompactDto
         {
-            CompactResponseDto response = _service.Compact(new CompactDto
-            {
-                InstanceName = name,
-                ArchiveFirst = archiveFirst.Value,
-            });
-            View.Show(response);
+            InstanceName = instanceName,
+            ArchiveFirst = archiveFirst.Value,
+        });
+        View.Show(response);
 
-            return ActionResult.Ok($"Compact : {name}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Compact : {name} - {exception.Message}");
-        }
+        return ActionResult.Ok($"Compact : {instanceName}");
     }
 }

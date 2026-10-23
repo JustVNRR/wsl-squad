@@ -6,15 +6,9 @@ public interface IUiThemeService
 {
     UiThemeSettings GetTheme();
 
-    void SetFontFamily(string family);
+    void Preview(UiThemeSettings settings);
 
-    void SetFontSize(int size);
-
-    void SetColorTheme(string colourTheme);
-
-    void SetVariant(string variant);
-
-    void Preview(string fontFamily, int fontSize, string colourSet, string variant);
+    void ApplyTheme(UiThemeSettings settings);
 
     IReadOnlyList<string> GetColorThemes();
 

@@ -8,13 +8,11 @@ public sealed class ArchiveViewModel : BaseViewModel
 {
     private readonly string _name;
 
-    public ArchiveViewModel(string name, IReadOnlyList<WslIndexDto> rows)
+    public ArchiveViewModel(string name, bool replacesArchive)
     {
-        ArgumentNullException.ThrowIfNull(rows);
-
         _name = name;
+        TakenVisible = replacesArchive;
         Lead = $"Back up '{name}' as '{name}_archive'.".ToUpperInvariant();
-        TakenVisible = rows.Any(row => row.IsArchive && row.Name == $"{name}_archive");
         ConfirmCommand = new RelayCommand(Confirm);
     }
 

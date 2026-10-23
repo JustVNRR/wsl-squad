@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
+using wsl_squad.Core.Validation;
 using wsl_squad.Presentation.Abstractions;
 using wsl_squad.Presentation.Settings;
 
@@ -24,10 +25,8 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private string _root = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Free))]
     private bool _busy;
-
-    [ObservableProperty]
-    private bool _free = true;
 
     [ObservableProperty]
     private string _colourSet;
@@ -61,7 +60,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
     public ObservableCollection<InstanceRowViewModel> Rows { get; } = [];
 
-    public bool CanToggleTheme => true;
+    public bool Free => !Busy;
 
     public string ThemeGlyph => Variant == "Light" ? "\uF186" : "\uF185";
 
@@ -74,15 +73,29 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private void Refresh()
+    private async Task RefreshAsync()
     {
-        Load();
+        if (Busy)
+        {
+            return;
+        }
+
+        SetBusy(true, "Reading the fleet...");
+
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            SetBusy(false, null);
+        }
     }
 
     [RelayCommand]
     private async Task RunRowAsync(InstanceCommandParameter? request)
     {
-        if (request is null || string.IsNullOrEmpty(request.Name))
+        if (Busy || request is null || string.IsNullOrEmpty(request.Name))
         {
             return;
         }
@@ -111,8 +124,10 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                 await CompactAsync(request.Name);
                 break;
             case WslCommandKind.RegisterDocker:
+                await DockerAsync(request.Name, register: true);
+                break;
             case WslCommandKind.UnregisterDocker:
-                await DockerAsync(request.Name);
+                await DockerAsync(request.Name, register: false);
                 break;
             case WslCommandKind.Remove:
                 await RemoveAsync(request.Name);
@@ -131,6 +146,11 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private async Task AddAsync()
     {
+        if (Busy)
+        {
+            return;
+        }
+
         BuildViewModel viewModel = new(_instance, _dialogs);
         BuildDto? request = _dialogs.ShowBuild(viewModel);
 
@@ -144,7 +164,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         try
         {
             int exitCode = await _buildLauncher.RunAsync(request);
-            Load();
+            await LoadAsync();
             SetStatus(
                 exitCode == 0
                     ? $"Created '{request.Name}'."
@@ -165,6 +185,11 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private async Task SettingsAsync()
     {
+        if (Busy)
+        {
+            return;
+        }
+
         SettingsViewModel viewModel = new(_ui, _catalogue, _fleet, _dialogs);
         SettingsDto? outcome = _dialogs.ShowSettings(viewModel);
 
@@ -182,14 +207,17 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         string previousFont = _ui.GetTheme().FontFamily;
         int previousSize = _ui.GetTheme().FontSize;
 
+        UiThemeSettings look = new()
+        {
+            FontFamily = fontFamily,
+            FontSize = fontSize,
+            ColourSet = colourSet,
+            ColourVariant = variant,
+        };
+
         try
         {
-            _ui.SetFontFamily(fontFamily);
-            _ui.SetFontSize(fontSize);
-            _ui.SetColorTheme(colourSet);
-            _ui.SetVariant(variant);
-
-            _ui.Preview(fontFamily, fontSize, colourSet, variant);
+            _ui.ApplyTheme(look);
         }
         catch (InvalidOperationException exception)
         {
@@ -221,7 +249,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        Load();
+        await LoadAsync();
         SetStatus(
             $"Window face: '{fontFamily}' at {fontSize} pt, theme '{(ColourSet.Length > 0 ? ColourSet : "default")}'. Popups follow on their next open.",
             false);
@@ -230,14 +258,25 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private void Theme()
     {
+        if (Busy)
+        {
+            return;
+        }
+
         string other = Variant == "Light" ? "Dark" : "Light";
+
+        UiThemeSettings current = _ui.GetTheme();
+        UiThemeSettings look = new()
+        {
+            FontFamily = current.FontFamily,
+            FontSize = current.FontSize,
+            ColourSet = current.ColourSet,
+            ColourVariant = other,
+        };
 
         try
         {
-            _ui.SetVariant(other);
-
-            UiThemeSettings look = _ui.GetTheme();
-            _ui.Preview(look.FontFamily, look.FontSize, look.ColourSet, other);
+            _ui.ApplyTheme(look);
         }
         catch (InvalidOperationException exception)
         {
@@ -251,10 +290,9 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         SetStatus($"The window wears '{setName}', {other.ToLowerInvariant()} version.", false);
     }
 
-    [RelayCommand]
-    private async Task OpenAsync(string? name)
+        private async Task OpenAsync(string? name)
     {
-        if (string.IsNullOrEmpty(name))
+        if (Busy || string.IsNullOrEmpty(name))
         {
             return;
         }
@@ -270,8 +308,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
     }
 
-    [RelayCommand]
-    private async Task RestartAsync(string? name)
+        private async Task RestartAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -284,10 +321,9 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"Restarted '{name}'.");
     }
 
-    [RelayCommand]
-    private void Edit(string? name)
+        private void Edit(string? name)
     {
-        if (string.IsNullOrEmpty(name))
+        if (Busy || string.IsNullOrEmpty(name))
         {
             return;
         }
@@ -306,8 +342,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         SetStatus($"Editing '{name}'s packs in a terminal.", false);
     }
 
-    [RelayCommand]
-    private async Task AppearanceAsync(string? name)
+        private async Task AppearanceAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -349,28 +384,16 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"SetAppearance : {name}");
     }
 
-    [RelayCommand]
-    private async Task ArchiveAsync(string? name)
+        private async Task ArchiveAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        IReadOnlyList<WslIndexDto> all;
-
-        try
-        {
-            all = _instance.GetAll();
-        }
-        catch (InvalidOperationException exception)
-        {
-            SetStatus($"Archive : {name} - {exception.Message}", true);
-
-            return;
-        }
-
-        ArchiveDto? request = _dialogs.ShowArchive(new ArchiveViewModel(name, all));
+        bool replacesArchive = Rows.Any(row =>
+            row.IsArchive && row.Name == $"{name}_archive");
+        ArchiveDto? request = _dialogs.ShowArchive(new ArchiveViewModel(name, replacesArchive));
 
         if (request is null)
         {
@@ -383,15 +406,16 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"Archived '{name}'.");
     }
 
-    [RelayCommand]
-    private async Task CompactAsync(string? name)
+        private async Task CompactAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        CompactDto? request = _dialogs.ShowCompact(new CompactViewModel(name));
+        bool replacesArchive = Rows.Any(row =>
+            row.IsArchive && row.Name == $"{name}_archive");
+        CompactDto? request = _dialogs.ShowCompact(new CompactViewModel(name, replacesArchive));
 
         if (request is null)
         {
@@ -404,8 +428,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"Compacted '{name}'.");
     }
 
-    [RelayCommand]
-    private async Task RemoveAsync(string? name)
+        private async Task RemoveAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -425,8 +448,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"Removed '{name}'.");
     }
 
-    [RelayCommand]
-    private async Task DockerAsync(string? name)
+    private async Task DockerAsync(string? name, bool register)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -434,54 +456,65 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
 
         string state = Rows.FirstOrDefault(row => row.Name == name)?.Docker ?? string.Empty;
+        DockerTargetStatus status = DockerRules.Status(state, register);
 
-        if (state is not "yes" and not "no")
+        if (status == DockerTargetStatus.Unknown)
         {
             SetStatus($"DockerDesktop : {name} - its Docker Desktop state cannot be read.", true);
 
             return;
         }
 
-        DockerDialogDto? answer = _dialogs.ShowDockerRegister(new DockerRegisterViewModel(name, state));
+        if (status != DockerTargetStatus.Eligible)
+        {
+            string reason = status == DockerTargetStatus.AlreadyRegistered
+                ? "it is already registered"
+                : "it is not registered";
+            SetStatus($"DockerDesktop : {name} - {reason}.", true);
 
-        if (answer is null)
+            return;
+        }
+
+        bool? restart = _dialogs.ShowDockerRegister(new DockerRegisterViewModel(name, state));
+
+        if (restart is null)
         {
             return;
         }
 
-        if (state == "yes")
-        {
-            await RunAsync(
-                $"Taking '{name}' out of Docker Desktop...",
-                () => _instance.UnregisterDocker(new UnregisterDockerDto
-                {
-                    InstanceName = name,
-                    Restart = answer.Restart,
-                }),
-                $"Unregistered '{name}' from Docker Desktop.");
-        }
-        else
+        if (register)
         {
             await RunAsync(
                 $"Registering '{name}' with Docker Desktop...",
                 () => _instance.RegisterDocker(new RegisterDockerDto
                 {
                     InstanceName = name,
-                    Restart = answer.Restart,
+                    Restart = restart.Value,
                 }),
                 $"Registered '{name}' with Docker Desktop.");
         }
+        else
+        {
+            await RunAsync(
+                $"Taking '{name}' out of Docker Desktop...",
+                () => _instance.UnregisterDocker(new UnregisterDockerDto
+                {
+                    InstanceName = name,
+                    Restart = restart.Value,
+                }),
+                $"Unregistered '{name}' from Docker Desktop.");
+        }
     }
 
-    [RelayCommand]
-    private async Task RestoreAsync(string? name)
+        private async Task RestoreAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        RestoreDto? request = _dialogs.ShowRestore(new RestoreViewModel(name));
+        string[] taken = [.. Rows.Where(row => !row.IsArchive).Select(row => row.Name)];
+        RestoreDto? request = _dialogs.ShowRestore(new RestoreViewModel(name, taken));
 
         if (request is null)
         {
@@ -494,15 +527,15 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"Restored '{name}' as '{request.InstanceName}'.");
     }
 
-    [RelayCommand]
-    private async Task DuplicateAsync(string? name)
+        private async Task DuplicateAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        DuplicateDto? request = _dialogs.ShowDuplicate(new DuplicateViewModel(name));
+        string[] taken = [.. Rows.Select(row => row.Name)];
+        DuplicateDto? request = _dialogs.ShowDuplicate(new DuplicateViewModel(name, taken));
 
         if (request is null)
         {
@@ -515,8 +548,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"Duplicated '{name}' as '{request.CopyName}'.");
     }
 
-    [RelayCommand]
-    private async Task DeleteArchiveAsync(string? name)
+        private async Task DeleteArchiveAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -536,14 +568,17 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             $"Deleted the archive '{named}'.");
     }
 
-    private void Load()
+    private async Task LoadAsync()
     {
         try
         {
-            Root = _fleet.GetRoot();
+            (string root, IReadOnlyList<WslIndexDto> rows) = await Task.Run(
+                () => (_fleet.GetRoot(), _instance.GetAll()));
+
+            Root = root;
             Rows.Clear();
 
-            foreach (WslIndexDto row in _instance.GetAll()
+            foreach (WslIndexDto row in rows
                          .Where(row => row is not null)
                          .OrderBy(row => row.Name, StringComparer.Ordinal))
             {
@@ -572,7 +607,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         try
         {
             await Task.Run(action);
-            Load();
+            await LoadAsync();
             SetStatus(success, false);
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
@@ -588,7 +623,6 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private void SetBusy(bool busy, string? message)
     {
         Busy = busy;
-        Free = !busy;
 
         if (!string.IsNullOrEmpty(message))
         {

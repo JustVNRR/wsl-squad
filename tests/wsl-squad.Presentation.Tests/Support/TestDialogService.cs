@@ -32,7 +32,7 @@ public sealed class TestDialogService : IDialogService
 
     public string? DeleteArchiveAnswer { get; set; }
 
-    public DockerDialogDto? DockerRegisterAnswer { get; set; }
+    public bool? DockerRegisterAnswer { get; set; }
 
     public SetAppearanceDto? SetAppearanceAnswer { get; set; }
 
@@ -105,7 +105,7 @@ public sealed class TestDialogService : IDialogService
         return DeleteArchiveAnswer;
     }
 
-    public DockerDialogDto? ShowDockerRegister(DockerRegisterViewModel viewModel)
+    public bool? ShowDockerRegister(DockerRegisterViewModel viewModel)
     {
         return DockerRegisterAnswer;
     }

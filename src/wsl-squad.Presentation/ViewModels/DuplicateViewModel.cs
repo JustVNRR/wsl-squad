@@ -9,6 +9,7 @@ namespace wsl_squad.Presentation.ViewModels;
 public sealed partial class DuplicateViewModel : BaseViewModel
 {
     private readonly string _source;
+    private readonly IReadOnlyList<string> _taken;
     private bool _nameOk;
 
     [ObservableProperty]
@@ -17,9 +18,10 @@ public sealed partial class DuplicateViewModel : BaseViewModel
     [ObservableProperty]
     private string _nameError = string.Empty;
 
-    public DuplicateViewModel(string source)
+    public DuplicateViewModel(string source, IReadOnlyList<string> taken)
     {
         _source = source;
+        _taken = taken;
         _name = $"{source}-copy";
         Lead = $"Duplicate '{source}'.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, () => _nameOk);
@@ -44,6 +46,8 @@ public sealed partial class DuplicateViewModel : BaseViewModel
         {
             { Length: 0 } => "Give a name.",
             _ when !NameRules.IsValid(trimmed) => "Letters, digits, '.', '_' and '-' only.",
+            _ when _taken.Contains(trimmed, StringComparer.OrdinalIgnoreCase) =>
+                $"An instance named '{trimmed}' already exists.",
             _ => string.Empty,
         };
 

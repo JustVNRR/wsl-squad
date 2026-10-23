@@ -22,8 +22,6 @@ public interface IInstanceService
 
     WslBuildSourceDto UploadRecipe(UploadRecipeDto dto);
 
-    bool StartDocker();
-
     void DeleteRecipe(string path);
 
     void ExportRecipe(ExportRecipeDto dto);

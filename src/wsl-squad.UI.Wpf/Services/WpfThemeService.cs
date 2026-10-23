@@ -40,35 +40,21 @@ public sealed class WpfThemeService : IUiThemeService
         return _settings;
     }
 
-    public void SetFontFamily(string family)
+    public void Preview(UiThemeSettings settings)
     {
-        _settings.FontFamily = family;
-        Save();
-    }
-
-    public void SetFontSize(int size)
-    {
-        _settings.FontSize = size;
-        Save();
-    }
-
-    public void SetColorTheme(string colourTheme)
-    {
-        _settings.ColourSet = colourTheme;
-        Save();
-    }
-
-    public void SetVariant(string variant)
-    {
-        _settings.ColourVariant = variant;
-        Save();
-    }
-
-    public void Preview(string fontFamily, int fontSize, string colourSet, string variant)
-    {
-        ApplyTheme(colourSet, variant);
-        ApplyLook(fontFamily, fontSize);
+        ApplyPaletteTheme(settings.ColourSet, settings.ColourVariant);
+        ApplyLook(settings.FontFamily, settings.FontSize);
         RefreshFrames();
+    }
+
+    public void ApplyTheme(UiThemeSettings settings)
+    {
+        _settings.FontFamily = settings.FontFamily;
+        _settings.FontSize = settings.FontSize;
+        _settings.ColourSet = settings.ColourSet;
+        _settings.ColourVariant = settings.ColourVariant;
+        Preview(_settings);
+        Save();
     }
 
     public IReadOnlyList<string> GetColorThemes()
@@ -208,7 +194,7 @@ public sealed class WpfThemeService : IUiThemeService
 
     public void ApplyPalette()
     {
-        ApplyTheme(_settings.ColourSet, _settings.ColourVariant);
+        ApplyPaletteTheme(_settings.ColourSet, _settings.ColourVariant);
         RefreshFrames();
     }
 
@@ -235,7 +221,7 @@ public sealed class WpfThemeService : IUiThemeService
         }
     }
 
-    private void ApplyTheme(string colourSet, string variant)
+    private void ApplyPaletteTheme(string colourSet, string variant)
     {
         ResourceDictionary? palette = LoadTheme(colourSet) ?? LoadTheme("phosphor");
         ResourceDictionary chosen = palette?[variant] as ResourceDictionary

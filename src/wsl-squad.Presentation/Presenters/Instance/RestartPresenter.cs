@@ -4,43 +4,18 @@ using wsl_squad.Presentation.Presenters.Views;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class RestartPresenter : BasePresenter<IInstanceView>
+public sealed class RestartPresenter : InstanceTargetPresenterBase
 {
-    private readonly IInstanceService _service;
-    private readonly SelectInstancePresenter _picker;
-
     public RestartPresenter(IInstanceService service, IInstanceView view)
-        : base(view)
+        : base(service, view)
     {
-        _service = service;
-        _picker = new SelectInstancePresenter(view);
     }
 
-    public ActionResult Run(string? target)
+    protected override string OperationName => "Restart";
+
+    protected override ActionResult ExecuteCore(string instanceName)
     {
-        IReadOnlyList<WslIndexDto> rows;
-
-        try
-        {
-            rows = _service.GetAll();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Restart : {exception.Message}");
-        }
-
-        string name = _picker.Pick(target, rows);
-
-        if (name.Length == 0)
-        {
-            return _picker.Miss == "none"
-                ? ActionResult.Nok("Restart : no instance")
-                : ActionResult.Ok("Restart : cancelled");
-        }
-
-        View.ShowStoppingWarning(name);
+        View.ShowStoppingWarning(instanceName);
 
         if (View.AskRestart() != true)
         {
@@ -49,20 +24,11 @@ public sealed class RestartPresenter : BasePresenter<IInstanceView>
             return ActionResult.Ok("Restart : cancelled");
         }
 
-        View.ShowRestarting(name);
+        View.ShowRestarting(instanceName);
 
-        try
-        {
-            RestartResponseDto response = _service.Restart(name);
-            View.Show(response);
+        RestartResponseDto response = Service.Restart(instanceName);
+        View.Show(response);
 
-            return ActionResult.Ok($"Restart : {name}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Restart : {name} - {exception.Message}");
-        }
+        return ActionResult.Ok($"Restart : {instanceName}");
     }
 }

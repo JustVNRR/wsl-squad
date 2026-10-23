@@ -28,7 +28,7 @@
                 <TextBlock Text="WSL SQUAD" FontWeight="SemiBold" Foreground="{DynamicResource AppForegroundBrush}"/>
                 <TextBlock Text="{Binding Root, StringFormat='Root: {0}'}" Foreground="{DynamicResource AppMutedBrush}" Margin="0,2,0,0"/>
             </StackPanel>
-            <Button Grid.Column="1" Command="{Binding AddCommand}" Content="&#xF067;" FontFamily="{DynamicResource IconFace}"
+            <Button Grid.Column="1" Command="{Binding AddCommand}" IsEnabled="{Binding Free}" Content="&#xF067;" FontFamily="{DynamicResource IconFace}"
                     Margin="0,0,8,0" VerticalAlignment="Top"
                     Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
                     ToolTip="Add"/>
@@ -36,11 +36,11 @@
                     VerticalAlignment="Top"
                     Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
                     ToolTip="Refresh"/>
-            <Button Grid.Column="3" Command="{Binding SettingsCommand}" Content="&#xF013;" FontFamily="{DynamicResource IconFace}"
+            <Button Grid.Column="3" Command="{Binding SettingsCommand}" IsEnabled="{Binding Free}" Content="&#xF013;" FontFamily="{DynamicResource IconFace}"
                     Margin="8,0,0,0" VerticalAlignment="Top"
                     Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
                     ToolTip="Settings"/>
-            <Button Grid.Column="4" Command="{Binding ThemeCommand}" IsEnabled="{Binding CanToggleTheme}"
+            <Button Grid.Column="4" Command="{Binding ThemeCommand}" IsEnabled="{Binding Free}"
                     Content="{Binding ThemeGlyph}" ToolTip="{Binding ThemeTooltip}"
                     FontFamily="{DynamicResource IconFace}"
                     Margin="8,0,0,0" VerticalAlignment="Top"

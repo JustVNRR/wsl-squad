@@ -46,7 +46,7 @@ public sealed class CliComposition
         _open = new OpenPresenter(instance, instanceView);
         _restart = new RestartPresenter(instance, instanceView);
         _managePacks = new ManagePacksPresenter(instance, instanceView);
-        _appearance = new SetAppearancePresenter(instance, instanceView, appearanceView);
+        _appearance = new SetAppearancePresenter(instance, appearanceView);
         _registerDocker = new RegisterDockerPresenter(instance, instanceView);
         _unregisterDocker = new UnregisterDockerPresenter(instance, instanceView);
         _remove = new RemovePresenter(instance, instanceView);
