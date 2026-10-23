@@ -7,17 +7,13 @@ public abstract class WorkflowBase
 {
     protected WorkflowBase(
         IInstanceService service,
-        IInstanceInteraction interaction,
         Action<string>? executionStarted)
     {
         Service = service;
-        Interaction = interaction;
         ExecutionStarted = executionStarted;
     }
 
     protected IInstanceService Service { get; }
-
-    protected IInstanceInteraction Interaction { get; }
 
     protected Action<string>? ExecutionStarted { get; }
 

@@ -7,13 +7,13 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 
 public sealed class DeleteArchivePresenter
 {
-    private readonly InstanceWorkflow _workflow;
-    private readonly IInstanceDeleteArchiveView _view;
+    private readonly InstanceStorageWorkflow _workflow;
+    private readonly IInstanceView _view;
 
-    public DeleteArchivePresenter(IInstanceService service, IInstanceDeleteArchiveView view)
+    public DeleteArchivePresenter(IInstanceService service, IInstanceView view)
     {
         _view = view;
-        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
+        _workflow = new InstanceStorageWorkflow(service, new ViewInstanceInteraction(view));
     }
 
     public ActionResult Run(string? target)

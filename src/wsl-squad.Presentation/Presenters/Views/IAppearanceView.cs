@@ -2,8 +2,12 @@ using wsl_squad.Core.Dtos;
 
 namespace wsl_squad.Presentation.Presenters.Views;
 
-public interface IAppearanceView : IInstancePickerView
+public interface IAppearanceView : IPresenterViewBase
 {
+    void ShowNoInstances();
+
+    string? AskOffered(IReadOnlyList<WslIndexDto> instances);
+
     string? AskTheme(string name);
 
     string? AskFont(string name, IReadOnlyList<string> fonts, string current);

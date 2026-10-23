@@ -98,6 +98,11 @@ public interface IInstanceInteraction
     void ShowDockerProblem(string instanceName, DockerProblem problem);
 
     bool? PromptDocker(string instanceName, bool shouldRegister);
+}
+
+public interface IAppearanceInteraction
+{
+    TargetResolution SelectInstance(string? target, IReadOnlyList<WslIndexDto> rows);
 
     IReadOnlyList<SetAppearanceDto> PromptAppearance(string instanceName, AppearanceContextDto context);
 }

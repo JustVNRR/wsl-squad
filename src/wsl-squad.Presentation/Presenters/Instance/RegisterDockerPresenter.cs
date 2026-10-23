@@ -6,13 +6,13 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 
 public sealed class RegisterDockerPresenter
 {
-    private readonly InstanceWorkflow _workflow;
-    private readonly IInstanceDockerView _view;
+    private readonly InstanceIntegrationWorkflow _workflow;
+    private readonly IInstanceView _view;
 
-    public RegisterDockerPresenter(IInstanceService service, IInstanceDockerView view)
+    public RegisterDockerPresenter(IInstanceService service, IInstanceView view)
     {
         _view = view;
-        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
+        _workflow = new InstanceIntegrationWorkflow(service, new ViewInstanceInteraction(view));
     }
 
     public ActionResult Run(string? target)

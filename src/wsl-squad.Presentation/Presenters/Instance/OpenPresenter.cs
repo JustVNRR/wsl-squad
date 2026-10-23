@@ -7,13 +7,13 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 
 public sealed class OpenPresenter
 {
-    private readonly InstanceWorkflow _workflow;
-    private readonly IInstanceOpenView _view;
+    private readonly InstanceLifecycleWorkflow _workflow;
+    private readonly IInstanceView _view;
 
-    public OpenPresenter(IInstanceService service, IInstanceOpenView view)
+    public OpenPresenter(IInstanceService service, IInstanceView view)
     {
         _view = view;
-        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
+        _workflow = new InstanceLifecycleWorkflow(service, new ViewInstanceInteraction(view));
     }
 
     public ActionResult Run(string? target)

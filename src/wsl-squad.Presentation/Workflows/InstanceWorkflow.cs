@@ -8,15 +8,18 @@ public sealed class InstanceWorkflow : IInstanceWorkflow
     private readonly InstanceLifecycleWorkflow _lifecycle;
     private readonly InstanceStorageWorkflow _storage;
     private readonly InstanceIntegrationWorkflow _integration;
+    private readonly InstanceAppearanceWorkflow _appearance;
 
     public InstanceWorkflow(
         IInstanceService service,
         IInstanceInteraction interaction,
+        IAppearanceInteraction appearanceInteraction,
         Action<string>? executionStarted = null)
     {
         _lifecycle = new InstanceLifecycleWorkflow(service, interaction, executionStarted);
         _storage = new InstanceStorageWorkflow(service, interaction, executionStarted);
         _integration = new InstanceIntegrationWorkflow(service, interaction, executionStarted);
+        _appearance = new InstanceAppearanceWorkflow(service, appearanceInteraction, executionStarted);
     }
 
     public Task<WorkflowResult<OpenResponseDto>> OpenAsync(string? target)
@@ -76,6 +79,6 @@ public sealed class InstanceWorkflow : IInstanceWorkflow
 
     public Task<WorkflowResult<SetAppearanceResponseDto>> AppearanceAsync(string? target)
     {
-        return _integration.AppearanceAsync(target);
+        return _appearance.AppearanceAsync(target);
     }
 }

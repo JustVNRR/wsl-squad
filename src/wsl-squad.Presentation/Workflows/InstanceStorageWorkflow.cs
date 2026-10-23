@@ -5,9 +5,12 @@ namespace wsl_squad.Presentation.Workflows;
 
 public sealed class InstanceStorageWorkflow : WorkflowBase
 {
+    private readonly IInstanceInteraction _interaction;
+
     public InstanceStorageWorkflow(IInstanceService service, IInstanceInteraction interaction, Action<string>? executionStarted = null)
-        : base(service, interaction, executionStarted)
+        : base(service, executionStarted)
     {
+        _interaction = interaction;
     }
 
     public async Task<WorkflowResult<ArchiveResponseDto>> ArchiveAsync(string? target)
@@ -19,7 +22,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = Interaction.SelectInstance(target, rows);
+        TargetResolution choice = _interaction.SelectInstance(target, rows);
 
         if (SelectError<ArchiveResponseDto>(choice) is { } selectionError)
         {
@@ -28,7 +31,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
 
         bool replacesArchive = rows.Any(row =>
             row.IsArchive && row.Name == $"{choice.Name}_archive");
-        ArchiveDto? request = Interaction.PromptArchive(choice.Name, replacesArchive);
+        ArchiveDto? request = _interaction.PromptArchive(choice.Name, replacesArchive);
 
         if (request is null)
         {
@@ -58,7 +61,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = Interaction.SelectInstance(target, rows);
+        TargetResolution choice = _interaction.SelectInstance(target, rows);
 
         if (SelectError<CompactResponseDto>(choice) is { } selectionError)
         {
@@ -67,7 +70,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
 
         bool replacesArchive = rows.Any(row =>
             row.IsArchive && row.Name == $"{choice.Name}_archive");
-        CompactDto? request = Interaction.PromptCompact(choice.Name, replacesArchive);
+        CompactDto? request = _interaction.PromptCompact(choice.Name, replacesArchive);
 
         if (request is null)
         {
@@ -97,7 +100,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = Interaction.SelectArchive(target, rows);
+        TargetResolution choice = _interaction.SelectArchive(target, rows);
 
         if (SelectError<RestoreResponseDto>(choice) is { } selectionError)
         {
@@ -107,7 +110,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
         string[] taken = [.. rows
             .Where(row => !row.IsArchive && !string.IsNullOrEmpty(row.Name))
             .Select(row => row.Name!)];
-        RestoreDto? request = Interaction.PromptRestore(choice.Name, taken);
+        RestoreDto? request = _interaction.PromptRestore(choice.Name, taken);
 
         if (request is null)
         {
@@ -146,7 +149,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
                 return error;
             }
 
-            choice = Interaction.SelectArchive(target, rows);
+            choice = _interaction.SelectArchive(target, rows);
 
             if (SelectError<DeleteArchiveResponseDto>(choice) is { } selectionError)
             {
@@ -154,7 +157,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             }
         }
 
-        if (!Interaction.PromptDeleteArchive(choice.Name))
+        if (!_interaction.PromptDeleteArchive(choice.Name))
         {
             return WorkflowResults.Cancelled<DeleteArchiveResponseDto>(choice.Name);
         }

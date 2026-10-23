@@ -4,7 +4,7 @@ using wsl_squad.Presentation.ViewModels;
 
 namespace wsl_squad.Presentation.Workflows;
 
-public sealed class DialogInstanceInteraction : IInstanceInteraction
+public sealed class DialogInstanceInteraction : IInstanceInteraction, IAppearanceInteraction
 {
     private readonly IDialogService _dialogs;
 

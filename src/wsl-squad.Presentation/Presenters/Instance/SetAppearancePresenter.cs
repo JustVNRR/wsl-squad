@@ -7,13 +7,13 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 
 public sealed class SetAppearancePresenter
 {
-    private readonly InstanceWorkflow _workflow;
+    private readonly InstanceAppearanceWorkflow _workflow;
     private readonly IAppearanceView _view;
 
     public SetAppearancePresenter(IInstanceService service, IAppearanceView view)
     {
         _view = view;
-        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
+        _workflow = new InstanceAppearanceWorkflow(service, new ViewAppearanceInteraction(view));
     }
 
     public ActionResult Run(string? target)

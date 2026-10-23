@@ -5,9 +5,12 @@ namespace wsl_squad.Presentation.Workflows;
 
 public sealed class InstanceLifecycleWorkflow : WorkflowBase
 {
+    private readonly IInstanceInteraction _interaction;
+
     public InstanceLifecycleWorkflow(IInstanceService service, IInstanceInteraction interaction, Action<string>? executionStarted = null)
-        : base(service, interaction, executionStarted)
+        : base(service, executionStarted)
     {
+        _interaction = interaction;
     }
 
     public async Task<WorkflowResult<OpenResponseDto>> OpenAsync(string? target)
@@ -27,7 +30,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 return error;
             }
 
-            choice = Interaction.SelectInstance(target, rows);
+            choice = _interaction.SelectInstance(target, rows);
 
             if (SelectError<OpenResponseDto>(choice) is { } selectionError)
             {
@@ -66,7 +69,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 return error;
             }
 
-            choice = Interaction.SelectInstance(target, rows);
+            choice = _interaction.SelectInstance(target, rows);
 
             if (SelectError<RestartResponseDto>(choice) is { } selectionError)
             {
@@ -74,7 +77,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             }
         }
 
-        if (!Interaction.PromptRestart(choice.Name))
+        if (!_interaction.PromptRestart(choice.Name))
         {
             return WorkflowResults.Cancelled<RestartResponseDto>(choice.Name);
         }
@@ -110,7 +113,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 return error;
             }
 
-            choice = Interaction.SelectInstance(target, rows);
+            choice = _interaction.SelectInstance(target, rows);
 
             if (SelectError<bool>(choice) is { } selectionError)
             {
@@ -141,7 +144,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = Interaction.SelectInstance(target, rows);
+        TargetResolution choice = _interaction.SelectInstance(target, rows);
 
         if (SelectError<DuplicateResponseDto>(choice) is { } selectionError)
         {
@@ -151,7 +154,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         string[] taken = [.. rows
             .Where(row => !string.IsNullOrEmpty(row.Name))
             .Select(row => row.Name!)];
-        DuplicateDto? request = Interaction.PromptDuplicate(choice.Name, taken);
+        DuplicateDto? request = _interaction.PromptDuplicate(choice.Name, taken);
 
         if (request is null)
         {
@@ -181,7 +184,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = Interaction.SelectInstance(target, rows);
+        TargetResolution choice = _interaction.SelectInstance(target, rows);
 
         if (SelectError<RemoveDto>(choice) is { } selectionError)
         {
@@ -190,7 +193,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
 
         bool replacesArchive = rows.Any(row =>
             row.IsArchive && row.Name == $"{choice.Name}_archive");
-        RemoveDto? request = Interaction.PromptRemove(choice.Name, replacesArchive);
+        RemoveDto? request = _interaction.PromptRemove(choice.Name, replacesArchive);
 
         if (request is null)
         {

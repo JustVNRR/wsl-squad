@@ -51,7 +51,12 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _catalogue = catalogue;
         _dialogs = dialogs;
         _buildLauncher = buildLauncher;
-        _workflow = new InstanceWorkflow(instance, new DialogInstanceInteraction(dialogs), message => SetBusy(true, message));
+        DialogInstanceInteraction interaction = new(dialogs);
+        _workflow = new InstanceWorkflow(
+            instance,
+            interaction,
+            interaction,
+            message => SetBusy(true, message));
         _fleetWorkflow = new FleetWorkflow(fleet, executionStarted: message => SetBusy(true, message));
         _logger = logger;
 

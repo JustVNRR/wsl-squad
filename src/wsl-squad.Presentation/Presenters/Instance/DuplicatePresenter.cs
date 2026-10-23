@@ -7,13 +7,13 @@ namespace wsl_squad.Presentation.Presenters.Instance;
 
 public sealed class DuplicatePresenter
 {
-    private readonly InstanceWorkflow _workflow;
-    private readonly IInstanceDuplicateView _view;
+    private readonly InstanceLifecycleWorkflow _workflow;
+    private readonly IInstanceView _view;
 
-    public DuplicatePresenter(IInstanceService service, IInstanceDuplicateView view)
+    public DuplicatePresenter(IInstanceService service, IInstanceView view)
     {
         _view = view;
-        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
+        _workflow = new InstanceLifecycleWorkflow(service, new ViewInstanceInteraction(view));
     }
 
     public ActionResult Run(string? target)
