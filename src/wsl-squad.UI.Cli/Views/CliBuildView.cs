@@ -103,11 +103,6 @@ public sealed class CliBuildView : CliViewBase, IBuildView
         return AskConfirmation($"Add '{name}' to Docker Desktop? (it will be restarted)", defaultNo: false);
     }
 
-    public void ShowCancelled(string noun)
-    {
-        Cancelled(noun);
-    }
-
     public void Show(BuildResponseDto response)
     {
         foreach (string message in response.Messages)

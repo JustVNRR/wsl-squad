@@ -1,34 +1,25 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class RestartPresenter : InstanceTargetPresenterBase
+public sealed class RestartPresenter
 {
-    public RestartPresenter(IInstanceService service, IInstanceView view)
-        : base(service, view)
+    private readonly InstanceWorkflow _workflow;
+    private readonly IInstanceRestartView _view;
+
+    public RestartPresenter(IInstanceService service, IInstanceRestartView view)
     {
+        _view = view;
+        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    protected override string OperationName => "Restart";
-
-    protected override ActionResult ExecuteCore(string instanceName)
+    public ActionResult Run(string? target)
     {
-        View.ShowStoppingWarning(instanceName);
+        WorkflowResult<RestartResponseDto> result = _workflow.RestartAsync(target).GetAwaiter().GetResult();
 
-        if (View.AskRestart() != true)
-        {
-            View.ShowCancelled("modified");
-
-            return ActionResult.Ok("Restart : cancelled");
-        }
-
-        View.ShowRestarting(instanceName);
-
-        RestartResponseDto response = Service.Restart(instanceName);
-        View.Show(response);
-
-        return ActionResult.Ok($"Restart : {instanceName}");
+        return result.ToActionResult("Restart", _view.Show, _view.ShowError);
     }
 }

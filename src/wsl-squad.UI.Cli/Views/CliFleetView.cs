@@ -137,21 +137,11 @@ public sealed class CliFleetView : CliViewBase, IFleetView
         Write("Removing it may break them.", ConsoleTone.Error);
     }
 
-    public bool? Confirm(string question, bool defaultNo)
-    {
-        return AskConfirmation(question, defaultNo);
-    }
-
     public string? AskTarget(string root)
     {
         Write(string.Empty);
 
         return AskLine($"Move the fleet from '{root}' to")?.Trim();
-    }
-
-    public void ShowCancelled(string noun)
-    {
-        Cancelled(noun);
     }
 
     public void ShowSameFolder()

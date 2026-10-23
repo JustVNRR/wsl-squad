@@ -105,6 +105,33 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task A_row_action_blocks_another_while_the_rows_load()
+    {
+        TaskCompletionSource started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _instance.Setup(service => service.GetAll()).Returns(() =>
+        {
+            started.TrySetResult();
+            release.Task.GetAwaiter().GetResult();
+
+            return [new WslIndexDto { Name = "alpha", Size = 2048, Docker = "no" }];
+        });
+
+        Task first = _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.Archive));
+
+        await started.Task;
+
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.Shell));
+
+        release.SetResult();
+        await first;
+
+        _instance.Verify(service => service.Open(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public async Task A_busy_window_ignores_add()
     {
         _viewModel.Busy = true;

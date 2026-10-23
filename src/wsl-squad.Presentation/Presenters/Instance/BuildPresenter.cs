@@ -21,11 +21,14 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
     {
         GetBuildSourcesResponseDto sources;
         IReadOnlyList<WslDockerImageDto> images;
+        IReadOnlyList<string> takenNames;
 
         try
         {
-            sources = _service.GetBuildSources();
-            images = _service.GetAllSavedImages();
+            BuildContextDto buildContext = _service.GetBuildContext();
+            sources = buildContext.Sources;
+            images = buildContext.Images;
+            takenNames = buildContext.TakenNames;
         }
         catch (InvalidOperationException exception)
         {
@@ -68,7 +71,8 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         answer = answer.Trim();
 
-                        if (NameRules.IsValid(answer))
+                        if (NameRules.IsValid(answer) &&
+                            !takenNames.Contains(answer, StringComparer.OrdinalIgnoreCase))
                         {
                             name = answer;
                             ok = true;

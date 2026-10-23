@@ -216,6 +216,26 @@ public sealed record SetAppearanceDto
 
 public sealed record SettingsDto(SetAppearanceDto Appearance, string? NewRoot);
 
+public sealed record AppearanceContextDto
+{
+    public GetAppearanceResponseDto Appearance { get; init; } = new();
+
+    public IReadOnlyList<string> Fonts { get; init; } = [];
+
+    public IReadOnlyList<WslColorSchemeDto> ColorSchemes { get; init; } = [];
+
+    public IReadOnlyList<WslIconPairDto> IconPairs { get; init; } = [];
+}
+
+public sealed record BuildContextDto
+{
+    public GetBuildSourcesResponseDto Sources { get; init; } = new();
+
+    public IReadOnlyList<WslDockerImageDto> Images { get; init; } = [];
+
+    public IReadOnlyList<string> TakenNames { get; init; } = [];
+}
+
 public sealed record WslIconPairDto
 {
     public string? Name { get; init; }

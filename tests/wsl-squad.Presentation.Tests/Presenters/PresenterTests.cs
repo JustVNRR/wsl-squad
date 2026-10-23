@@ -49,6 +49,38 @@ public class PresenterTests
     }
 
     [Fact]
+    public void Appearance_presenter_applies_each_selected_change()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.GetAppearance("alpha")).Returns(
+            new GetAppearanceResponseDto { Font = "VT323", ColourScheme = "amber" });
+        service.Setup(s => s.GetFonts()).Returns(["VT323", "Cascadia"]);
+        service.Setup(s => s.GetColorSchemes()).Returns(
+            [new WslColorSchemeDto { Name = "amber" }, new WslColorSchemeDto { Name = "ice" }]);
+        service.Setup(s => s.GetIconPairs()).Returns([]);
+        service.Setup(s => s.SetAppearance(It.IsAny<SetAppearanceDto>()))
+            .Returns((SetAppearanceDto dto) => new SetAppearanceResponseDto
+            {
+                InstanceName = dto.InstanceName,
+                Changes = [dto.Font is not null ? "font" : "colours"],
+            });
+        TestAppearanceView view = new();
+        view.Themes.Enqueue("font");
+        view.Themes.Enqueue("color");
+        view.Themes.Enqueue(null);
+
+        ActionResult result = new SetAppearancePresenter(service.Object, view).Run("alpha");
+
+        result.Status.Should().Be(ActionResultStatus.Ok);
+        service.Verify(s => s.SetAppearance(It.Is<SetAppearanceDto>(dto =>
+            dto.Font == "Cascadia" && dto.ColourScheme == null)), Times.Once);
+        service.Verify(s => s.SetAppearance(It.Is<SetAppearanceDto>(dto =>
+            dto.Font == null && dto.ColourScheme == "ice")), Times.Once);
+        view.Shown.Should().ContainSingle();
+        view.Shown[0].Changes.Should().Equal("font", "colours");
+    }
+
+    [Fact]
     public void Browse_filters_live_instances_and_archives()
     {
         Mock<IInstanceService> service = new();
@@ -371,7 +403,7 @@ public class PresenterTests
             Dependents[name] = dependents;
         }
 
-        public bool? Confirm(string question, bool defaultNo)
+        public bool? Confirm(string question, bool defaultNo = true)
         {
             return ConfirmAnswer;
         }
@@ -435,15 +467,9 @@ public class PresenterTests
 
         public List<string> Errors { get; } = [];
 
-        public bool? AskRestartDocker() => true;
+        public bool? AskDockerAction(string name, bool shouldRegister) => true;
 
         public bool? AskRestart() => true;
-
-        public bool? AskRegister(string name) => true;
-
-        public bool? AskUnregister(string name) => true;
-
-        public string? AskTypedName() => TypedName;
 
         public string? AskCopyName() => CopyName;
 
@@ -453,9 +479,11 @@ public class PresenterTests
 
         public string? AskArchive(IReadOnlyList<WslIndexDto> archives) => ArchiveName;
 
-        public bool? Confirm(string question, bool defaultNo) => ConfirmAnswer;
+        public bool? Confirm(string question, bool defaultNo = true) => ConfirmAnswer;
 
         public void ShowNoInstances() { }
+
+        public bool ConfirmDestruction(string instanceName) => TypedName == instanceName;
 
         public void ShowStopWarning(string name) => StopWarnings.Add(name);
 
@@ -476,8 +504,6 @@ public class PresenterTests
         public void ShowCompacting(string name, bool archiveFirst) { }
 
         public void Show(CompactResponseDto response) { }
-
-        public void ShowNoName() { }
 
         public void ShowDeleting(string target) { }
 
@@ -509,14 +535,6 @@ public class PresenterTests
 
         public void Show(UnregisterDockerResponseDto response) { }
 
-        public void ShowDestructionGate(string name, string question) { }
-
-        public void ShowGateClose() { }
-
-        public void ShowGateRefused() { }
-
-        public void ShowGateOpened() { }
-
         public void ShowRemovingSteps() { }
 
         public void Show() { }
@@ -532,6 +550,52 @@ public class PresenterTests
         public void ShowRestoring(string archiveName) { }
 
         public void Show(RestoreResponseDto response) { }
+
+        public void ShowError(string message) => Errors.Add(message);
+    }
+
+    private sealed class TestAppearanceView : IAppearanceView
+    {
+        public Queue<string?> Themes { get; } = new();
+
+        public List<SetAppearanceResponseDto> Shown { get; } = [];
+
+        public List<string> Errors { get; } = [];
+
+        public string? AskTheme(string name) => Themes.TryDequeue(out string? theme) ? theme : null;
+
+        public string? AskFont(string name, IReadOnlyList<string> fonts, string current) => "Cascadia";
+
+        public string? AskColour(string name, IReadOnlyList<WslColorSchemeDto> schemes, string current) => "ice";
+
+        public string? AskIconType(string name) => null;
+
+        public string? AskLetters(string question) => null;
+
+        public void ShowLettersHint() { }
+
+        public WslIconPairDto? AskIconPair(
+            string name,
+            IReadOnlyList<WslIconPairDto> pairs,
+            string suggestion,
+            string? top,
+            string? bottom) => null;
+
+        public string? AskImagePath() => null;
+
+        public void ShowNoFile() { }
+
+        public void ShowBadExtension() { }
+
+        public void Show(SetAppearanceResponseDto response) => Shown.Add(response);
+
+        public void ShowNoInstances() { }
+
+        public string? AskOffered(IReadOnlyList<WslIndexDto> instances) => "alpha";
+
+        public bool? Confirm(string question, bool defaultNo = true) => true;
+
+        public void ShowCancelled(string noun) { }
 
         public void ShowError(string message) => Errors.Add(message);
     }
@@ -569,6 +633,8 @@ public class PresenterTests
         public void ShowBeforeAccount() { }
 
         public void ShowUserHint() { }
+
+        public bool? Confirm(string question, bool defaultNo = true) => true;
 
         public void ShowCancelled(string noun) { }
 

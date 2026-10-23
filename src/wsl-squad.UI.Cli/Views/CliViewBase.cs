@@ -23,6 +23,16 @@ public abstract class CliViewBase : IPresenterViewBase
         Write(string.Empty);
     }
 
+    public bool? Confirm(string question, bool defaultNo = true)
+    {
+        return AskConfirmation(question, defaultNo);
+    }
+
+    public void ShowCancelled(string noun)
+    {
+        Cancelled(noun);
+    }
+
     protected void Write(string text = "", ConsoleTone? tone = null)
     {
         Host.Line(text, tone);

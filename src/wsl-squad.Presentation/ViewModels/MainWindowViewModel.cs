@@ -5,9 +5,9 @@ using CommunityToolkit.Mvvm.Input;
 
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
-using wsl_squad.Core.Validation;
 using wsl_squad.Presentation.Abstractions;
 using wsl_squad.Presentation.Settings;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.ViewModels;
 
@@ -19,7 +19,9 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private readonly IPackCatalogService _catalogue;
     private readonly IDialogService _dialogs;
     private readonly IBuildLauncher _buildLauncher;
+    private readonly InstanceWorkflow _workflow;
     private readonly ILoggerService _logger;
+    private bool InFlight { get; set; }
 
     [ObservableProperty]
     private string _root = string.Empty;
@@ -49,6 +51,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _catalogue = catalogue;
         _dialogs = dialogs;
         _buildLauncher = buildLauncher;
+        _workflow = new InstanceWorkflow(instance, new DialogInstanceInteraction(dialogs), message => SetBusy(true, message));
         _logger = logger;
 
         UiThemeSettings theme = ui.GetTheme();
@@ -61,6 +64,8 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     public ObservableCollection<InstanceRowViewModel> Rows { get; } = [];
 
     public bool Free => !Busy;
+
+    private bool IsLocked => Busy || InFlight;
 
     public string ThemeGlyph => Variant == "Light" ? "\uF186" : "\uF185";
 
@@ -75,7 +80,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private async Task RefreshAsync()
     {
-        if (Busy)
+        if (IsLocked)
         {
             return;
         }
@@ -95,7 +100,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private async Task RunRowAsync(InstanceCommandParameter? request)
     {
-        if (Busy || request is null || string.IsNullOrEmpty(request.Name))
+        if (IsLocked || request is null || string.IsNullOrEmpty(request.Name))
         {
             return;
         }
@@ -109,7 +114,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                 await RestartAsync(request.Name);
                 break;
             case WslCommandKind.ManagePacks:
-                Edit(request.Name);
+                await EditAsync(request.Name);
                 break;
             case WslCommandKind.Appearance:
                 await AppearanceAsync(request.Name);
@@ -146,7 +151,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private async Task AddAsync()
     {
-        if (Busy)
+        if (IsLocked)
         {
             return;
         }
@@ -185,7 +190,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private async Task SettingsAsync()
     {
-        if (Busy)
+        if (IsLocked)
         {
             return;
         }
@@ -258,7 +263,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     [RelayCommand]
     private void Theme()
     {
-        if (Busy)
+        if (IsLocked)
         {
             return;
         }
@@ -290,162 +295,74 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         SetStatus($"The window wears '{setName}', {other.ToLowerInvariant()} version.", false);
     }
 
-        private async Task OpenAsync(string? name)
-    {
-        if (Busy || string.IsNullOrEmpty(name))
-        {
-            return;
-        }
-
-        try
-        {
-            _ = await Task.Run(() => _instance.Open(name));
-            SetStatus($"Open : {name}", false);
-        }
-        catch (InvalidOperationException exception)
-        {
-            SetStatus($"Open : {name} - {exception.Message}", true);
-        }
-    }
-
-        private async Task RestartAsync(string? name)
+    private async Task OpenAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        await RunAsync(
-            $"Restarting '{name}'...",
-            () => _instance.Restart(name),
-            $"Restarted '{name}'.");
+        await RunWorkflowAsync("Open", name, () => _workflow.OpenAsync(name), reload: false);
     }
 
-        private void Edit(string? name)
-    {
-        if (Busy || string.IsNullOrEmpty(name))
-        {
-            return;
-        }
-
-        try
-        {
-            _instance.OpenPackManager(name);
-        }
-        catch (InvalidOperationException exception)
-        {
-            SetStatus($"ManagePacks : {name} - {exception.Message}", true);
-
-            return;
-        }
-
-        SetStatus($"Editing '{name}'s packs in a terminal.", false);
-    }
-
-        private async Task AppearanceAsync(string? name)
+    private async Task RestartAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        GetAppearanceResponseDto appearance;
-        IReadOnlyList<string> fonts;
-        IReadOnlyList<WslColorSchemeDto> schemes;
-        IReadOnlyList<WslIconPairDto> pairs;
-
-        try
-        {
-            appearance = _instance.GetAppearance(name);
-            fonts = _instance.GetFonts();
-            schemes = _instance.GetColorSchemes();
-            pairs = _instance.GetIconPairs();
-        }
-        catch (InvalidOperationException exception)
-        {
-            SetStatus($"SetAppearance : {name} - {exception.Message}", true);
-
-            return;
-        }
-
-        SetAppearanceViewModel viewModel = new(name, appearance, fonts, schemes, pairs);
-        SetAppearanceDto? request = _dialogs.ShowSetAppearance(viewModel);
-
-        if (request is null)
-        {
-            SetStatus("SetAppearance : cancelled", false);
-
-            return;
-        }
-
-        await RunAsync(
-            $"Applying '{name}'s appearance...",
-            () => _instance.SetAppearance(request),
-            $"SetAppearance : {name}");
+        await RunWorkflowAsync("Restart", name, () => _workflow.RestartAsync(name), reload: false);
     }
 
-        private async Task ArchiveAsync(string? name)
+    private async Task EditAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        bool replacesArchive = Rows.Any(row =>
-            row.IsArchive && row.Name == $"{name}_archive");
-        ArchiveDto? request = _dialogs.ShowArchive(new ArchiveViewModel(name, replacesArchive));
-
-        if (request is null)
-        {
-            return;
-        }
-
-        await RunAsync(
-            $"Archiving '{name}' as '{name}_archive'...",
-            () => _instance.Archive(request),
-            $"Archived '{name}'.");
+        await RunWorkflowAsync("ManagePacks", name, () => _workflow.ManagePacksAsync(name), reload: false);
     }
 
-        private async Task CompactAsync(string? name)
+    private async Task AppearanceAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        bool replacesArchive = Rows.Any(row =>
-            row.IsArchive && row.Name == $"{name}_archive");
-        CompactDto? request = _dialogs.ShowCompact(new CompactViewModel(name, replacesArchive));
-
-        if (request is null)
-        {
-            return;
-        }
-
-        await RunAsync(
-            $"Compacting '{name}'...",
-            () => _instance.Compact(request),
-            $"Compacted '{name}'.");
+        await RunWorkflowAsync("SetAppearance", name, () => _workflow.AppearanceAsync(name), reload: false);
     }
 
-        private async Task RemoveAsync(string? name)
+    private async Task ArchiveAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        RemoveDto? request = _dialogs.ShowRemove(new RemoveViewModel(name));
+        await RunWorkflowAsync("Archive", name, () => _workflow.ArchiveAsync(name), reload: true);
+    }
 
-        if (request is null)
+    private async Task CompactAsync(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        await RunAsync(
-            $"Removing '{name}'...",
-            () => _instance.Remove(request),
-            $"Removed '{name}'.");
+        await RunWorkflowAsync("Compact", name, () => _workflow.CompactAsync(name), reload: true);
+    }
+
+    private async Task RemoveAsync(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+
+        await RunWorkflowAsync("Remove", name, () => _workflow.RemoveAsync(name), reload: true);
     }
 
     private async Task DockerAsync(string? name, bool register)
@@ -455,117 +372,100 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        string state = Rows.FirstOrDefault(row => row.Name == name)?.Docker ?? string.Empty;
-        DockerTargetStatus status = DockerRules.Status(state, register);
+        Func<Task<WorkflowResult<bool>>> run = register
+            ? () => _workflow.RegisterDockerAsync(name)
+            : () => _workflow.UnregisterDockerAsync(name);
 
-        if (status == DockerTargetStatus.Unknown)
-        {
-            SetStatus($"DockerDesktop : {name} - its Docker Desktop state cannot be read.", true);
-
-            return;
-        }
-
-        if (status != DockerTargetStatus.Eligible)
-        {
-            string reason = status == DockerTargetStatus.AlreadyRegistered
-                ? "it is already registered"
-                : "it is not registered";
-            SetStatus($"DockerDesktop : {name} - {reason}.", true);
-
-            return;
-        }
-
-        bool? restart = _dialogs.ShowDockerRegister(new DockerRegisterViewModel(name, state));
-
-        if (restart is null)
-        {
-            return;
-        }
-
-        if (register)
-        {
-            await RunAsync(
-                $"Registering '{name}' with Docker Desktop...",
-                () => _instance.RegisterDocker(new RegisterDockerDto
-                {
-                    InstanceName = name,
-                    Restart = restart.Value,
-                }),
-                $"Registered '{name}' with Docker Desktop.");
-        }
-        else
-        {
-            await RunAsync(
-                $"Taking '{name}' out of Docker Desktop...",
-                () => _instance.UnregisterDocker(new UnregisterDockerDto
-                {
-                    InstanceName = name,
-                    Restart = restart.Value,
-                }),
-                $"Unregistered '{name}' from Docker Desktop.");
-        }
+        await RunWorkflowAsync(register ? "RegisterDocker" : "UnregisterDocker", name, run, reload: false);
     }
 
-        private async Task RestoreAsync(string? name)
+    private async Task RestoreAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        string[] taken = [.. Rows.Where(row => !row.IsArchive).Select(row => row.Name)];
-        RestoreDto? request = _dialogs.ShowRestore(new RestoreViewModel(name, taken));
-
-        if (request is null)
-        {
-            return;
-        }
-
-        await RunAsync(
-            $"Restoring '{name}' as '{request.InstanceName}'...",
-            () => _instance.Restore(request),
-            $"Restored '{name}' as '{request.InstanceName}'.");
+        await RunWorkflowAsync("Restore", name, () => _workflow.RestoreAsync(name), reload: true);
     }
 
-        private async Task DuplicateAsync(string? name)
+    private async Task DuplicateAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        string[] taken = [.. Rows.Select(row => row.Name)];
-        DuplicateDto? request = _dialogs.ShowDuplicate(new DuplicateViewModel(name, taken));
-
-        if (request is null)
-        {
-            return;
-        }
-
-        await RunAsync(
-            $"Duplicating '{name}' as '{request.CopyName}'...",
-            () => _instance.Duplicate(request),
-            $"Duplicated '{name}' as '{request.CopyName}'.");
+        await RunWorkflowAsync("Duplicate", name, () => _workflow.DuplicateAsync(name), reload: true);
     }
 
-        private async Task DeleteArchiveAsync(string? name)
+    private async Task DeleteArchiveAsync(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return;
         }
 
-        string? named = _dialogs.ShowDeleteArchive(new DeleteArchiveViewModel(name));
+        await RunWorkflowAsync("DeleteArchive", name, () => _workflow.DeleteArchiveAsync(name), reload: true);
+    }
 
-        if (named is null)
+    private async Task RunWorkflowAsync<T>(
+        string operation,
+        string name,
+        Func<Task<WorkflowResult<T>>> run,
+        bool reload)
+    {
+        if (IsLocked)
         {
             return;
         }
 
-        await RunAsync(
-            $"Deleting the archive '{named}'...",
-            () => _instance.DeleteArchive(named),
-            $"Deleted the archive '{named}'.");
+        InFlight = true;
+
+        try
+        {
+            WorkflowResult<T> result = await run();
+
+            switch (result.Status)
+            {
+                case WorkflowStatus.Success:
+                    if (reload)
+                    {
+                        await LoadAsync();
+                    }
+
+                    SetStatus($"{operation} : {result.Subject}", false);
+
+                    break;
+                case WorkflowStatus.Cancelled:
+                    SetStatus($"{operation} : cancelled", false);
+
+                    break;
+                case WorkflowStatus.NoTarget:
+                    SetStatus($"{operation} : no instance", true);
+
+                    break;
+                case WorkflowStatus.Failed:
+                    string detail = string.IsNullOrEmpty(result.Message)
+                        ? result.Subject
+                        : $"{result.Subject} - {result.Message}";
+                    SetStatus($"{operation} : {detail}", true);
+
+                    break;
+                default:
+                    break;
+            }
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            SetStatus($"{operation} : {name} - {exception.Message}", true);
+        }
+        finally
+        {
+            InFlight = false;
+            SetBusy(false, null);
+        }
     }
 
     private async Task LoadAsync()
@@ -597,7 +497,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
     private async Task RunAsync(string message, Action action, string success)
     {
-        if (Busy)
+        if (IsLocked)
         {
             return;
         }

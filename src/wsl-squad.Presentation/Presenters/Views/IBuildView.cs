@@ -38,7 +38,5 @@ public interface IBuildView : IPresenterViewBase
 
     bool? AskRegisterDocker(string name);
 
-    void ShowCancelled(string noun);
-
     void Show(BuildResponseDto response);
 }

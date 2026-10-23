@@ -19,6 +19,7 @@ public sealed partial class BuildViewModel : BaseViewModel
     private readonly List<WslBuildSourceDto> _onboardings;
     private readonly List<WslBuildSourceDto> _recipes;
     private readonly List<WslDockerImageDto> _images;
+    private readonly IReadOnlyList<string> _takenNames;
     private bool _nameOk;
     private bool _userOk;
 
@@ -117,15 +118,17 @@ public sealed partial class BuildViewModel : BaseViewModel
 
         try
         {
-            GetBuildSourcesResponseDto sources = instance.GetBuildSources();
-            _dockerfiles = [.. sources.Dockerfiles];
-            _onboardings = [.. sources.Onboardings];
-            _recipes = [.. sources.Recipes];
-            _images = [.. instance.GetAllSavedImages()];
+            BuildContextDto context = instance.GetBuildContext();
+            _dockerfiles = [.. context.Sources.Dockerfiles];
+            _onboardings = [.. context.Sources.Onboardings];
+            _recipes = [.. context.Sources.Recipes];
+            _images = [.. context.Images];
+            _takenNames = context.TakenNames;
         }
         catch (InvalidOperationException ex)
         {
             Trace.TraceWarning($"[BuildViewModel] Partial build sources loaded: {ex.Message}");
+            _takenNames = [];
         }
 
         _dockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
@@ -435,19 +438,9 @@ public sealed partial class BuildViewModel : BaseViewModel
         {
             problem = "Letters, digits, '.', '_' and '-' only.";
         }
-        else
+        else if (_takenNames.Contains(Name, StringComparer.OrdinalIgnoreCase))
         {
-            try
-            {
-                if (_instance.GetAll().Any(row => !row.IsArchive && row.Name == Name))
-                {
-                    problem = $"An instance named '{Name}' already exists.";
-                }
-            }
-            catch (InvalidOperationException ex)
-            {
-                Trace.TraceWarning($"[BuildViewModel] Fleet check skipped for '{Name}': {ex.Message}");
-            }
+            problem = $"An instance named '{Name}' already exists.";
         }
 
         NameError = problem;

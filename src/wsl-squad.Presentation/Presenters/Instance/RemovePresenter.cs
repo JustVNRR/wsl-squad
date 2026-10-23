@@ -1,58 +1,25 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class RemovePresenter : InstanceTargetPresenterBase
+public sealed class RemovePresenter
 {
-    public RemovePresenter(IInstanceService service, IInstanceView view)
-        : base(service, view)
+    private readonly InstanceWorkflow _workflow;
+    private readonly IInstanceRemoveView _view;
+
+    public RemovePresenter(IInstanceService service, IInstanceRemoveView view)
     {
+        _view = view;
+        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    protected override string OperationName => "Remove";
-
-    protected override ActionResult ExecuteCore(string instanceName)
+    public ActionResult Run(string? target)
     {
-        View.ShowDestructionGate(
-            instanceName,
-            $"The WSL distribution '{instanceName}' and ALL its data will be deleted:");
-        string? typed = View.AskTypedName();
-        View.ShowGateClose();
+        WorkflowResult<RemoveDto> result = _workflow.RemoveAsync(target).GetAwaiter().GetResult();
 
-        if (typed != instanceName)
-        {
-            View.ShowGateRefused();
-
-            return ActionResult.Ok("Remove : cancelled");
-        }
-
-        View.ShowGateOpened();
-        bool? archiveFirst = View.Confirm("Archive it before deleting?", defaultNo: true);
-
-        if (archiveFirst is null)
-        {
-            View.ShowCancelled("deleted");
-
-            return ActionResult.Ok("Remove : cancelled");
-        }
-
-        if (archiveFirst == true &&
-            Rows.Any(row => row.IsArchive && row.Name == $"{instanceName}_archive"))
-        {
-            View.ShowReplacingArchive(instanceName);
-        }
-
-        View.ShowRemovingSteps();
-
-        Service.Remove(new RemoveDto
-        {
-            InstanceName = instanceName,
-            ArchiveFirst = archiveFirst.Value,
-        });
-        View.Show();
-
-        return ActionResult.Ok($"Remove : {instanceName}");
+        return result.ToActionResult("Remove", _ => _view.Show(), _view.ShowError);
     }
 }

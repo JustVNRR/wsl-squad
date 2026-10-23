@@ -35,11 +35,7 @@ public interface IFleetView : IPresenterViewBase
 
     void ShowDependents(string name, IReadOnlyList<string> dependents);
 
-    bool? Confirm(string question, bool defaultNo);
-
     string? AskTarget(string root);
-
-    void ShowCancelled(string noun);
 
     void ShowSameFolder();
 

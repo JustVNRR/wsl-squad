@@ -1,48 +1,25 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class CompactPresenter : InstanceTargetPresenterBase
+public sealed class CompactPresenter
 {
-    public CompactPresenter(IInstanceService service, IInstanceView view)
-        : base(service, view)
+    private readonly InstanceWorkflow _workflow;
+    private readonly IInstanceCompactView _view;
+
+    public CompactPresenter(IInstanceService service, IInstanceCompactView view)
     {
+        _view = view;
+        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    protected override string OperationName => "Compact";
-
-    protected override ActionResult ExecuteCore(string instanceName)
+    public ActionResult Run(string? target)
     {
-        View.ShowBeforeQuestions();
-        bool? archiveFirst = View.Confirm("Archive it first?", defaultNo: false);
+        WorkflowResult<CompactResponseDto> result = _workflow.CompactAsync(target).GetAwaiter().GetResult();
 
-        if (archiveFirst is null)
-        {
-            View.ShowCancelled("modified");
-
-            return ActionResult.Ok("Compact : cancelled");
-        }
-
-        if (archiveFirst == false)
-        {
-            View.ShowNoArchive();
-        }
-        else if (Rows.Any(row => row.IsArchive && row.Name == $"{instanceName}_archive"))
-        {
-            View.ShowReplacingArchive(instanceName);
-        }
-
-        View.ShowCompacting(instanceName, archiveFirst.Value);
-
-        CompactResponseDto response = Service.Compact(new CompactDto
-        {
-            InstanceName = instanceName,
-            ArchiveFirst = archiveFirst.Value,
-        });
-        View.Show(response);
-
-        return ActionResult.Ok($"Compact : {instanceName}");
+        return result.ToActionResult("Compact", _view.Show, _view.ShowError);
     }
 }

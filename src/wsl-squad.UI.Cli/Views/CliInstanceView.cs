@@ -32,16 +32,6 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         Write("  Save what you have open in there - stopping it loses anything unsaved.", ConsoleTone.Warning);
     }
 
-    public bool? Confirm(string question, bool defaultNo)
-    {
-        return AskConfirmation(question, defaultNo);
-    }
-
-    public void ShowCancelled(string noun)
-    {
-        Cancelled(noun);
-    }
-
     public void ShowReplacing(string archiveName)
     {
         Write($"  '{archiveName}' exists: replacing it.", ConsoleTone.Warning);
@@ -117,12 +107,6 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
                 ? $"    '{response.InstanceName}' is running again."
                 : $"    '{response.InstanceName}' is left stopped.",
             response.Restarted ? ConsoleTone.Success : ConsoleTone.Muted);
-    }
-
-    public void ShowNoName()
-    {
-        Write(string.Empty);
-        Write("[ABORT] Name an archive to delete.", ConsoleTone.Error);
     }
 
     public void ShowDeleting(string target)
@@ -201,19 +185,18 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         Write("  No instance is available for this action.", ConsoleTone.Warning);
     }
 
-    public bool? AskRegister(string name)
+    public bool? AskDockerAction(string name, bool shouldRegister)
     {
-        return AskConfirmation($"Register '{name}' with Docker Desktop?", defaultNo: false);
-    }
+        string question = shouldRegister
+            ? $"Register '{name}' with Docker Desktop?"
+            : $"Unregister '{name}' from Docker Desktop?";
 
-    public bool? AskUnregister(string name)
-    {
-        return AskConfirmation($"Unregister '{name}' from Docker Desktop?", defaultNo: false);
-    }
+        if (AskConfirmation(question, defaultNo: false) != true)
+        {
+            return null;
+        }
 
-    public bool? AskRestartDocker()
-    {
-        return AskConfirmation("Restart Docker Desktop to apply now?", defaultNo: false);
+        return AskConfirmation("Restart Docker Desktop to apply now?", defaultNo: false) == true;
     }
 
     public void Show(RegisterDockerResponseDto response)
@@ -226,7 +209,7 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         Write($"==> Docker Desktop: {response.InstanceName} {response.Restart}.", ConsoleTone.Success);
     }
 
-    public void ShowDestructionGate(string name, string question)
+    public bool ConfirmDestruction(string instanceName)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -243,10 +226,10 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         Write(string.Empty);
         Banner("DANGER: TOTAL DATA LOSS IMMINENT");
         Write(string.Empty);
-        Write($"  {question}", ConsoleTone.Error);
+        Write($"  The WSL distribution '{instanceName}' and ALL its data will be deleted:", ConsoleTone.Error);
         Write(string.Empty);
         Write("  Proceeding will PERMANENTLY DESTROY this distribution:", ConsoleTone.Warning);
-        Write($"    - Executing: wsl --unregister {name}", ConsoleTone.Muted);
+        Write($"    - Executing: wsl --unregister {instanceName}", ConsoleTone.Muted);
         Write("    - IRREVERSIBLE DELETION of the virtual disk (VHDX)", ConsoleTone.Muted);
         Write("    - TOTAL LOSS of projects, SSH keys, and all files in /home", ConsoleTone.Muted);
         Write(string.Empty);
@@ -255,27 +238,20 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         Write(" ----------------------------------------------------------------------", ConsoleTone.Muted);
         Write(" Press ENTER to abort immediately.", ConsoleTone.Hint);
         Write(" To confirm DESTRUCTION, type the name of the distribution:", ConsoleTone.Hint);
-    }
-
-    public string? AskTypedName()
-    {
-        return AskLine(" Confirm");
-    }
-
-    public void ShowGateClose()
-    {
+        string? typed = AskLine(" Confirm");
         Write(" ----------------------------------------------------------------------", ConsoleTone.Muted);
         Write(string.Empty);
-    }
 
-    public void ShowGateRefused()
-    {
-        Write("[ABORT] Operation cancelled. No data was modified.", ConsoleTone.Warning);
-    }
+        if (typed != instanceName)
+        {
+            Write("[ABORT] Operation cancelled. No data was modified.", ConsoleTone.Warning);
 
-    public void ShowGateOpened()
-    {
+            return false;
+        }
+
         Write(string.Empty);
+
+        return true;
     }
 
     public void ShowRemovingSteps()

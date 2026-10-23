@@ -1,118 +1,24 @@
-using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
-using wsl_squad.Core.Validation;
 using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class RegisterDockerPresenter : BasePresenter<IInstanceView>
+public sealed class RegisterDockerPresenter
 {
-    private readonly IInstanceService _service;
+    private readonly InstanceWorkflow _workflow;
+    private readonly IInstanceDockerView _view;
 
-    public RegisterDockerPresenter(IInstanceService service, IInstanceView view)
-        : base(view)
+    public RegisterDockerPresenter(IInstanceService service, IInstanceDockerView view)
     {
-        _service = service;
+        _view = view;
+        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
     }
 
     public ActionResult Run(string? target)
     {
-        IReadOnlyList<WslIndexDto> rows;
+        WorkflowResult<bool> result = _workflow.RegisterDockerAsync(target).GetAwaiter().GetResult();
 
-        try
-        {
-            rows = _service.GetAll();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"RegisterDocker : {exception.Message}");
-        }
-
-        List<WslIndexDto> live = [.. rows.Where(row => !row.IsArchive)];
-        List<WslIndexDto> candidates = [.. live.Where(row => DockerRules.IsCandidate(row, register: true))];
-        string name;
-
-        if (!string.IsNullOrEmpty(target))
-        {
-            WslIndexDto? row = live.Find(item => item.Name == target);
-
-            if (row is null)
-            {
-                ShowFailure($"'{target}' is not an instance of this machine.");
-
-                return ActionResult.Nok("RegisterDocker : no instance");
-            }
-
-            DockerTargetStatus status = DockerRules.Status(row.Docker, register: true);
-
-            if (status == DockerTargetStatus.AlreadyRegistered)
-            {
-                View.ShowAlreadyRegistered(target);
-
-                return ActionResult.Nok($"RegisterDocker : {target}");
-            }
-
-            if (status != DockerTargetStatus.Eligible)
-            {
-                View.ShowSettingsUnreadable();
-
-                return ActionResult.Nok($"RegisterDocker : {target}");
-            }
-
-            name = target;
-        }
-        else
-        {
-            if (candidates.Count == 0)
-            {
-                if (live.Count > 0 &&
-                    live.TrueForAll(row => DockerRules.Status(row.Docker, register: true) == DockerTargetStatus.Unknown))
-                {
-                    View.ShowSettingsUnreadable();
-                }
-                else
-                {
-                    View.ShowNoCandidates();
-                }
-
-                return ActionResult.Nok("RegisterDocker : none to register");
-            }
-
-            name = View.AskOffered(candidates) ?? string.Empty;
-
-            if (name.Length == 0)
-            {
-                return ActionResult.Ok("RegisterDocker : cancelled");
-            }
-        }
-
-        if (View.AskRegister(name) != true)
-        {
-            View.ShowCancelled("modified");
-
-            return ActionResult.Ok("RegisterDocker : cancelled");
-        }
-
-        bool restart = View.AskRestartDocker() == true;
-
-        try
-        {
-            RegisterDockerResponseDto response = _service.RegisterDocker(new RegisterDockerDto
-            {
-                InstanceName = name,
-                Restart = restart,
-            });
-            View.Show(response);
-
-            return ActionResult.Ok($"RegisterDocker : {name}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"RegisterDocker : {name} - {exception.Message}");
-        }
+        return result.ToActionResult("RegisterDocker", null, _view.ShowError);
     }
 }

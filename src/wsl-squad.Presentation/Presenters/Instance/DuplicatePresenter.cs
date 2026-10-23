@@ -1,62 +1,25 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
-using wsl_squad.Core.Validation;
 using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Presenters.Instance;
 
-public sealed class DuplicatePresenter : InstanceTargetPresenterBase
+public sealed class DuplicatePresenter
 {
-    public DuplicatePresenter(IInstanceService service, IInstanceView view)
-        : base(service, view)
+    private readonly InstanceWorkflow _workflow;
+    private readonly IInstanceDuplicateView _view;
+
+    public DuplicatePresenter(IInstanceService service, IInstanceDuplicateView view)
     {
+        _view = view;
+        _workflow = new InstanceWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    protected override string OperationName => "Duplicate";
-
-    protected override ActionResult ExecuteCore(string instanceName)
+    public ActionResult Run(string? target)
     {
-        string copy;
+        WorkflowResult<DuplicateResponseDto> result = _workflow.DuplicateAsync(target).GetAwaiter().GetResult();
 
-        while (true)
-        {
-            string? answer = View.AskCopyName();
-
-            if (string.IsNullOrEmpty(answer))
-            {
-                View.ShowCancelled("created");
-
-                return ActionResult.Ok("Duplicate : cancelled");
-            }
-
-            if (NameRules.IsValid(answer))
-            {
-                copy = answer;
-
-                break;
-            }
-
-            View.ShowNameHint();
-        }
-
-        View.ShowDiskWarning(instanceName);
-
-        if (View.Confirm("Continue?", defaultNo: false) != true)
-        {
-            View.ShowCancelled("created");
-
-            return ActionResult.Ok("Duplicate : cancelled");
-        }
-
-        View.ShowDuplicating(instanceName, copy);
-
-        DuplicateResponseDto response = Service.Duplicate(new DuplicateDto
-        {
-            SourceName = instanceName,
-            CopyName = copy,
-        });
-        View.Show(response);
-
-        return ActionResult.Ok($"Duplicate : {copy}");
+        return result.ToActionResult("Duplicate", _view.Show, _view.ShowError);
     }
 }
