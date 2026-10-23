@@ -9,8 +9,7 @@ public sealed class ServiceFactory : IServiceFactory
     public IInstanceService CreateInstanceService(
         string root,
         string assets,
-        string distroTree,
-        Func<string, string, IconDrawing?, IconDrawing>? drawIcon = null)
+        string distroTree)
     {
         ConfigRepository config = new(assets, distroTree);
 
@@ -18,7 +17,7 @@ public sealed class ServiceFactory : IServiceFactory
             new InstanceRepository(config),
             new ArchiveRepository(config),
             new WslRepository(),
-            new TerminalRepository(assets, drawIcon),
+            new TerminalRepository(assets),
             new DockerRepository(assets),
             new PackCatalogRepository(Path.Combine(assets, "packs")),
             config,
@@ -47,8 +46,7 @@ public sealed class ServiceFactory : IServiceFactory
     public IFleetService CreateFleetService(
         string root,
         string assets,
-        string distroTree,
-        Func<string, string, IconDrawing?, IconDrawing>? drawIcon = null)
+        string distroTree)
     {
         ConfigRepository config = new(assets, distroTree);
         InstanceRepository instances = new(config);
@@ -58,7 +56,7 @@ public sealed class ServiceFactory : IServiceFactory
             instances,
             archives,
             wsl,
-            new TerminalRepository(assets, drawIcon),
+            new TerminalRepository(assets),
             new DockerRepository(assets),
             new PackCatalogRepository(Path.Combine(assets, "packs")),
             config,

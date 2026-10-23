@@ -1,5 +1,3 @@
-using wsl_squad.Core.Entities;
-
 namespace wsl_squad.Core.Services;
 
 public interface IServiceFactory
@@ -7,8 +5,7 @@ public interface IServiceFactory
     IInstanceService CreateInstanceService(
         string root,
         string assets,
-        string distroTree,
-        Func<string, string, IconDrawing?, IconDrawing>? drawIcon = null);
+        string distroTree);
 
     ILoggerService CreateLoggerService();
 
@@ -17,8 +14,7 @@ public interface IServiceFactory
     IFleetService CreateFleetService(
         string root,
         string assets,
-        string distroTree,
-        Func<string, string, IconDrawing?, IconDrawing>? drawIcon = null);
+        string distroTree);
 
     IPackCatalogService CreatePackCatalogService(string assets, string distroTree);
 }

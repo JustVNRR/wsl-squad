@@ -1,5 +1,4 @@
 using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Drawing;
 
 namespace wsl_squad.UI.Cli.Composition;
 
@@ -30,8 +29,8 @@ public sealed class CliServices
         string root = factory.ResolveRoot(assets, assets);
 
         return new CliServices(
-            factory.CreateInstanceService(root, assets, assets, IconPainter.Draw),
-            factory.CreateFleetService(root, assets, assets, IconPainter.Draw),
+            factory.CreateInstanceService(root, assets, assets),
+            factory.CreateFleetService(root, assets, assets),
             factory.CreatePackCatalogService(assets, assets));
     }
 }

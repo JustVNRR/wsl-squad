@@ -21,7 +21,7 @@ public sealed record PruneReport(int Pruned, IReadOnlyList<string> Unreadable);
 
 public sealed record TerminalFont(string Name, bool Icons);
 
-public sealed class TerminalRepository : ITerminalRepository
+public sealed partial class TerminalRepository : ITerminalRepository
 {
     private static readonly IconPair[] _palette =
     [
@@ -57,14 +57,10 @@ public sealed class TerminalRepository : ITerminalRepository
     ];
 
     private readonly string _assetsDir;
-    private readonly Func<string, string, IconDrawing?, IconDrawing>? _drawIcon;
 
-    public TerminalRepository(
-        string assetsDir,
-        Func<string, string, IconDrawing?, IconDrawing>? drawIcon = null)
+    public TerminalRepository(string assetsDir)
     {
         _assetsDir = assetsDir;
-        _drawIcon = drawIcon;
     }
 
     public string GetFragmentPath(string instanceName)
@@ -800,13 +796,12 @@ public sealed class TerminalRepository : ITerminalRepository
 
     public IconDrawing DrawIcon(string instanceName, string outputPath, IconDrawing? drawing)
     {
-        if (_drawIcon is null)
+        if (!OperatingSystem.IsWindows())
         {
-            throw new PlatformNotSupportedException(
-                "No icon painter is configured: icon drawing belongs to the interface layer.");
+            throw new PlatformNotSupportedException("Icon drawing needs Windows.");
         }
 
-        return _drawIcon(instanceName, outputPath, drawing);
+        return IconPainter.Draw(instanceName, outputPath, drawing);
     }
 
     public IReadOnlyList<WslIconPairDto> GetIconPairs()

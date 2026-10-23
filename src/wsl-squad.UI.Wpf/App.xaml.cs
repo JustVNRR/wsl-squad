@@ -2,7 +2,6 @@ using System.IO;
 using System.Windows;
 
 using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Drawing;
 using wsl_squad.Presentation.ViewModels;
 using wsl_squad.UI.Wpf.Services;
 
@@ -47,8 +46,8 @@ public partial class App : Application
         string root = factory.ResolveRoot(assets, assets);
 
         MainWindowViewModel viewModel = new(
-            factory.CreateInstanceService(root, assets, assets, IconPainter.Draw),
-            factory.CreateFleetService(root, assets, assets, IconPainter.Draw),
+            factory.CreateInstanceService(root, assets, assets),
+            factory.CreateFleetService(root, assets, assets),
             theme,
             factory.CreatePackCatalogService(assets, assets),
             new WpfDialogs(),
