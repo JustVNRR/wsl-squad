@@ -20,6 +20,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private readonly IDialogService _dialogs;
     private readonly IBuildLauncher _buildLauncher;
     private readonly InstanceWorkflow _workflow;
+    private readonly FleetWorkflow _fleetWorkflow;
     private readonly ILoggerService _logger;
     private bool InFlight { get; set; }
 
@@ -52,6 +53,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _dialogs = dialogs;
         _buildLauncher = buildLauncher;
         _workflow = new InstanceWorkflow(instance, new DialogInstanceInteraction(dialogs), message => SetBusy(true, message));
+        _fleetWorkflow = new FleetWorkflow(fleet, executionStarted: message => SetBusy(true, message));
         _logger = logger;
 
         UiThemeSettings theme = ui.GetTheme();
@@ -246,10 +248,11 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
         if (outcome.NewRoot is not null)
         {
-            await RunAsync(
-                $"Moving the fleet to '{outcome.NewRoot}'...",
-                () => _fleet.Migrate(outcome.NewRoot),
-                $"Fleet moved to '{outcome.NewRoot}'.");
+            await RunWorkflowAsync(
+                "Migrate",
+                outcome.NewRoot,
+                () => _fleetWorkflow.MigrateRootAsync(outcome.NewRoot),
+                reload: true);
 
             return;
         }
@@ -492,31 +495,6 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         catch (InvalidOperationException exception)
         {
             SetStatus($"Error reading instances: {exception.Message}", true);
-        }
-    }
-
-    private async Task RunAsync(string message, Action action, string success)
-    {
-        if (IsLocked)
-        {
-            return;
-        }
-
-        SetBusy(true, message);
-
-        try
-        {
-            await Task.Run(action);
-            await LoadAsync();
-            SetStatus(success, false);
-        }
-        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
-        {
-            SetStatus($"{message} - {exception.Message}", true);
-        }
-        finally
-        {
-            SetBusy(false, null);
         }
     }
 

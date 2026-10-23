@@ -139,6 +139,45 @@ public sealed record BuildDto
     public bool RegisterDocker { get; init; }
 
     public bool Interactive { get; init; }
+
+    public static BuildDto FromSource(
+        string name,
+        string user,
+        WslBuildType type,
+        string source,
+        string onboarding = "",
+        bool keepImage = false,
+        bool registerDocker = false,
+        bool interactive = false)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(onboarding);
+
+        bool recipe = type == WslBuildType.Recipe;
+        (string buildPath, string context) = type switch
+        {
+            WslBuildType.Recipe => (Path.Combine(source, "Dockerfile"), source),
+            WslBuildType.Dockerfile => (source, Path.GetDirectoryName(source) ?? string.Empty),
+            WslBuildType.Image => (source, string.Empty),
+            WslBuildType.Registry => (source, string.Empty),
+            _ => (source, string.Empty),
+        };
+
+        return new BuildDto
+        {
+            Name = name,
+            User = recipe ? string.Empty : user,
+            BuildType = type,
+            BuildPath = buildPath,
+            Context = context,
+            Onboarding = recipe ? string.Empty : onboarding,
+            KeepImage = !recipe && keepImage,
+            RegisterDocker = !recipe && registerDocker,
+            Interactive = interactive,
+        };
+    }
 }
 
 public enum WslRecipeStatus

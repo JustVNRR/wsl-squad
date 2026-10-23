@@ -1,35 +1,27 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Presenters.Fleet;
 
-public sealed class WslConfigPresenter : BasePresenter<IFleetView>
+public sealed class WslConfigPresenter
 {
-    private readonly IFleetService _service;
+    private readonly FleetWorkflow _workflow;
+    private readonly IFleetView _view;
 
     public WslConfigPresenter(IFleetService service, IFleetView view)
-        : base(view)
     {
-        _service = service;
+        _view = view;
+        _workflow = new FleetWorkflow(service);
     }
 
     public ActionResult Run()
     {
-        View.ShowLead();
+        _view.ShowLead();
 
-        try
-        {
-            WslConfigResponseDto report = _service.WslConfig();
-            View.Show(report);
+        WorkflowResult<WslConfigResponseDto> result = _workflow.OpenWslConfig();
 
-            return ActionResult.Ok($"WslConfig : {report.Path}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"WslConfig : {exception.Message}");
-        }
+        return result.ToActionResult("WslConfig", _view.Show, _view.ShowError);
     }
 }

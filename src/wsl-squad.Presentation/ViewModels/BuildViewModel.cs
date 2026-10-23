@@ -383,44 +383,39 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
 
         WslBuildType buildType;
-        string? buildPath;
-        string? context = null;
+        string source;
 
         if (RoadIndex == 2)
         {
             buildType = WslBuildType.Registry;
-            buildPath = RegistryRef.Trim();
+            source = RegistryRef.Trim();
         }
         else if (RoadIndex == 1)
         {
             buildType = WslBuildType.Image;
-            buildPath = _images[ImageIndex].Path;
+            source = _images[ImageIndex].Path ?? string.Empty;
         }
         else if (RoadIndex == 3)
         {
             buildType = WslBuildType.Recipe;
-            context = _recipes[RecipeIndex].Path;
-            buildPath = Path.Combine(context ?? string.Empty, "Dockerfile");
+            source = _recipes[RecipeIndex].Path ?? string.Empty;
         }
         else
         {
             buildType = WslBuildType.Dockerfile;
-            buildPath = _dockerfiles[DockerfileIndex].Path;
-            context = Path.GetDirectoryName(buildPath) ?? string.Empty;
+            source = _dockerfiles[DockerfileIndex].Path ?? string.Empty;
         }
 
-        bool recipe = buildType == WslBuildType.Recipe;
-        BuildDto dto = new()
-        {
-            Name = Name.Trim(),
-            User = !recipe && RunOnboarding ? User.Trim() : string.Empty,
-            BuildType = buildType,
-            BuildPath = buildPath,
-            Context = context,
-            Onboarding = !recipe && RunOnboarding && OnboardingIndex >= 0 ? _onboardings[OnboardingIndex].Path : string.Empty,
-            KeepImage = !recipe && SaveImage,
-            RegisterDocker = !recipe && RegisterDocker,
-        };
+        BuildDto dto = BuildDto.FromSource(
+            Name.Trim(),
+            User.Trim(),
+            buildType,
+            source,
+            RunOnboarding && OnboardingIndex >= 0
+                ? _onboardings[OnboardingIndex].Path ?? string.Empty
+                : string.Empty,
+            SaveImage,
+            RegisterDocker);
 
         Result = dto;
         RequestClose();

@@ -5,6 +5,7 @@ using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Abstractions;
 using wsl_squad.Presentation.Settings;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.ViewModels;
 
@@ -21,7 +22,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
 {
     private readonly IUiThemeService _ui;
     private readonly IPackCatalogService _catalogue;
-    private readonly IFleetService _fleet;
+    private readonly FleetWorkflow _fleetWorkflow;
     private readonly IDialogService _dialogs;
     private string? _newRoot;
 
@@ -69,7 +70,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
     {
         _ui = ui;
         _catalogue = catalogue;
-        _fleet = fleet;
+        _fleetWorkflow = new FleetWorkflow(fleet);
         _dialogs = dialogs;
 
         UiThemeSettings theme = ui.GetTheme();
@@ -439,18 +440,10 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     public void WslConfig()
     {
-        try
-        {
-            _ = _fleet.WslConfig();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ConfigError = $"The file did not open: {exception.Message}";
-
-            return;
-        }
-
-        ConfigError = string.Empty;
+        WorkflowResult<WslConfigResponseDto> result = _fleetWorkflow.OpenWslConfig();
+        ConfigError = result.Status == WorkflowStatus.Success
+            ? string.Empty
+            : $"The file did not open: {result.Message}";
     }
 
     public void EditRoot()

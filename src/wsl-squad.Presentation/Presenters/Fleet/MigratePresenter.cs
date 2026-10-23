@@ -1,85 +1,32 @@
+using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Presenters.Fleet;
 
-public sealed class MigratePresenter : BasePresenter<IFleetView>
+public sealed class MigratePresenter
 {
-    private readonly IFleetService _service;
+    private readonly FleetWorkflow _workflow;
+    private readonly IFleetView _view;
 
     public MigratePresenter(IFleetService service, IFleetView view)
-        : base(view)
     {
-        _service = service;
+        _view = view;
+        _workflow = new FleetWorkflow(service, new ViewFleetInteraction(view));
     }
 
     public ActionResult Run(string? target)
     {
-        string root;
+        WorkflowResult<MigrateResponseDto> result = _workflow.MigrateRootAsync(target)
+            .GetAwaiter()
+            .GetResult();
 
-        try
+        if (result.Status == WorkflowStatus.Cancelled)
         {
-            root = _service.GetRoot();
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Migrate : {exception.Message}");
+            _view.ShowCancelled("moved");
         }
 
-        if (string.IsNullOrEmpty(target))
-        {
-            while (true)
-            {
-                string? answer = View.AskTarget(root);
-
-                if (string.IsNullOrEmpty(answer))
-                {
-                    View.ShowCancelled("moved");
-
-                    return ActionResult.Ok("Migrate : cancelled");
-                }
-
-                answer = answer.Trim().Trim('"').TrimEnd('\\');
-
-                if (answer == root.TrimEnd('\\'))
-                {
-                    View.ShowSameFolder();
-
-                    continue;
-                }
-
-                string? problem = ReferenceHelpers.TestFleetTarget(answer);
-
-                if (problem is not null)
-                {
-                    View.ShowTargetProblem(problem);
-
-                    continue;
-                }
-
-                target = answer;
-
-                break;
-            }
-        }
-
-        View.ShowLead();
-
-        try
-        {
-            Core.Dtos.MigrateResponseDto response = _service.Migrate(target);
-
-            View.Show(response);
-
-            return ActionResult.Ok($"Migrate : {response.Target}");
-        }
-        catch (InvalidOperationException exception)
-        {
-            ShowFailure(exception.Message);
-
-            return ActionResult.Nok($"Migrate : {exception.Message}");
-        }
+        return result.ToActionResult("Migrate", _view.Show, _view.ShowError);
     }
 }

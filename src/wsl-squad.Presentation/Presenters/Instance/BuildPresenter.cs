@@ -39,8 +39,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
         string name = string.Empty;
         BuildRoad? road = null;
-        string buildPath = string.Empty;
-        string context = string.Empty;
+        string source = string.Empty;
         string onboarding = string.Empty;
         string user = string.Empty;
         bool keep = false;
@@ -159,7 +158,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (verdict.Valid)
                         {
-                            buildPath = reference;
+                            source = reference;
                             ok = true;
 
                             break;
@@ -199,7 +198,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         break;
                     }
 
-                    SelectSource(picked, road.Type, ref buildPath, ref context);
+                    source = picked.Path;
                     stack.Push(NextAfterSource(sources.Onboardings.Count, road));
 
                     break;
@@ -337,18 +336,15 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             return ActionResult.Ok("Build : cancelled");
         }
 
-        BuildDto dto = new()
-        {
-            Name = name,
-            User = user,
-            BuildType = road.Type,
-            BuildPath = buildPath,
-            Context = context,
-            Onboarding = onboarding,
-            KeepImage = keep,
-            RegisterDocker = register,
-            Interactive = true,
-        };
+        BuildDto dto = BuildDto.FromSource(
+            name,
+            user,
+            road.Type,
+            source,
+            onboarding,
+            keep,
+            register,
+            interactive: true);
 
         try
         {
@@ -394,28 +390,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
     private static string NextAfterOnboarding(BuildRoad road)
     {
         return road.Type is WslBuildType.Dockerfile or WslBuildType.Recipe ? "keep" : "register";
-    }
-
-    private static void SelectSource(
-        BuildSourceChoice choice,
-        WslBuildType type,
-        ref string buildPath,
-        ref string context)
-    {
-        if (type == WslBuildType.Recipe)
-        {
-            context = choice.Path;
-            buildPath = Path.Combine(context, "Dockerfile");
-        }
-        else
-        {
-            buildPath = choice.Path;
-
-            if (type == WslBuildType.Dockerfile)
-            {
-                context = Path.GetDirectoryName(buildPath) ?? string.Empty;
-            }
-        }
     }
 
     private static BuildSourceChoice ToChoice(WslBuildSourceDto source)

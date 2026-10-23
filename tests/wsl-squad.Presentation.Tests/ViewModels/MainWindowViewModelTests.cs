@@ -243,6 +243,26 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task Settings_moves_the_fleet_when_a_new_root_is_given()
+    {
+        _dialogs.SettingsAnswer = new SettingsDto(
+            new SetAppearanceDto
+            {
+                Font = "Cascadia",
+                FontSize = 13,
+                ColourScheme = "amber",
+                Variant = "Dark",
+            },
+            "/new");
+        _fleet.Setup(fleet => fleet.Migrate("/new")).Returns(new MigrateResponseDto { Target = "/new" });
+
+        await _viewModel.SettingsCommand.ExecuteAsync(null);
+
+        _fleet.Verify(fleet => fleet.Migrate("/new"), Times.Once);
+        _logger.Entries.Should().Contain(entry => entry.Message == "Migrate : /new");
+    }
+
+    [Fact]
     public async Task Remove_uses_the_dialogue_request()
     {
         RemoveDto request = new() { InstanceName = "alpha", ArchiveFirst = true };
