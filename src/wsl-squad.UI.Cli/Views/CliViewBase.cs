@@ -144,13 +144,17 @@ public abstract class CliViewBase : IPresenterViewBase
         ConsoleColor priorForeground = Console.ForegroundColor;
         ConsoleColor priorBackground = Console.BackgroundColor;
 
+        int inner = Math.Clamp(message.Length + 4, 24, 56);
+        string text = message.Length <= inner ? message.PadRight(inner) : message[..inner];
+        string rule = new('=', inner + 2);
+
         try
         {
             Console.ForegroundColor = ink;
             Console.BackgroundColor = box;
-            Write(" /!\\ ================================================================ /!\\");
-            Write($" |   {message,-60} |");
-            Write(" \\!/ ================================================================ \\!/");
+            Write($"+{rule}+");
+            Write($"| {text} |");
+            Write($"+{rule}+");
         }
         finally
         {

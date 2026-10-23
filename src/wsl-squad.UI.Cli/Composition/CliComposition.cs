@@ -128,30 +128,42 @@ public sealed class CliComposition
         _ = menu.Add("archives", "choose an archive: restore or delete");
         _ = menu.Add("exit", "leave the CLI");
 
-        while (true)
+        bool alternate = ConsoleMode.EnterAlternateScreen();
+
+        try
         {
-            _host.Clear();
-            IReadOnlyList<ConsoleMenuItem>? picked = menu.Prompt();
-
-            if (picked is null || picked[0].Key == "exit")
+            while (true)
             {
-                return 0;
+                _host.Clear();
+                IReadOnlyList<ConsoleMenuItem>? picked = menu.Prompt();
+
+                if (picked is null || picked[0].Key == "exit")
+                {
+                    return 0;
+                }
+
+                _host.Clear();
+
+                try
+                {
+                    _ = RunGesture(picked[0].Key, string.Empty);
+                }
+                catch (ConsoleQuitException)
+                {
+                    return 130;
+                }
+
+                _host.Line(string.Empty);
+                _host.Line("Press Enter to return to the menu.", ConsoleTone.Muted);
+                _ = Console.ReadLine();
             }
-
-            _host.Clear();
-
-            try
+        }
+        finally
+        {
+            if (alternate)
             {
-                _ = RunGesture(picked[0].Key, string.Empty);
+                ConsoleMode.LeaveAlternateScreen();
             }
-            catch (ConsoleQuitException)
-            {
-                return 130;
-            }
-
-            _host.Line(string.Empty);
-            _host.Line("Press Enter to return to the menu.", ConsoleTone.Muted);
-            _ = Console.ReadLine();
         }
     }
 
