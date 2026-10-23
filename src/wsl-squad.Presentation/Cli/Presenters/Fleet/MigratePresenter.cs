@@ -6,18 +6,17 @@ using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Fleet;
 
-public sealed class MigratePresenter
+public sealed class MigratePresenter : BasePresenter<IFleetView>
 {
     private readonly FleetWorkflow _workflow;
-    private readonly IFleetView _view;
 
     public MigratePresenter(IFleetService service, IFleetView view)
+        : base(view)
     {
-        _view = view;
         _workflow = new FleetWorkflow(service, new ViewFleetInteraction(view));
     }
 
-    public ActionResult Run(string? target)
+    public IWorkflowResult Run(string? target)
     {
         WorkflowResult<MigrateResponseDto> result = _workflow.MigrateRootAsync(target)
             .GetAwaiter()
@@ -25,9 +24,9 @@ public sealed class MigratePresenter
 
         if (result.Status == WorkflowStatus.Cancelled)
         {
-            _view.ShowCancelled("moved");
+            View.ShowCancelled("moved");
         }
 
-        return result.ToActionResult("Migrate", _view.Show, _view.ShowError);
+        return Finish(result, View.Show);
     }
 }

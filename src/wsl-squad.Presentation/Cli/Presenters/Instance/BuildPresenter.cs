@@ -4,6 +4,7 @@ using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Core.Validation;
 using wsl_squad.Presentation.Cli.Ports;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Instance;
 
@@ -17,7 +18,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         _service = service;
     }
 
-    public ActionResult Run()
+    public IWorkflowResult Run()
     {
         GetBuildSourcesResponseDto sources;
         IReadOnlyList<WslDockerImageDto> images;
@@ -34,7 +35,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         {
             ShowFailure(exception.Message);
 
-            return ActionResult.Nok($"Build : {exception.Message}");
+            return WorkflowResults.Failed(string.Empty, $"Build : {exception.Message}");
         }
 
         string name = string.Empty;
@@ -127,7 +128,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                     {
                         View.ShowAbort(AbortLines(road.Type));
 
-                        return ActionResult.Nok(road.Type switch
+                        return WorkflowResults.Failed(string.Empty, road.Type switch
                         {
                             WslBuildType.Image => "Build : no Docker image",
                             WslBuildType.Recipe => "Build : no recipe",
@@ -333,7 +334,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         {
             View.ShowCancelled("modified");
 
-            return ActionResult.Ok("Build : cancelled");
+            return WorkflowResults.Cancelled("Build");
         }
 
         BuildDto dto = BuildDto.FromSource(
@@ -360,13 +361,13 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                 Trace.TraceWarning($"[BuildPresenter] Could not open shell for '{dto.Name}': {ex.Message}");
             }
 
-            return ActionResult.Ok($"Build : {dto.Name}");
+            return WorkflowResults.Success(dto.Name ?? string.Empty);
         }
         catch (InvalidOperationException exception)
         {
             ShowFailure(exception.Message);
 
-            return ActionResult.Nok($"Build : {dto.Name} - {exception.Message}");
+            return WorkflowResults.Failed(dto.Name ?? string.Empty, exception.Message);
         }
     }
 

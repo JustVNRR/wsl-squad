@@ -5,24 +5,20 @@ using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Instance;
 
-public sealed class ManagePacksPresenter
+public sealed class ManagePacksPresenter : BasePresenter<IInstanceView>
 {
     private readonly InstanceLifecycleWorkflow _workflow;
-    private readonly IInstanceView _view;
 
     public ManagePacksPresenter(IInstanceService service, IInstanceView view)
+        : base(view)
     {
-        _view = view;
         _workflow = new InstanceLifecycleWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    public ActionResult Run(string? target)
+    public IWorkflowResult Run(string? target)
     {
         WorkflowResult<bool> result = _workflow.ManagePacksAsync(target).GetAwaiter().GetResult();
 
-        return result.ToActionResult(
-            "ManagePacks",
-            _ => _view.ShowManagingPacks(result.Subject),
-            _view.ShowError);
+        return Finish(result, _ => View.ShowManagingPacks(result.Subject));
     }
 }

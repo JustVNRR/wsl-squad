@@ -449,14 +449,14 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                     SetStatus($"{operation} : cancelled", false);
 
                     break;
-                case WorkflowStatus.NoTarget:
-                    SetStatus($"{operation} : no instance", true);
-
-                    break;
                 case WorkflowStatus.Failed:
-                    string detail = string.IsNullOrEmpty(result.Message)
-                        ? result.Subject
-                        : $"{result.Subject} - {result.Message}";
+                    string detail = (result.Subject, result.Message) switch
+                    {
+                        ({ Length: > 0 } subject, { Length: > 0 } message) => $"{subject} - {message}",
+                        ({ Length: > 0 } subject, _) => subject,
+                        (_, { Length: > 0 } message) => message,
+                        _ => "failed",
+                    };
                     SetStatus($"{operation} : {detail}", true);
 
                     break;

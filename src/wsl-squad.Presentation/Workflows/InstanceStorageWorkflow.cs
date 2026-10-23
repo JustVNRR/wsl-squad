@@ -24,7 +24,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
 
         TargetResolution choice = _interaction.SelectInstance(target, rows);
 
-        if (SelectError<ArchiveResponseDto>(choice) is { } selectionError)
+        if (SelectError<ArchiveResponseDto>(choice, "No instance is available.") is { } selectionError)
         {
             return selectionError;
         }
@@ -63,7 +63,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
 
         TargetResolution choice = _interaction.SelectInstance(target, rows);
 
-        if (SelectError<CompactResponseDto>(choice) is { } selectionError)
+        if (SelectError<CompactResponseDto>(choice, "No instance is available.") is { } selectionError)
         {
             return selectionError;
         }
@@ -102,7 +102,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
 
         TargetResolution choice = _interaction.SelectArchive(target, rows);
 
-        if (SelectError<RestoreResponseDto>(choice) is { } selectionError)
+        if (SelectError<RestoreResponseDto>(choice, "No archive is available.") is { } selectionError)
         {
             return selectionError;
         }
@@ -151,7 +151,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
 
             choice = _interaction.SelectArchive(target, rows);
 
-            if (SelectError<DeleteArchiveResponseDto>(choice) is { } selectionError)
+            if (SelectError<DeleteArchiveResponseDto>(choice, "No archive is available.") is { } selectionError)
             {
                 return selectionError;
             }

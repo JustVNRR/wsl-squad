@@ -3,6 +3,7 @@ using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Cli.Presenters;
 using wsl_squad.Presentation.Cli.Presenters.Fleet;
 using wsl_squad.Presentation.Cli.Presenters.Instance;
+using wsl_squad.Presentation.Workflows;
 using wsl_squad.UI.Cli.Interaction;
 using wsl_squad.UI.Cli.Views;
 
@@ -72,7 +73,7 @@ public sealed class CliComposition
         PresenterAction deleteArchive = new("delete_archive", "delete an archive", name => _deleteArchive.Run(name));
         PresenterAction migrate = new("migrate", "move the fleet to another folder", _ => _migrate.Run(null));
         PresenterAction wslConfig = new("wslconfig", "open the Windows-wide WSL settings", _ => _wslConfig.Run());
-        PresenterAction packs = new("availables packs", "edit, duplicate or delete a catalogue pack", _ => ActionResult.Ok("Settings : cancelled"));
+        PresenterAction packs = new("availables packs", "edit, duplicate or delete a catalogue pack", _ => WorkflowResults.Cancelled("Settings"));
 
         Dictionary<WslCommandKind, PresenterAction> actions = new()
         {
@@ -102,7 +103,9 @@ public sealed class CliComposition
         {
             if (!string.IsNullOrEmpty(command))
             {
-                return RunGesture(command, name).Status == ActionResultStatus.Ok ? 0 : 1;
+                WorkflowStatus status = RunGesture(command, name).Status;
+
+                return status is WorkflowStatus.Success or WorkflowStatus.Cancelled ? 0 : 1;
             }
 
             return RunMenu();
@@ -152,7 +155,7 @@ public sealed class CliComposition
         }
     }
 
-    private ActionResult RunGesture(string command, string? name)
+    private IWorkflowResult RunGesture(string command, string? name)
     {
         string target = name ?? string.Empty;
 
@@ -180,7 +183,7 @@ public sealed class CliComposition
         };
     }
 
-    private ActionResult Unknown(string command)
+    private WorkflowOutcome Unknown(string command)
     {
         _host.Line(string.Empty);
         _host.Line($"Unknown command '{command}'.", ConsoleTone.Error);
@@ -188,6 +191,6 @@ public sealed class CliComposition
         _host.Line("          register_docker, unregister_docker, unregister, archive, restore, duplicate,", ConsoleTone.Hint);
         _host.Line("          compact, migrate, wslconfig, delete_archive.", ConsoleTone.Hint);
 
-        return ActionResult.Nok($"Unknown command '{command}'.");
+        return WorkflowResults.Failed(string.Empty, $"Unknown command '{command}'.");
     }
 }

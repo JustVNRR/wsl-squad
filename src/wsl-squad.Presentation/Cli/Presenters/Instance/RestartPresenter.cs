@@ -6,21 +6,20 @@ using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Instance;
 
-public sealed class RestartPresenter
+public sealed class RestartPresenter : BasePresenter<IInstanceView>
 {
     private readonly InstanceLifecycleWorkflow _workflow;
-    private readonly IInstanceView _view;
 
     public RestartPresenter(IInstanceService service, IInstanceView view)
+        : base(view)
     {
-        _view = view;
         _workflow = new InstanceLifecycleWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    public ActionResult Run(string? target)
+    public IWorkflowResult Run(string? target)
     {
         WorkflowResult<RestartResponseDto> result = _workflow.RestartAsync(target).GetAwaiter().GetResult();
 
-        return result.ToActionResult("Restart", _view.Show, _view.ShowError);
+        return Finish(result, View.Show);
     }
 }

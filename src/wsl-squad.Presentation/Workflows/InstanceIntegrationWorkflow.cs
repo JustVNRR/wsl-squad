@@ -76,12 +76,14 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
                     : DockerProblem.NoCandidates;
                 _interaction.ShowDockerProblem(string.Empty, problem);
 
-                return WorkflowResults.NoTarget<bool>();
+                return WorkflowResults.Failed<bool>(
+                    string.Empty,
+                    "No Docker Desktop candidate is available.");
             }
 
             TargetResolution choice = _interaction.SelectInstance(string.Empty, candidates);
 
-            if (SelectError<bool>(choice) is { } selectionError)
+            if (SelectError<bool>(choice, "No instance is available.") is { } selectionError)
             {
                 return selectionError;
             }

@@ -5,21 +5,20 @@ using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Instance;
 
-public sealed class UnregisterDockerPresenter
+public sealed class UnregisterDockerPresenter : BasePresenter<IInstanceView>
 {
     private readonly InstanceIntegrationWorkflow _workflow;
-    private readonly IInstanceView _view;
 
     public UnregisterDockerPresenter(IInstanceService service, IInstanceView view)
+        : base(view)
     {
-        _view = view;
         _workflow = new InstanceIntegrationWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    public ActionResult Run(string? target)
+    public IWorkflowResult Run(string? target)
     {
         WorkflowResult<bool> result = _workflow.UnregisterDockerAsync(target).GetAwaiter().GetResult();
 
-        return result.ToActionResult("UnregisterDocker", null, _view.ShowError);
+        return Finish(result);
     }
 }

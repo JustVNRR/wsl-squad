@@ -6,21 +6,20 @@ using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Instance;
 
-public sealed class CompactPresenter
+public sealed class CompactPresenter : BasePresenter<IInstanceView>
 {
     private readonly InstanceStorageWorkflow _workflow;
-    private readonly IInstanceView _view;
 
     public CompactPresenter(IInstanceService service, IInstanceView view)
+        : base(view)
     {
-        _view = view;
         _workflow = new InstanceStorageWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    public ActionResult Run(string? target)
+    public IWorkflowResult Run(string? target)
     {
         WorkflowResult<CompactResponseDto> result = _workflow.CompactAsync(target).GetAwaiter().GetResult();
 
-        return result.ToActionResult("Compact", _view.Show, _view.ShowError);
+        return Finish(result, View.Show);
     }
 }

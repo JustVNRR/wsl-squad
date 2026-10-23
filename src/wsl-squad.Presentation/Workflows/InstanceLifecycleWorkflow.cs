@@ -32,7 +32,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
 
             choice = _interaction.SelectInstance(target, rows);
 
-            if (SelectError<OpenResponseDto>(choice) is { } selectionError)
+            if (SelectError<OpenResponseDto>(choice, "No instance is available.") is { } selectionError)
             {
                 return selectionError;
             }
@@ -71,7 +71,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
 
             choice = _interaction.SelectInstance(target, rows);
 
-            if (SelectError<RestartResponseDto>(choice) is { } selectionError)
+            if (SelectError<RestartResponseDto>(choice, "No instance is available.") is { } selectionError)
             {
                 return selectionError;
             }
@@ -115,7 +115,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
 
             choice = _interaction.SelectInstance(target, rows);
 
-            if (SelectError<bool>(choice) is { } selectionError)
+            if (SelectError<bool>(choice, "No instance is available.") is { } selectionError)
             {
                 return selectionError;
             }
@@ -146,7 +146,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
 
         TargetResolution choice = _interaction.SelectInstance(target, rows);
 
-        if (SelectError<DuplicateResponseDto>(choice) is { } selectionError)
+        if (SelectError<DuplicateResponseDto>(choice, "No instance is available.") is { } selectionError)
         {
             return selectionError;
         }
@@ -186,7 +186,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
 
         TargetResolution choice = _interaction.SelectInstance(target, rows);
 
-        if (SelectError<RemoveDto>(choice) is { } selectionError)
+        if (SelectError<RemoveDto>(choice, "No instance is available.") is { } selectionError)
         {
             return selectionError;
         }

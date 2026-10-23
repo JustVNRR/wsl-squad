@@ -6,21 +6,20 @@ using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Instance;
 
-public sealed class DuplicatePresenter
+public sealed class DuplicatePresenter : BasePresenter<IInstanceView>
 {
     private readonly InstanceLifecycleWorkflow _workflow;
-    private readonly IInstanceView _view;
 
     public DuplicatePresenter(IInstanceService service, IInstanceView view)
+        : base(view)
     {
-        _view = view;
         _workflow = new InstanceLifecycleWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    public ActionResult Run(string? target)
+    public IWorkflowResult Run(string? target)
     {
         WorkflowResult<DuplicateResponseDto> result = _workflow.DuplicateAsync(target).GetAwaiter().GetResult();
 
-        return result.ToActionResult("Duplicate", _view.Show, _view.ShowError);
+        return Finish(result, View.Show);
     }
 }

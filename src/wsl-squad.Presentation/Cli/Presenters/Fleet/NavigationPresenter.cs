@@ -1,5 +1,6 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Presentation.Cli.Ports;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Fleet;
 
@@ -17,7 +18,7 @@ public sealed class NavigationPresenter
         _view = view;
     }
 
-    public ActionResult Run(string kind)
+    public IWorkflowResult Run(string kind)
     {
         _stack.Clear();
         _stack.Push(new NavigationState(kind));
@@ -25,7 +26,7 @@ public sealed class NavigationPresenter
         while (_stack.Count > 0)
         {
             _view.Clear();
-            ActionResult? result = Step();
+            IWorkflowResult? result = Step();
 
             if (result is not null)
             {
@@ -33,10 +34,10 @@ public sealed class NavigationPresenter
             }
         }
 
-        return ActionResult.Ok("Navigate : cancelled");
+        return WorkflowResults.Cancelled("Navigate");
     }
 
-    private ActionResult? Step()
+    private IWorkflowResult? Step()
     {
         NavigationState top = _stack.Peek();
 
@@ -80,7 +81,7 @@ public sealed class NavigationPresenter
                 }
 
                 _view.Clear();
-                ActionResult result = action.Execute(top.Row?.Name ?? string.Empty);
+                IWorkflowResult result = action.Execute(top.Row?.Name ?? string.Empty);
 
                 return IsCancelled(result) ? null : result;
             }
@@ -101,7 +102,7 @@ public sealed class NavigationPresenter
                 }
 
                 _view.Clear();
-                ActionResult result = item.Execute(string.Empty);
+                IWorkflowResult result = item.Execute(string.Empty);
 
                 return IsCancelled(result) ? null : result;
             }
@@ -130,7 +131,7 @@ public sealed class NavigationPresenter
                 }
 
                 _view.Clear();
-                ActionResult? outcome = choice switch
+                IWorkflowResult? outcome = choice switch
                 {
                     "edit" => _settings.Edit(top.Pack!),
                     "duplicate" => _settings.Duplicate(top.Pack!),
@@ -142,11 +143,11 @@ public sealed class NavigationPresenter
             }
 
             default:
-                return ActionResult.Ok("Navigate : cancelled");
+                return WorkflowResults.Cancelled("Navigate");
         }
     }
 
-    private ActionResult? Pop(object presenter, string label)
+    private WorkflowOutcome? Pop(object presenter, string label)
     {
         _ = _stack.Pop();
 
@@ -170,23 +171,22 @@ public sealed class NavigationPresenter
         }
         else
         {
-            return ActionResult.Ok($"{label} : cancelled");
+            return WorkflowResults.Cancelled(label);
         }
 
         if (miss == "none")
         {
-            return ActionResult.Nok($"{label} : none");
+            return WorkflowResults.Failed(label, "none");
         }
 
         return miss == "failure"
-            ? ActionResult.Nok($"{label} : {error}")
-            : ActionResult.Ok($"{label} : cancelled");
+            ? WorkflowResults.Failed(label, error)
+            : WorkflowResults.Cancelled(label);
     }
 
-    private static bool IsCancelled(ActionResult result)
+    private static bool IsCancelled(IWorkflowResult result)
     {
-        return result.Status == ActionResultStatus.Ok &&
-               result.Message.EndsWith(": cancelled", StringComparison.Ordinal);
+        return result.Status == WorkflowStatus.Cancelled;
     }
 
     private sealed record NavigationState(

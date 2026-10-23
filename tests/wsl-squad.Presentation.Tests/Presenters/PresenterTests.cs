@@ -8,18 +8,12 @@ using wsl_squad.Presentation.Cli.Presenters;
 using wsl_squad.Presentation.Cli.Presenters.Fleet;
 using wsl_squad.Presentation.Cli.Presenters.Instance;
 using wsl_squad.Presentation.Cli.Ports;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Tests.Presenters;
 
 public class PresenterTests
 {
-    [Fact]
-    public void ActionResult_exposes_ok_and_nok()
-    {
-        ActionResult.Ok("done").Status.Should().Be(ActionResultStatus.Ok);
-        ActionResult.Nok("boom").Status.Should().Be(ActionResultStatus.Nok);
-    }
-
     [Fact]
     public void Manage_packs_presenter_opens_the_distro_manager()
     {
@@ -27,9 +21,9 @@ public class PresenterTests
         service.Setup(s => s.GetAll()).Returns([new WslIndexDto { Name = "alpha" }]);
         TestInstanceView view = new();
 
-        ActionResult result = new ManagePacksPresenter(service.Object, view).Run("alpha");
+        IWorkflowResult result = new ManagePacksPresenter(service.Object, view).Run("alpha");
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
+        result.Status.Should().Be(WorkflowStatus.Success);
         service.Verify(s => s.OpenPackManager("alpha"), Times.Once);
         view.ManagedPacks.Should().Equal("alpha");
     }
@@ -42,9 +36,9 @@ public class PresenterTests
         service.Setup(s => s.OpenPackManager("alpha")).Throws(new InvalidOperationException("no manager"));
         TestInstanceView view = new();
 
-        ActionResult result = new ManagePacksPresenter(service.Object, view).Run("alpha");
+        IWorkflowResult result = new ManagePacksPresenter(service.Object, view).Run("alpha");
 
-        result.Status.Should().Be(ActionResultStatus.Nok);
+        result.Status.Should().Be(WorkflowStatus.Failed);
         view.Errors.Should().ContainSingle(message => message.Contains("no manager", StringComparison.Ordinal));
     }
 
@@ -69,15 +63,30 @@ public class PresenterTests
         view.Themes.Enqueue("color");
         view.Themes.Enqueue(null);
 
-        ActionResult result = new SetAppearancePresenter(service.Object, view).Run("alpha");
+        IWorkflowResult result = new SetAppearancePresenter(service.Object, view).Run("alpha");
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
+        result.Status.Should().Be(WorkflowStatus.Success);
         service.Verify(s => s.SetAppearance(It.Is<SetAppearanceDto>(dto =>
             dto.Font == "Cascadia" && dto.ColourScheme == null)), Times.Once);
         service.Verify(s => s.SetAppearance(It.Is<SetAppearanceDto>(dto =>
             dto.Font == null && dto.ColourScheme == "ice")), Times.Once);
         view.Shown.Should().ContainSingle();
         view.Shown[0].Changes.Should().Equal("font", "colours");
+    }
+
+    [Fact]
+    public void Archive_presenter_reports_a_missing_instance_as_a_failure()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.GetAll()).Returns([]);
+        TestInstanceView view = new();
+
+        IWorkflowResult result = new ArchivePresenter(service.Object, view).Run(null);
+
+        result.Status.Should().Be(WorkflowStatus.Failed);
+        result.Message.Should().Contain("No instance is available.");
+        view.Errors.Should().ContainSingle(message =>
+            message.Contains("No instance is available.", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -93,8 +102,8 @@ public class PresenterTests
         service.Setup(s => s.GetOrphans()).Returns([]);
 
         TestFleetView view = new() { PickedInstance = "alpha" };
-        PresenterAction unregister = new("unregister", "Unregister", _ => ActionResult.Ok("u"));
-        PresenterAction archive = new("archive", "Archive", _ => ActionResult.Ok("a"));
+        PresenterAction unregister = new("unregister", "Unregister", _ => WorkflowResults.Success("u"));
+        PresenterAction archive = new("archive", "Archive", _ => WorkflowResults.Success("a"));
         Dictionary<WslCommandKind, PresenterAction> actions = new()
         {
             [WslCommandKind.UnregisterDocker] = unregister,
@@ -123,8 +132,8 @@ public class PresenterTests
     {
         Mock<IInstanceService> service = new();
         TestFleetView view = new();
-        PresenterAction shell = new("shell", "Shell", _ => ActionResult.Ok("s"));
-        PresenterAction manage = new("manage_packs", "Manage packs", _ => ActionResult.Ok("m"));
+        PresenterAction shell = new("shell", "Shell", _ => WorkflowResults.Success("s"));
+        PresenterAction manage = new("manage_packs", "Manage packs", _ => WorkflowResults.Success("m"));
         Dictionary<WslCommandKind, PresenterAction> actions = new()
         {
             [WslCommandKind.Shell] = shell,
@@ -154,9 +163,9 @@ public class PresenterTests
         });
         TestInstanceView view = new() { ConfirmAnswer = true };
 
-        ActionResult result = new ArchivePresenter(service.Object, view).Run("alpha");
+        IWorkflowResult result = new ArchivePresenter(service.Object, view).Run("alpha");
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
+        result.Status.Should().Be(WorkflowStatus.Success);
         service.Verify(s => s.Archive(It.Is<ArchiveDto>(dto =>
             dto.InstanceName == "alpha" && dto.Format == "tar.gz" && dto.Permit)), Times.Once);
         view.StopWarnings.Should().Equal("alpha");
@@ -169,10 +178,9 @@ public class PresenterTests
         service.Setup(s => s.GetAll()).Returns([new WslIndexDto { Name = "alpha" }]);
         TestInstanceView view = new() { ConfirmAnswer = false };
 
-        ActionResult result = new ArchivePresenter(service.Object, view).Run("alpha");
+        IWorkflowResult result = new ArchivePresenter(service.Object, view).Run("alpha");
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
-        result.Message.Should().Contain("cancelled");
+        result.Status.Should().Be(WorkflowStatus.Cancelled);
         service.Verify(s => s.Archive(It.IsAny<ArchiveDto>()), Times.Never);
     }
 
@@ -183,9 +191,9 @@ public class PresenterTests
         service.Setup(s => s.GetAll()).Returns([new WslIndexDto { Name = "alpha" }]);
         TestInstanceView view = new() { TypedName = "wrong" };
 
-        ActionResult result = new RemovePresenter(service.Object, view).Run("alpha");
+        IWorkflowResult result = new RemovePresenter(service.Object, view).Run("alpha");
 
-        result.Message.Should().Contain("cancelled");
+        result.Status.Should().Be(WorkflowStatus.Cancelled);
         service.Verify(s => s.Remove(It.IsAny<RemoveDto>()), Times.Never);
 
         view.TypedName = "alpha";
@@ -193,7 +201,7 @@ public class PresenterTests
 
         result = new RemovePresenter(service.Object, view).Run("alpha");
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
+        result.Status.Should().Be(WorkflowStatus.Success);
         service.Verify(s => s.Remove(It.Is<RemoveDto>(dto =>
             dto.InstanceName == "alpha" && !dto.ArchiveFirst)), Times.Once);
     }
@@ -224,10 +232,10 @@ public class PresenterTests
         service.Setup(s => s.Open("alpha")).Returns(new OpenResponseDto { InstanceName = "alpha" });
         TestBuildView view = new();
 
-        ActionResult result = new BuildPresenter(service.Object, view).Run();
+        IWorkflowResult result = new BuildPresenter(service.Object, view).Run();
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
-        result.Message.Should().Be("Build : alpha");
+        result.Status.Should().Be(WorkflowStatus.Success);
+        result.Subject.Should().Be("alpha");
         service.Verify(s => s.Build(It.Is<BuildDto>(dto =>
             dto.Name == "alpha" &&
             dto.BuildType == WslBuildType.Dockerfile &&
@@ -264,10 +272,10 @@ public class PresenterTests
         service.Setup(s => s.Open("alpha")).Throws(new InvalidOperationException("shell failed"));
         TestBuildView view = new();
 
-        ActionResult result = new BuildPresenter(service.Object, view).Run();
+        IWorkflowResult result = new BuildPresenter(service.Object, view).Run();
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
-        result.Message.Should().Be("Build : alpha");
+        result.Status.Should().Be(WorkflowStatus.Success);
+        result.Subject.Should().Be("alpha");
     }
 
     [Fact]
@@ -278,9 +286,9 @@ public class PresenterTests
         SettingsPresenter presenter = new(catalogue.Object, view, []);
         WslPackDto pack = new() { Name = "tools", Dependents = ["shell"] };
 
-        ActionResult? result = presenter.Delete(pack);
+        IWorkflowResult? result = presenter.Delete(pack);
 
-        result!.Status.Should().Be(ActionResultStatus.Ok);
+        result!.Status.Should().Be(WorkflowStatus.Success);
         catalogue.Verify(c => c.DeletePack("tools"), Times.Once);
         view.Dependents.Should().ContainKey("tools");
     }
@@ -295,9 +303,9 @@ public class PresenterTests
         SettingsPresenter presenter = new(catalogue.Object, view, []);
         WslPackDto pack = new() { Name = "tools" };
 
-        ActionResult? result = presenter.Duplicate(pack);
+        IWorkflowResult? result = presenter.Duplicate(pack);
 
-        result!.Status.Should().Be(ActionResultStatus.Nok);
+        result!.Status.Should().Be(WorkflowStatus.Failed);
         view.Errors.Should().ContainSingle(message => message.Contains("not usable", StringComparison.Ordinal));
     }
 
@@ -308,10 +316,10 @@ public class PresenterTests
         TestInstanceView view = new() { ConfirmAnswer = false };
         DeleteArchivePresenter presenter = new(service.Object, view);
 
-        ActionResult result = presenter.Run("old");
+        IWorkflowResult result = presenter.Run("old");
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
-        result.Message.Should().Be("DeleteArchive : cancelled");
+        result.Status.Should().Be(WorkflowStatus.Cancelled);
+        result.Subject.Should().Be("old");
         service.Verify(s => s.DeleteArchive(It.IsAny<string>()), Times.Never);
     }
 
@@ -324,10 +332,10 @@ public class PresenterTests
         TestInstanceView view = new() { ConfirmAnswer = true };
         DeleteArchivePresenter presenter = new(service.Object, view);
 
-        ActionResult result = presenter.Run("old");
+        IWorkflowResult result = presenter.Run("old");
 
-        result.Status.Should().Be(ActionResultStatus.Ok);
-        result.Message.Should().Be("DeleteArchive : old");
+        result.Status.Should().Be(WorkflowStatus.Success);
+        result.Subject.Should().Be("old");
         service.Verify(s => s.DeleteArchive("old"), Times.Once);
     }
 

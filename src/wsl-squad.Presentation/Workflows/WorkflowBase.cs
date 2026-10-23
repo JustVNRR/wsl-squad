@@ -31,11 +31,13 @@ public abstract class WorkflowBase
         }
     }
 
-    protected static WorkflowResult<T>? SelectError<T>(TargetResolution choice)
+    protected static WorkflowResult<T>? SelectError<T>(
+        TargetResolution choice,
+        string noTargetMessage)
     {
         return choice.Status switch
         {
-            TargetResolutionStatus.None => WorkflowResults.NoTarget<T>(),
+            TargetResolutionStatus.None => WorkflowResults.Failed<T>(string.Empty, noTargetMessage),
             TargetResolutionStatus.Cancelled => WorkflowResults.Cancelled<T>(string.Empty),
             _ => null,
         };

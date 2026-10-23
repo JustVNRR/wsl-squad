@@ -6,21 +6,20 @@ using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Instance;
 
-public sealed class DeleteArchivePresenter
+public sealed class DeleteArchivePresenter : BasePresenter<IInstanceView>
 {
     private readonly InstanceStorageWorkflow _workflow;
-    private readonly IInstanceView _view;
 
     public DeleteArchivePresenter(IInstanceService service, IInstanceView view)
+        : base(view)
     {
-        _view = view;
         _workflow = new InstanceStorageWorkflow(service, new ViewInstanceInteraction(view));
     }
 
-    public ActionResult Run(string? target)
+    public IWorkflowResult Run(string? target)
     {
         WorkflowResult<DeleteArchiveResponseDto> result = _workflow.DeleteArchiveAsync(target).GetAwaiter().GetResult();
 
-        return result.ToActionResult("DeleteArchive", _view.Show, _view.ShowError, noTargetReason: "no archive");
+        return Finish(result, View.Show);
     }
 }

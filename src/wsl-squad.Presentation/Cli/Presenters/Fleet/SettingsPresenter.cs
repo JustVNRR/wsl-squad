@@ -1,6 +1,7 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Cli.Ports;
+using wsl_squad.Presentation.Workflows;
 
 namespace wsl_squad.Presentation.Cli.Presenters.Fleet;
 
@@ -77,7 +78,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         return View.PickPackAction(pack.Name ?? string.Empty);
     }
 
-    public ActionResult? Edit(WslPackDto pack)
+    public IWorkflowResult? Edit(WslPackDto pack)
     {
         ArgumentNullException.ThrowIfNull(pack);
 
@@ -89,15 +90,15 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         {
             ShowFailure(exception.Message);
 
-            return ActionResult.Nok($"Settings : {exception.Message}");
+            return WorkflowResults.Failed("Settings", exception.Message);
         }
 
         View.ShowOpening(pack.Name ?? string.Empty);
 
-        return ActionResult.Ok($"Settings : {pack.Name}");
+        return WorkflowResults.Success(pack.Name ?? string.Empty);
     }
 
-    public ActionResult? Duplicate(WslPackDto pack)
+    public IWorkflowResult? Duplicate(WslPackDto pack)
     {
         ArgumentNullException.ThrowIfNull(pack);
 
@@ -122,15 +123,15 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         {
             ShowFailure(exception.Message);
 
-            return ActionResult.Nok($"Settings : {exception.Message}");
+            return WorkflowResults.Failed("Settings", exception.Message);
         }
 
         View.ShowDuplicated(newName);
 
-        return ActionResult.Ok($"Settings : {newName}");
+        return WorkflowResults.Success(newName);
     }
 
-    public ActionResult? Delete(WslPackDto pack)
+    public IWorkflowResult? Delete(WslPackDto pack)
     {
         ArgumentNullException.ThrowIfNull(pack);
 
@@ -154,11 +155,11 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         {
             ShowFailure(exception.Message);
 
-            return ActionResult.Nok($"Settings : {exception.Message}");
+            return WorkflowResults.Failed("Settings", exception.Message);
         }
 
         View.ShowRemoved(pack.Name ?? string.Empty);
 
-        return ActionResult.Ok($"Settings : {pack.Name}");
+        return WorkflowResults.Success(pack.Name ?? string.Empty);
     }
 }

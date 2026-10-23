@@ -36,7 +36,7 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
 
             choice = _interaction.SelectInstance(target, rows);
 
-            if (SelectError<SetAppearanceResponseDto>(choice) is { } selectionError)
+            if (SelectError<SetAppearanceResponseDto>(choice, "No instance is available.") is { } selectionError)
             {
                 return selectionError;
             }
