@@ -60,14 +60,6 @@ public interface IInstanceView : IPresenterViewBase
 
     void Show();
 
-    void ShowAlreadyRegistered(string name);
-
-    void ShowNotRegistered(string name);
-
-    void ShowSettingsUnreadable();
-
-    void ShowNoCandidates();
-
     bool? AskDockerAction(string name, bool shouldRegister);
 
     void Show(RegisterDockerResponseDto response);

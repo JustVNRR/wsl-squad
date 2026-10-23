@@ -14,16 +14,14 @@ public sealed class DialogInstanceInteraction : IInstanceInteraction, IAppearanc
         _dialogs = dialogs;
     }
 
-    public TargetResolution SelectInstance(string? target, IReadOnlyList<WslIndexDto> rows)
+    public string? PickInstance(IReadOnlyList<WslIndexDto> candidates)
     {
-        return string.IsNullOrEmpty(target)
-            ? new TargetResolution(TargetResolutionStatus.None, string.Empty)
-            : new TargetResolution(TargetResolutionStatus.Selected, target);
+        return null;
     }
 
-    public TargetResolution SelectArchive(string? target, IReadOnlyList<WslIndexDto> rows)
+    public string? PickArchive(IReadOnlyList<WslIndexDto> archives)
     {
-        return SelectInstance(target, rows);
+        return null;
     }
 
     public bool PromptRestart(string instanceName)
@@ -59,10 +57,6 @@ public sealed class DialogInstanceInteraction : IInstanceInteraction, IAppearanc
     public bool PromptDeleteArchive(string archiveName)
     {
         return _dialogs.ShowDeleteArchive(new DeleteArchiveViewModel(archiveName)) is not null;
-    }
-
-    public void ShowDockerProblem(string instanceName, DockerProblem problem)
-    {
     }
 
     public bool? PromptDocker(string instanceName, bool shouldRegister)

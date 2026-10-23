@@ -19,6 +19,6 @@ public sealed class ManagePacksPresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<bool> result = _workflow.ManagePacksAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, _ => View.ShowManagingPacks(result.Subject));
+        return Finish(result, _ => View.ShowManagingPacks(result.Subject), View.ShowNoInstances);
     }
 }

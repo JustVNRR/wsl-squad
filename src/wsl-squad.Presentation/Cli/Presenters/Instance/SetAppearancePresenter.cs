@@ -22,6 +22,6 @@ public sealed class SetAppearancePresenter : BasePresenter<IAppearanceView>
             .GetAwaiter()
             .GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoInstances);
     }
 }

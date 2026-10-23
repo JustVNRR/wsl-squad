@@ -18,11 +18,25 @@ public abstract class BasePresenter<TView>
         View.ShowError(message);
     }
 
-    protected IWorkflowResult Finish<T>(WorkflowResult<T> result, Action<T>? onSuccess = null)
+    protected IWorkflowResult Finish<T>(
+        WorkflowResult<T> result,
+        Action<T>? onSuccess = null,
+        Action? onNoTarget = null)
     {
         if (result.Status == WorkflowStatus.Success && result.Response is not null)
         {
             onSuccess?.Invoke(result.Response);
+        }
+        else if (result.Status == WorkflowStatus.NoTarget)
+        {
+            if (onNoTarget is not null)
+            {
+                onNoTarget();
+            }
+            else if (!string.IsNullOrEmpty(result.Message))
+            {
+                View.ShowError(result.Message);
+            }
         }
         else if (result.Status == WorkflowStatus.Failed && !string.IsNullOrEmpty(result.Message))
         {

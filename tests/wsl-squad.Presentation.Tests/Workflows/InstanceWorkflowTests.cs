@@ -22,9 +22,8 @@ public class InstanceWorkflowTests
 
         WorkflowResult<ArchiveResponseDto> result = await workflow.ArchiveAsync(null);
 
-        result.Status.Should().Be(WorkflowStatus.Failed);
+        result.Status.Should().Be(WorkflowStatus.NoTarget);
         result.Message.Should().Be("No instance is available.");
-        view.Verify(v => v.ShowNoInstances(), Times.Once);
     }
 
     [Fact]
@@ -37,8 +36,7 @@ public class InstanceWorkflowTests
 
         WorkflowResult<RestoreResponseDto> result = await workflow.RestoreAsync(null);
 
-        result.Status.Should().Be(WorkflowStatus.Failed);
+        result.Status.Should().Be(WorkflowStatus.NoTarget);
         result.Message.Should().Be("No archive is available.");
-        view.Verify(v => v.ShowNoArchives(), Times.Once);
     }
 }

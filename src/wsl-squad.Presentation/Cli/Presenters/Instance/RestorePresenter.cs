@@ -20,6 +20,6 @@ public sealed class RestorePresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<RestoreResponseDto> result = _workflow.RestoreAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoArchives);
     }
 }

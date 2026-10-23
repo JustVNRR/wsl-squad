@@ -1,3 +1,4 @@
+using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Cli.Adapters;
 using wsl_squad.Presentation.Cli.Ports;
@@ -17,8 +18,8 @@ public sealed class RegisterDockerPresenter : BasePresenter<IInstanceView>
 
     public IWorkflowResult Run(string? target)
     {
-        WorkflowResult<bool> result = _workflow.RegisterDockerAsync(target).GetAwaiter().GetResult();
+        WorkflowResult<RegisterDockerResponseDto> result = _workflow.RegisterDockerAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result);
+        return Finish(result, View.Show);
     }
 }

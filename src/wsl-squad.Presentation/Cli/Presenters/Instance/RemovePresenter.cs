@@ -20,6 +20,6 @@ public sealed class RemovePresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<RemoveDto> result = _workflow.RemoveAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, _ => View.Show());
+        return Finish(result, _ => View.Show(), View.ShowNoInstances);
     }
 }

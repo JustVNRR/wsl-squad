@@ -20,6 +20,6 @@ public sealed class OpenPresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<OpenResponseDto> result = _workflow.OpenAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoInstances);
     }
 }

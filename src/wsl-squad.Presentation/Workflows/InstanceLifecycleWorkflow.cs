@@ -15,123 +15,94 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
 
     public async Task<WorkflowResult<OpenResponseDto>> OpenAsync(string? target)
     {
-        TargetResolution choice;
+        (string? name, WorkflowResult<OpenResponseDto>? error) =
+            await PickTargetAsync<OpenResponseDto>(
+                target,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (!string.IsNullOrEmpty(target))
+        if (error is not null)
         {
-            choice = new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-        else
-        {
-            (IReadOnlyList<WslIndexDto> rows, WorkflowResult<OpenResponseDto>? error) = await LoadRowsAsync<OpenResponseDto>();
-
-            if (error is not null)
-            {
-                return error;
-            }
-
-            choice = _interaction.SelectInstance(target, rows);
-
-            if (SelectError<OpenResponseDto>(choice, "No instance is available.") is { } selectionError)
-            {
-                return selectionError;
-            }
+            return error;
         }
 
-        ExecutionStarted?.Invoke($"Opening '{choice.Name}'...");
+        string instance = name!;
+        ExecutionStarted?.Invoke($"Opening '{instance}'...");
 
         try
         {
-            OpenResponseDto response = await Task.Run(() => Service.Open(choice.Name));
+            OpenResponseDto response = await Task.Run(() => Service.Open(instance));
 
-            return WorkflowResults.Success<OpenResponseDto>(choice.Name, response);
+            return WorkflowResults.Success(instance, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<OpenResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<OpenResponseDto>(instance, exception.Message);
         }
     }
 
     public async Task<WorkflowResult<RestartResponseDto>> RestartAsync(string? target)
     {
-        TargetResolution choice;
+        (string? name, WorkflowResult<RestartResponseDto>? error) =
+            await PickTargetAsync<RestartResponseDto>(
+                target,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (!string.IsNullOrEmpty(target))
+        if (error is not null)
         {
-            choice = new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-        else
-        {
-            (IReadOnlyList<WslIndexDto> rows, WorkflowResult<RestartResponseDto>? error) = await LoadRowsAsync<RestartResponseDto>();
-
-            if (error is not null)
-            {
-                return error;
-            }
-
-            choice = _interaction.SelectInstance(target, rows);
-
-            if (SelectError<RestartResponseDto>(choice, "No instance is available.") is { } selectionError)
-            {
-                return selectionError;
-            }
+            return error;
         }
 
-        if (!_interaction.PromptRestart(choice.Name))
+        string instance = name!;
+
+        if (!_interaction.PromptRestart(instance))
         {
-            return WorkflowResults.Cancelled<RestartResponseDto>(choice.Name);
+            return WorkflowResults.Cancelled<RestartResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Restarting '{choice.Name}'...");
+        ExecutionStarted?.Invoke($"Restarting '{instance}'...");
 
         try
         {
-            RestartResponseDto response = await Task.Run(() => Service.Restart(choice.Name));
+            RestartResponseDto response = await Task.Run(() => Service.Restart(instance));
 
-            return WorkflowResults.Success<RestartResponseDto>(choice.Name, response);
+            return WorkflowResults.Success(instance, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<RestartResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<RestartResponseDto>(instance, exception.Message);
         }
     }
 
     public async Task<WorkflowResult<bool>> ManagePacksAsync(string? target)
     {
-        TargetResolution choice;
+        (string? name, WorkflowResult<bool>? error) =
+            await PickTargetAsync<bool>(
+                target,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (!string.IsNullOrEmpty(target))
+        if (error is not null)
         {
-            choice = new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-        else
-        {
-            (IReadOnlyList<WslIndexDto> rows, WorkflowResult<bool>? error) = await LoadRowsAsync<bool>();
-
-            if (error is not null)
-            {
-                return error;
-            }
-
-            choice = _interaction.SelectInstance(target, rows);
-
-            if (SelectError<bool>(choice, "No instance is available.") is { } selectionError)
-            {
-                return selectionError;
-            }
+            return error;
         }
 
-        ExecutionStarted?.Invoke($"Opening the pack manager for '{choice.Name}'...");
+        string instance = name!;
+        ExecutionStarted?.Invoke($"Opening the pack manager for '{instance}'...");
 
         try
         {
-            await Task.Run(() => Service.OpenPackManager(choice.Name));
+            await Task.Run(() => Service.OpenPackManager(instance));
 
-            return WorkflowResults.Success<bool>(choice.Name, true);
+            return WorkflowResults.Success(instance, true);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<bool>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<bool>(instance, exception.Message);
         }
     }
 
@@ -144,34 +115,41 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = _interaction.SelectInstance(target, rows);
+        (string? name, WorkflowResult<DuplicateResponseDto>? selectionError) =
+            PickTarget<DuplicateResponseDto>(
+                target,
+                rows,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (SelectError<DuplicateResponseDto>(choice, "No instance is available.") is { } selectionError)
+        if (selectionError is not null)
         {
             return selectionError;
         }
 
+        string instance = name!;
         string[] taken = [.. rows
             .Where(row => !string.IsNullOrEmpty(row.Name))
             .Select(row => row.Name!)];
-        DuplicateDto? request = _interaction.PromptDuplicate(choice.Name, taken);
+        DuplicateDto? request = _interaction.PromptDuplicate(instance, taken);
 
         if (request is null)
         {
-            return WorkflowResults.Cancelled<DuplicateResponseDto>(choice.Name);
+            return WorkflowResults.Cancelled<DuplicateResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Duplicating '{choice.Name}'...");
+        ExecutionStarted?.Invoke($"Duplicating '{instance}'...");
 
         try
         {
             DuplicateResponseDto response = await Task.Run(() => Service.Duplicate(request));
 
-            return WorkflowResults.Success<DuplicateResponseDto>(choice.Name, response);
+            return WorkflowResults.Success(instance, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<DuplicateResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<DuplicateResponseDto>(instance, exception.Message);
         }
     }
 
@@ -184,33 +162,40 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = _interaction.SelectInstance(target, rows);
+        (string? name, WorkflowResult<RemoveDto>? selectionError) =
+            PickTarget<RemoveDto>(
+                target,
+                rows,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (SelectError<RemoveDto>(choice, "No instance is available.") is { } selectionError)
+        if (selectionError is not null)
         {
             return selectionError;
         }
 
+        string instance = name!;
         bool replacesArchive = rows.Any(row =>
-            row.IsArchive && row.Name == $"{choice.Name}_archive");
-        RemoveDto? request = _interaction.PromptRemove(choice.Name, replacesArchive);
+            row.IsArchive && row.Name == $"{instance}_archive");
+        RemoveDto? request = _interaction.PromptRemove(instance, replacesArchive);
 
         if (request is null)
         {
-            return WorkflowResults.Cancelled<RemoveDto>(choice.Name);
+            return WorkflowResults.Cancelled<RemoveDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Removing '{choice.Name}'...");
+        ExecutionStarted?.Invoke($"Removing '{instance}'...");
 
         try
         {
             await Task.Run(() => Service.Remove(request));
 
-            return WorkflowResults.Success<RemoveDto>(choice.Name, request);
+            return WorkflowResults.Success(instance, request);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<RemoveDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<RemoveDto>(instance, exception.Message);
         }
     }
 }

@@ -22,33 +22,40 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = _interaction.SelectInstance(target, rows);
+        (string? name, WorkflowResult<ArchiveResponseDto>? selectionError) =
+            PickTarget<ArchiveResponseDto>(
+                target,
+                rows,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (SelectError<ArchiveResponseDto>(choice, "No instance is available.") is { } selectionError)
+        if (selectionError is not null)
         {
             return selectionError;
         }
 
+        string instance = name!;
         bool replacesArchive = rows.Any(row =>
-            row.IsArchive && row.Name == $"{choice.Name}_archive");
-        ArchiveDto? request = _interaction.PromptArchive(choice.Name, replacesArchive);
+            row.IsArchive && row.Name == $"{instance}_archive");
+        ArchiveDto? request = _interaction.PromptArchive(instance, replacesArchive);
 
         if (request is null)
         {
-            return WorkflowResults.Cancelled<ArchiveResponseDto>(choice.Name);
+            return WorkflowResults.Cancelled<ArchiveResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Archiving '{choice.Name}'...");
+        ExecutionStarted?.Invoke($"Archiving '{instance}'...");
 
         try
         {
             ArchiveResponseDto response = await Task.Run(() => Service.Archive(request));
 
-            return WorkflowResults.Success<ArchiveResponseDto>(choice.Name, response);
+            return WorkflowResults.Success(instance, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<ArchiveResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<ArchiveResponseDto>(instance, exception.Message);
         }
     }
 
@@ -61,33 +68,40 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = _interaction.SelectInstance(target, rows);
+        (string? name, WorkflowResult<CompactResponseDto>? selectionError) =
+            PickTarget<CompactResponseDto>(
+                target,
+                rows,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (SelectError<CompactResponseDto>(choice, "No instance is available.") is { } selectionError)
+        if (selectionError is not null)
         {
             return selectionError;
         }
 
+        string instance = name!;
         bool replacesArchive = rows.Any(row =>
-            row.IsArchive && row.Name == $"{choice.Name}_archive");
-        CompactDto? request = _interaction.PromptCompact(choice.Name, replacesArchive);
+            row.IsArchive && row.Name == $"{instance}_archive");
+        CompactDto? request = _interaction.PromptCompact(instance, replacesArchive);
 
         if (request is null)
         {
-            return WorkflowResults.Cancelled<CompactResponseDto>(choice.Name);
+            return WorkflowResults.Cancelled<CompactResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Compacting '{choice.Name}'...");
+        ExecutionStarted?.Invoke($"Compacting '{instance}'...");
 
         try
         {
             CompactResponseDto response = await Task.Run(() => Service.Compact(request));
 
-            return WorkflowResults.Success<CompactResponseDto>(choice.Name, response);
+            return WorkflowResults.Success(instance, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<CompactResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<CompactResponseDto>(instance, exception.Message);
         }
     }
 
@@ -100,79 +114,76 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return error;
         }
 
-        TargetResolution choice = _interaction.SelectArchive(target, rows);
+        (string? name, WorkflowResult<RestoreResponseDto>? selectionError) =
+            PickTarget<RestoreResponseDto>(
+                target,
+                rows,
+                archives: true,
+                _interaction.PickArchive,
+                "No archive is available.");
 
-        if (SelectError<RestoreResponseDto>(choice, "No archive is available.") is { } selectionError)
+        if (selectionError is not null)
         {
             return selectionError;
         }
 
+        string instance = name!;
         string[] taken = [.. rows
             .Where(row => !row.IsArchive && !string.IsNullOrEmpty(row.Name))
             .Select(row => row.Name!)];
-        RestoreDto? request = _interaction.PromptRestore(choice.Name, taken);
+        RestoreDto? request = _interaction.PromptRestore(instance, taken);
 
         if (request is null)
         {
-            return WorkflowResults.Cancelled<RestoreResponseDto>(choice.Name);
+            return WorkflowResults.Cancelled<RestoreResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Restoring '{choice.Name}'...");
+        ExecutionStarted?.Invoke($"Restoring '{instance}'...");
 
         try
         {
             RestoreResponseDto response = await Task.Run(() => Service.Restore(request));
 
-            return WorkflowResults.Success<RestoreResponseDto>(choice.Name, response);
+            return WorkflowResults.Success(instance, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<RestoreResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<RestoreResponseDto>(instance, exception.Message);
         }
     }
 
     public async Task<WorkflowResult<DeleteArchiveResponseDto>> DeleteArchiveAsync(string? target)
     {
-        TargetResolution choice;
+        (string? name, WorkflowResult<DeleteArchiveResponseDto>? error) =
+            await PickTargetAsync<DeleteArchiveResponseDto>(
+                target,
+                archives: true,
+                _interaction.PickArchive,
+                "No archive is available.");
 
-        if (!string.IsNullOrEmpty(target))
+        if (error is not null)
         {
-            choice = new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-        else
-        {
-            (IReadOnlyList<WslIndexDto> rows, WorkflowResult<DeleteArchiveResponseDto>? error) =
-                await LoadRowsAsync<DeleteArchiveResponseDto>();
-
-            if (error is not null)
-            {
-                return error;
-            }
-
-            choice = _interaction.SelectArchive(target, rows);
-
-            if (SelectError<DeleteArchiveResponseDto>(choice, "No archive is available.") is { } selectionError)
-            {
-                return selectionError;
-            }
+            return error;
         }
 
-        if (!_interaction.PromptDeleteArchive(choice.Name))
+        string archive = name!;
+
+        if (!_interaction.PromptDeleteArchive(archive))
         {
-            return WorkflowResults.Cancelled<DeleteArchiveResponseDto>(choice.Name);
+            return WorkflowResults.Cancelled<DeleteArchiveResponseDto>(archive);
         }
 
-        ExecutionStarted?.Invoke($"Deleting the archive '{choice.Name}'...");
+        ExecutionStarted?.Invoke($"Deleting the archive '{archive}'...");
 
         try
         {
-            DeleteArchiveResponseDto response = await Task.Run(() => Service.DeleteArchive(choice.Name));
+            DeleteArchiveResponseDto response = await Task.Run(() => Service.DeleteArchive(archive));
 
-            return WorkflowResults.Success<DeleteArchiveResponseDto>(choice.Name, response);
+            return WorkflowResults.Success(archive, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<DeleteArchiveResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<DeleteArchiveResponseDto>(archive, exception.Message);
         }
     }
 }

@@ -20,6 +20,6 @@ public sealed class ArchivePresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<ArchiveResponseDto> result = _workflow.ArchiveAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoInstances);
     }
 }

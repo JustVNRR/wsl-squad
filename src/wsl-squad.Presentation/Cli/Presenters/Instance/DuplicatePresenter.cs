@@ -20,6 +20,6 @@ public sealed class DuplicatePresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<DuplicateResponseDto> result = _workflow.DuplicateAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoInstances);
     }
 }

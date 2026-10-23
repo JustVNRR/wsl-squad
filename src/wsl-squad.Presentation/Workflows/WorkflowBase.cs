@@ -31,15 +31,58 @@ public abstract class WorkflowBase
         }
     }
 
-    protected static WorkflowResult<T>? SelectError<T>(
-        TargetResolution choice,
+    protected async Task<(string? Name, WorkflowResult<T>? Error)> PickTargetAsync<T>(
+        string? target,
+        bool archives,
+        Func<IReadOnlyList<WslIndexDto>, string?> pick,
         string noTargetMessage)
     {
-        return choice.Status switch
+        if (!string.IsNullOrEmpty(target))
         {
-            TargetResolutionStatus.None => WorkflowResults.Failed<T>(string.Empty, noTargetMessage),
-            TargetResolutionStatus.Cancelled => WorkflowResults.Cancelled<T>(string.Empty),
-            _ => null,
-        };
+            return (target, null);
+        }
+
+        (IReadOnlyList<WslIndexDto> rows, WorkflowResult<T>? error) = await LoadRowsAsync<T>();
+
+        if (error is not null)
+        {
+            return (null, error);
+        }
+
+        return PickTarget<T>(target, rows, archives, pick, noTargetMessage);
+    }
+
+    protected static (string? Name, WorkflowResult<T>? Error) PickTarget<T>(
+        string? target,
+        IReadOnlyList<WslIndexDto> rows,
+        bool archives,
+        Func<IReadOnlyList<WslIndexDto>, string?> pick,
+        string noTargetMessage)
+    {
+        if (!string.IsNullOrEmpty(target))
+        {
+            if (rows.Count > 0 &&
+                !rows.Any(row => row.IsArchive == archives && row.Name == target))
+            {
+                return (null, WorkflowResults.Failed<T>(
+                    target,
+                    archives ? "not an archive of this machine" : "not an instance of this machine"));
+            }
+
+            return (target, null);
+        }
+
+        List<WslIndexDto> candidates = [.. rows.Where(row => row.IsArchive == archives)];
+
+        if (candidates.Count == 0)
+        {
+            return (null, WorkflowResults.NoTarget<T>(noTargetMessage));
+        }
+
+        string? picked = pick(candidates);
+
+        return string.IsNullOrEmpty(picked)
+            ? (null, WorkflowResults.Cancelled<T>(string.Empty))
+            : (picked, null);
     }
 }

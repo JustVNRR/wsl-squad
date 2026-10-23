@@ -18,49 +18,38 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
 
     public async Task<WorkflowResult<SetAppearanceResponseDto>> AppearanceAsync(string? target)
     {
-        TargetResolution choice;
+        (string? name, WorkflowResult<SetAppearanceResponseDto>? error) =
+            await PickTargetAsync<SetAppearanceResponseDto>(
+                target,
+                archives: false,
+                _interaction.PickInstance,
+                "No instance is available.");
 
-        if (!string.IsNullOrEmpty(target))
+        if (error is not null)
         {
-            choice = new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-        else
-        {
-            (IReadOnlyList<WslIndexDto> rows, WorkflowResult<SetAppearanceResponseDto>? error) =
-                await LoadRowsAsync<SetAppearanceResponseDto>();
-
-            if (error is not null)
-            {
-                return error;
-            }
-
-            choice = _interaction.SelectInstance(target, rows);
-
-            if (SelectError<SetAppearanceResponseDto>(choice, "No instance is available.") is { } selectionError)
-            {
-                return selectionError;
-            }
+            return error;
         }
 
+        string instance = name!;
         AppearanceContextDto context;
 
         try
         {
-            context = await Task.Run(() => Service.GetAppearanceContext(choice.Name));
+            context = await Task.Run(() => Service.GetAppearanceContext(instance));
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<SetAppearanceResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<SetAppearanceResponseDto>(instance, exception.Message);
         }
 
-        IReadOnlyList<SetAppearanceDto> requests = _interaction.PromptAppearance(choice.Name, context);
+        IReadOnlyList<SetAppearanceDto> requests = _interaction.PromptAppearance(instance, context);
 
         if (requests.Count == 0)
         {
-            return WorkflowResults.Cancelled<SetAppearanceResponseDto>(choice.Name);
+            return WorkflowResults.Cancelled<SetAppearanceResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Applying '{choice.Name}'s appearance...");
+        ExecutionStarted?.Invoke($"Applying '{instance}'s appearance...");
 
         try
         {
@@ -74,15 +63,15 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
 
             SetAppearanceResponseDto result = new()
             {
-                InstanceName = choice.Name,
+                InstanceName = instance,
                 Changes = changes,
             };
 
-            return WorkflowResults.Success(choice.Name, result);
+            return WorkflowResults.Success(instance, result);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<SetAppearanceResponseDto>(choice.Name, exception.Message);
+            return WorkflowResults.Failed<SetAppearanceResponseDto>(instance, exception.Message);
         }
     }
 }

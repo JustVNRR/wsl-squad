@@ -14,50 +14,14 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
         _view = view;
     }
 
-    public TargetResolution SelectInstance(string? target, IReadOnlyList<WslIndexDto> rows)
+    public string? PickInstance(IReadOnlyList<WslIndexDto> candidates)
     {
-        if (!string.IsNullOrEmpty(target))
-        {
-            return new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-
-        List<WslIndexDto> instances = [.. rows.Where(row => !row.IsArchive)];
-
-        if (instances.Count == 0)
-        {
-            _view.ShowNoInstances();
-
-            return new TargetResolution(TargetResolutionStatus.None, string.Empty);
-        }
-
-        string? picked = _view.AskOffered(instances);
-
-        return string.IsNullOrEmpty(picked)
-            ? new TargetResolution(TargetResolutionStatus.Cancelled, string.Empty)
-            : new TargetResolution(TargetResolutionStatus.Selected, picked);
+        return _view.AskOffered(candidates);
     }
 
-    public TargetResolution SelectArchive(string? target, IReadOnlyList<WslIndexDto> rows)
+    public string? PickArchive(IReadOnlyList<WslIndexDto> archives)
     {
-        if (!string.IsNullOrEmpty(target))
-        {
-            return new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-
-        List<WslIndexDto> archives = [.. rows.Where(row => row.IsArchive)];
-
-        if (archives.Count == 0)
-        {
-            _view.ShowNoArchives();
-
-            return new TargetResolution(TargetResolutionStatus.None, string.Empty);
-        }
-
-        string? picked = _view.AskArchive(archives);
-
-        return string.IsNullOrEmpty(picked)
-            ? new TargetResolution(TargetResolutionStatus.Cancelled, string.Empty)
-            : new TargetResolution(TargetResolutionStatus.Selected, picked);
+        return _view.AskArchive(archives);
     }
 
     public bool PromptRestart(string instanceName)
@@ -220,32 +184,6 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
         return _view.Confirm(
             $"Delete the archive '{archiveName}'? It cannot be restored.",
             defaultNo: true) == true;
-    }
-
-    public void ShowDockerProblem(string instanceName, DockerProblem problem)
-    {
-
-        switch (problem)
-        {
-            case DockerProblem.AlreadyRegistered:
-                _view.ShowAlreadyRegistered(instanceName);
-
-                break;
-            case DockerProblem.NotRegistered:
-                _view.ShowNotRegistered(instanceName);
-
-                break;
-            case DockerProblem.Unknown:
-                _view.ShowSettingsUnreadable();
-
-                break;
-            case DockerProblem.NoCandidates:
-                _view.ShowNoCandidates();
-
-                break;
-            default:
-                break;
-        }
     }
 
     public bool? PromptDocker(string instanceName, bool shouldRegister)

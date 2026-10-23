@@ -165,25 +165,6 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
     {
     }
 
-    public void ShowAlreadyRegistered(string name)
-    {
-        Write($"  '{name}' is already registered with Docker Desktop.", ConsoleTone.Warning);
-    }
-
-    public void ShowNotRegistered(string name)
-    {
-        Write($"  '{name}' is not registered with Docker Desktop.", ConsoleTone.Warning);
-    }
-
-    public void ShowSettingsUnreadable()
-    {
-        Write("  Docker Desktop's settings cannot be read.", ConsoleTone.Warning);
-    }
-
-    public void ShowNoCandidates()
-    {
-        Write("  No instance is available for this action.", ConsoleTone.Warning);
-    }
 
     public bool? AskDockerAction(string name, bool shouldRegister)
     {

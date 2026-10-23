@@ -380,11 +380,22 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        Func<Task<WorkflowResult<bool>>> run = register
-            ? () => _workflow.RegisterDockerAsync(name)
-            : () => _workflow.UnregisterDockerAsync(name);
+        if (register)
+        {
+            await RunWorkflowAsync(
+                "RegisterDocker",
+                name,
+                () => _workflow.RegisterDockerAsync(name),
+                reload: false);
 
-        await RunWorkflowAsync(register ? "RegisterDocker" : "UnregisterDocker", name, run, reload: false);
+            return;
+        }
+
+        await RunWorkflowAsync(
+            "UnregisterDocker",
+            name,
+            () => _workflow.UnregisterDockerAsync(name),
+            reload: false);
     }
 
     private async Task RestoreAsync(string? name)
@@ -447,6 +458,10 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                     break;
                 case WorkflowStatus.Cancelled:
                     SetStatus($"{operation} : cancelled", false);
+
+                    break;
+                case WorkflowStatus.NoTarget:
+                    SetStatus($"{operation} : {result.Message}", true);
 
                     break;
                 case WorkflowStatus.Failed:

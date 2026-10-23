@@ -20,6 +20,6 @@ public sealed class DeleteArchivePresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<DeleteArchiveResponseDto> result = _workflow.DeleteArchiveAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoArchives);
     }
 }

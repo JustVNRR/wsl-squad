@@ -67,12 +67,12 @@ public sealed class InstanceWorkflow : IInstanceWorkflow
         return _storage.DeleteArchiveAsync(target);
     }
 
-    public Task<WorkflowResult<bool>> RegisterDockerAsync(string? target)
+    public Task<WorkflowResult<RegisterDockerResponseDto>> RegisterDockerAsync(string? target)
     {
         return _integration.RegisterDockerAsync(target);
     }
 
-    public Task<WorkflowResult<bool>> UnregisterDockerAsync(string? target)
+    public Task<WorkflowResult<UnregisterDockerResponseDto>> UnregisterDockerAsync(string? target)
     {
         return _integration.UnregisterDockerAsync(target);
     }

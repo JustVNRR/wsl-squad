@@ -13,27 +13,9 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
         _view = view;
     }
 
-    public TargetResolution SelectInstance(string? target, IReadOnlyList<WslIndexDto> rows)
+    public string? PickInstance(IReadOnlyList<WslIndexDto> candidates)
     {
-        if (!string.IsNullOrEmpty(target))
-        {
-            return new TargetResolution(TargetResolutionStatus.Selected, target);
-        }
-
-        List<WslIndexDto> instances = [.. rows.Where(row => !row.IsArchive)];
-
-        if (instances.Count == 0)
-        {
-            _view.ShowNoInstances();
-
-            return new TargetResolution(TargetResolutionStatus.None, string.Empty);
-        }
-
-        string? picked = _view.AskOffered(instances);
-
-        return string.IsNullOrEmpty(picked)
-            ? new TargetResolution(TargetResolutionStatus.Cancelled, string.Empty)
-            : new TargetResolution(TargetResolutionStatus.Selected, picked);
+        return _view.AskOffered(candidates);
     }
 
     public IReadOnlyList<SetAppearanceDto> PromptAppearance(

@@ -20,6 +20,6 @@ public sealed class CompactPresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<CompactResponseDto> result = _workflow.CompactAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoInstances);
     }
 }

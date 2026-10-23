@@ -8,26 +8,49 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
 {
     private readonly IInstanceInteraction _interaction;
 
-    public InstanceIntegrationWorkflow(IInstanceService service, IInstanceInteraction interaction, Action<string>? executionStarted = null)
+    public InstanceIntegrationWorkflow(
+        IInstanceService service,
+        IInstanceInteraction interaction,
+        Action<string>? executionStarted = null)
         : base(service, executionStarted)
     {
         _interaction = interaction;
     }
 
-    public async Task<WorkflowResult<bool>> RegisterDockerAsync(string? target)
+    public Task<WorkflowResult<RegisterDockerResponseDto>> RegisterDockerAsync(string? target)
     {
-        return await DockerAsync(target, register: true);
+        return RunDockerAsync(
+            target,
+            register: true,
+            name => $"Registering '{name}' with Docker Desktop...",
+            (name, restart) => Service.RegisterDocker(new RegisterDockerDto
+            {
+                InstanceName = name,
+                Restart = restart,
+            }));
     }
 
-    public async Task<WorkflowResult<bool>> UnregisterDockerAsync(string? target)
+    public Task<WorkflowResult<UnregisterDockerResponseDto>> UnregisterDockerAsync(string? target)
     {
-        return await DockerAsync(target, register: false);
+        return RunDockerAsync(
+            target,
+            register: false,
+            name => $"Taking '{name}' out of Docker Desktop...",
+            (name, restart) => Service.UnregisterDocker(new UnregisterDockerDto
+            {
+                InstanceName = name,
+                Restart = restart,
+            }));
     }
 
-    private async Task<WorkflowResult<bool>> DockerAsync(string? target, bool register)
+    private async Task<WorkflowResult<TResponse>> RunDockerAsync<TResponse>(
+        string? target,
+        bool register,
+        Func<string, string> progressMessage,
+        Func<string, bool, TResponse> execute)
     {
-        (IReadOnlyList<WslIndexDto> rows, WorkflowResult<bool>? error) =
-            await LoadRowsAsync<bool>();
+        (IReadOnlyList<WslIndexDto> rows, WorkflowResult<TResponse>? error) =
+            await LoadRowsAsync<TResponse>();
 
         if (error is not null)
         {
@@ -43,15 +66,13 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
 
             if (row is null)
             {
-                return WorkflowResults.Failed<bool>(target, "not an instance of this machine");
+                return WorkflowResults.Failed<TResponse>(target, "not an instance of this machine");
             }
 
             DockerTargetStatus status = DockerRules.Status(row.Docker, register);
 
             if (status != DockerTargetStatus.Eligible)
             {
-                _interaction.ShowDockerProblem(target, Map(status));
-
                 string reason = status switch
                 {
                     DockerTargetStatus.AlreadyRegistered => "already registered",
@@ -59,7 +80,7 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
                     _ => "the Docker Desktop state cannot be read",
                 };
 
-                return WorkflowResults.Failed<bool>(target, reason);
+                return WorkflowResults.Failed<TResponse>(target, reason);
             }
 
             name = target;
@@ -70,73 +91,43 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
 
             if (candidates.Count == 0)
             {
-                DockerProblem problem = live.Count > 0 &&
-                                        live.TrueForAll(row => DockerRules.Status(row.Docker, register) == DockerTargetStatus.Unknown)
-                    ? DockerProblem.Unknown
-                    : DockerProblem.NoCandidates;
-                _interaction.ShowDockerProblem(string.Empty, problem);
+                string noTargetMessage = live.Count > 0 &&
+                                         live.TrueForAll(row =>
+                                             DockerRules.Status(row.Docker, register) == DockerTargetStatus.Unknown)
+                    ? "the Docker Desktop state cannot be read"
+                    : "No Docker Desktop candidate is available.";
 
-                return WorkflowResults.Failed<bool>(
-                    string.Empty,
-                    "No Docker Desktop candidate is available.");
+                return WorkflowResults.NoTarget<TResponse>(noTargetMessage);
             }
 
-            TargetResolution choice = _interaction.SelectInstance(string.Empty, candidates);
+            string? picked = _interaction.PickInstance(candidates);
 
-            if (SelectError<bool>(choice, "No instance is available.") is { } selectionError)
+            if (string.IsNullOrEmpty(picked))
             {
-                return selectionError;
+                return WorkflowResults.Cancelled<TResponse>(string.Empty);
             }
 
-            name = choice.Name;
+            name = picked;
         }
 
         bool? restart = _interaction.PromptDocker(name, register);
 
         if (restart is null)
         {
-            return WorkflowResults.Cancelled<bool>(name);
+            return WorkflowResults.Cancelled<TResponse>(name);
         }
 
-        ExecutionStarted?.Invoke(
-            register
-                ? $"Registering '{name}' with Docker Desktop..."
-                : $"Taking '{name}' out of Docker Desktop...");
+        ExecutionStarted?.Invoke(progressMessage(name));
 
         try
         {
-            if (register)
-            {
-                _ = await Task.Run(() => Service.RegisterDocker(new RegisterDockerDto
-                {
-                    InstanceName = name,
-                    Restart = restart.Value,
-                }));
+            TResponse response = await Task.Run(() => execute(name, restart.Value));
 
-                return WorkflowResults.Success<bool>(name, true);
-            }
-
-            _ = await Task.Run(() => Service.UnregisterDocker(new UnregisterDockerDto
-            {
-                InstanceName = name,
-                Restart = restart.Value,
-            }));
-
-            return WorkflowResults.Success<bool>(name, true);
+            return WorkflowResults.Success(name, response);
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<bool>(name, exception.Message);
+            return WorkflowResults.Failed<TResponse>(name, exception.Message);
         }
-    }
-
-    private static DockerProblem Map(DockerTargetStatus status)
-    {
-        return status switch
-        {
-            DockerTargetStatus.AlreadyRegistered => DockerProblem.AlreadyRegistered,
-            DockerTargetStatus.NotRegistered => DockerProblem.NotRegistered,
-            _ => DockerProblem.Unknown,
-        };
     }
 }

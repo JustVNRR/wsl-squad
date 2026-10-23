@@ -20,6 +20,6 @@ public sealed class RestartPresenter : BasePresenter<IInstanceView>
     {
         WorkflowResult<RestartResponseDto> result = _workflow.RestartAsync(target).GetAwaiter().GetResult();
 
-        return Finish(result, View.Show);
+        return Finish(result, View.Show, View.ShowNoInstances);
     }
 }

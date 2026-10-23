@@ -75,7 +75,7 @@ public class PresenterTests
     }
 
     [Fact]
-    public void Archive_presenter_reports_a_missing_instance_as_a_failure()
+    public void Archive_presenter_reports_a_missing_instance_as_no_target()
     {
         Mock<IInstanceService> service = new();
         service.Setup(s => s.GetAll()).Returns([]);
@@ -83,10 +83,8 @@ public class PresenterTests
 
         IWorkflowResult result = new ArchivePresenter(service.Object, view).Run(null);
 
-        result.Status.Should().Be(WorkflowStatus.Failed);
+        result.Status.Should().Be(WorkflowStatus.NoTarget);
         result.Message.Should().Contain("No instance is available.");
-        view.Errors.Should().ContainSingle(message =>
-            message.Contains("No instance is available.", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -531,13 +529,6 @@ public class PresenterTests
 
         public void Show(OpenResponseDto response) { }
 
-        public void ShowAlreadyRegistered(string name) { }
-
-        public void ShowNotRegistered(string name) { }
-
-        public void ShowSettingsUnreadable() { }
-
-        public void ShowNoCandidates() { }
 
         public void Show(RegisterDockerResponseDto response) { }
 
