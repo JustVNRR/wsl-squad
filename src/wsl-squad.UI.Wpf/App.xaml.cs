@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows;
 
 using wsl_squad.Core.Services;
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 using wsl_squad.UI.Wpf.Services;
 
 namespace wsl_squad.UI.Wpf;

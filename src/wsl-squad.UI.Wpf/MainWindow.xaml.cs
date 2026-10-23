@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 
 namespace wsl_squad.UI.Wpf;
 

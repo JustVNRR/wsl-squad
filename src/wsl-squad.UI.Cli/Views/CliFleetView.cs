@@ -1,6 +1,6 @@
 using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Presenters;
-using wsl_squad.Presentation.Presenters.Views;
+using wsl_squad.Presentation.Cli.Presenters;
+using wsl_squad.Presentation.Cli.Ports;
 using wsl_squad.UI.Cli.Interaction;
 
 namespace wsl_squad.UI.Cli.Views;

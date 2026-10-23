@@ -1,4 +1,4 @@
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 
 namespace wsl_squad.UI.Wpf.Views.Dialogs;
 

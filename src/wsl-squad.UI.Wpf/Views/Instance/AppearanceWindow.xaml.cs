@@ -9,7 +9,7 @@ using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 using wsl_squad.UI.Wpf.Services;
 
 namespace wsl_squad.UI.Wpf.Views.Instance;

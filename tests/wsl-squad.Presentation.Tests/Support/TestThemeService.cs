@@ -1,4 +1,4 @@
-using wsl_squad.Presentation.Abstractions;
+using wsl_squad.Presentation.Gui.Ports;
 
 namespace wsl_squad.Presentation.Tests.Support;
 

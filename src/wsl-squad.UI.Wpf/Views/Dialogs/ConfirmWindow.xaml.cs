@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 
 namespace wsl_squad.UI.Wpf.Views.Dialogs;
 

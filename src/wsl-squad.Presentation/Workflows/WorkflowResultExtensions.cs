@@ -1,4 +1,4 @@
-using wsl_squad.Presentation.Presenters;
+using wsl_squad.Presentation.Cli.Presenters;
 
 namespace wsl_squad.Presentation.Workflows;
 

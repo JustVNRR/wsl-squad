@@ -7,7 +7,7 @@ using System.Xml;
 
 using Microsoft.Win32;
 
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 using wsl_squad.UI.Wpf.Services;
 using wsl_squad.UI.Wpf.Views.Dialogs;
 

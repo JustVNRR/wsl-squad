@@ -1,8 +1,8 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Presenters;
-using wsl_squad.Presentation.Presenters.Fleet;
-using wsl_squad.Presentation.Presenters.Instance;
+using wsl_squad.Presentation.Cli.Presenters;
+using wsl_squad.Presentation.Cli.Presenters.Fleet;
+using wsl_squad.Presentation.Cli.Presenters.Instance;
 using wsl_squad.UI.Cli.Interaction;
 using wsl_squad.UI.Cli.Views;
 

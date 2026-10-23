@@ -1,7 +1,7 @@
 using FluentAssertions;
 
 using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 
 namespace wsl_squad.Presentation.Tests.ViewModels;
 

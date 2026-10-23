@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 using Microsoft.Win32;
 
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.ViewModels;
 
 namespace wsl_squad.UI.Wpf.Views.Instance;
 

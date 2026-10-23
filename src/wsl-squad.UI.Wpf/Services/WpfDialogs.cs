@@ -1,6 +1,6 @@
 using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Abstractions;
-using wsl_squad.Presentation.ViewModels;
+using wsl_squad.Presentation.Gui.Ports;
+using wsl_squad.Presentation.Gui.ViewModels;
 using wsl_squad.UI.Wpf.Views;
 using wsl_squad.UI.Wpf.Views.Dialogs;
 using wsl_squad.UI.Wpf.Views.Instance;

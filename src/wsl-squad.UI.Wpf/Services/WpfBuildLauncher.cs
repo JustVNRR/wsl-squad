@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.Json;
 
 using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Abstractions;
+using wsl_squad.Presentation.Gui.Ports;
 
 namespace wsl_squad.UI.Wpf.Services;
 
