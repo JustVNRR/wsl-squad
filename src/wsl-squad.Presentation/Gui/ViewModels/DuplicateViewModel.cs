@@ -42,17 +42,10 @@ public sealed partial class DuplicateViewModel : BaseViewModel
     private void ValidateName()
     {
         string trimmed = Name.Trim();
-        string problem = trimmed switch
-        {
-            { Length: 0 } => "Give a name.",
-            _ when !NameRules.IsValid(trimmed) => "Letters, digits, '.', '_' and '-' only.",
-            _ when _taken.Contains(trimmed, StringComparer.OrdinalIgnoreCase) =>
-                $"An instance named '{trimmed}' already exists.",
-            _ => string.Empty,
-        };
+        NameProblem problem = NameRules.ValidateInstanceName(trimmed, _taken);
 
-        NameError = problem;
-        _nameOk = problem.Length == 0;
+        NameError = problem.ToMessage(trimmed) ?? string.Empty;
+        _nameOk = problem == NameProblem.None;
         ConfirmCommand.NotifyCanExecuteChanged();
     }
 

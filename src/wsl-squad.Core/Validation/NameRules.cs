@@ -3,6 +3,14 @@ using System.Text;
 
 namespace wsl_squad.Core.Validation;
 
+public enum NameProblem
+{
+    None,
+    Empty,
+    InvalidFormat,
+    AlreadyTaken,
+}
+
 public static class NameRules
 {
     private const int _maxLinuxUserLength = 32;
@@ -23,6 +31,25 @@ public static class NameRules
         }
 
         return true;
+    }
+
+    public static NameProblem ValidateInstanceName(string? name, IEnumerable<string> takenNames)
+    {
+        ArgumentNullException.ThrowIfNull(takenNames);
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return NameProblem.Empty;
+        }
+
+        if (!IsValid(name))
+        {
+            return NameProblem.InvalidFormat;
+        }
+
+        return takenNames.Contains(name, StringComparer.OrdinalIgnoreCase)
+            ? NameProblem.AlreadyTaken
+            : NameProblem.None;
     }
 
     public static bool IsValidUser(string? value)

@@ -30,7 +30,7 @@ public interface IInstanceView : IPresenterViewBase
 
     void Show(CompactResponseDto response);
 
-    void ShowNameHint();
+    void ShowNameProblem(string message);
 
     string? AskCopyName();
 

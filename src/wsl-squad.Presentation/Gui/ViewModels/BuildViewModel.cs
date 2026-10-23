@@ -423,23 +423,11 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     private void ValidateName()
     {
-        string problem = string.Empty;
+        string name = Name.Trim();
+        NameProblem problem = NameRules.ValidateInstanceName(name, _takenNames);
 
-        if (Name.Length == 0)
-        {
-            problem = "Give a name.";
-        }
-        else if (!NameRules.IsValid(Name))
-        {
-            problem = "Letters, digits, '.', '_' and '-' only.";
-        }
-        else if (_takenNames.Contains(Name, StringComparer.OrdinalIgnoreCase))
-        {
-            problem = $"An instance named '{Name}' already exists.";
-        }
-
-        NameError = problem;
-        _nameOk = problem.Length == 0;
+        NameError = problem.ToMessage(name) ?? string.Empty;
+        _nameOk = problem == NameProblem.None;
         CreateCommand.NotifyCanExecuteChanged();
     }
 

@@ -127,9 +127,9 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         return answer?.Trim();
     }
 
-    public void ShowNameHint()
+    public void ShowNameProblem(string message)
     {
-        Write("  Letters, digits, '.', '_' and '-' only, starting with a letter or a digit.", ConsoleTone.Hint);
+        Write($"  {message}", ConsoleTone.Warning);
     }
 
     public void ShowDiskWarning(string source)

@@ -96,15 +96,19 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
                 return null;
             }
 
-            if (NameRules.IsValid(answer) &&
-                !takenNames.Contains(answer, StringComparer.OrdinalIgnoreCase))
-            {
-                copy = answer;
+            string trimmed = answer.Trim();
+            NameProblem problem = NameRules.ValidateInstanceName(trimmed, takenNames);
 
-                break;
+            if (problem != NameProblem.None)
+            {
+                _view.ShowNameProblem(problem.ToMessage(trimmed)!);
+
+                continue;
             }
 
-            _view.ShowNameHint();
+            copy = trimmed;
+
+            break;
         }
 
         _view.ShowDiskWarning(instanceName);
@@ -161,18 +165,21 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
         {
             string trimmed = name.Trim();
 
-            if (NameRules.IsValid(trimmed) &&
-                !takenNames.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
+            NameProblem problem = NameRules.ValidateInstanceName(trimmed, takenNames);
+
+            if (problem != NameProblem.None)
             {
-                return new RestoreDto
-                {
-                    ArchiveName = archiveName,
-                    InstanceName = trimmed,
-                };
+                _view.ShowNameProblem(problem.ToMessage(trimmed)!);
+                name = _view.AskNewName();
+
+                continue;
             }
 
-            _view.ShowNameHint();
-            name = _view.AskNewName();
+            return new RestoreDto
+            {
+                ArchiveName = archiveName,
+                InstanceName = trimmed,
+            };
         }
 
         return null;
@@ -180,7 +187,6 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
 
     public bool PromptDeleteArchive(string archiveName)
     {
-
         return _view.Confirm(
             $"Delete the archive '{archiveName}'? It cannot be restored.",
             defaultNo: true) == true;

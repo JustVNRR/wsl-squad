@@ -71,16 +71,19 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         answer = answer.Trim();
 
-                        if (NameRules.IsValid(answer) &&
-                            !takenNames.Contains(answer, StringComparer.OrdinalIgnoreCase))
-                        {
-                            name = answer;
-                            ok = true;
+                        NameProblem problem = NameRules.ValidateInstanceName(answer, takenNames);
 
-                            break;
+                        if (problem != NameProblem.None)
+                        {
+                            View.ShowNameProblem(problem.ToMessage(answer)!);
+
+                            continue;
                         }
 
-                        View.ShowNameHint();
+                        name = answer;
+                        ok = true;
+
+                        break;
                     }
 
                     if (ok)

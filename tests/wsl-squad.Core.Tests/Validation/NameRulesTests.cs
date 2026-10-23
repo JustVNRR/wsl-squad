@@ -19,6 +19,24 @@ public class NameRulesTests
     }
 
     [Theory]
+    [InlineData(null, NameProblem.Empty)]
+    [InlineData("", NameProblem.Empty)]
+    [InlineData("   ", NameProblem.Empty)]
+    [InlineData(".alpha", NameProblem.InvalidFormat)]
+    [InlineData("alpha space", NameProblem.InvalidFormat)]
+    [InlineData("alpha", NameProblem.None)]
+    public void Instance_name_validation_reports_the_reason(string? name, NameProblem expected)
+    {
+        NameRules.ValidateInstanceName(name, []).Should().Be(expected);
+    }
+
+    [Fact]
+    public void A_taken_instance_name_is_reported_case_insensitively()
+    {
+        NameRules.ValidateInstanceName("Alpha", ["alpha"]).Should().Be(NameProblem.AlreadyTaken);
+    }
+
+    [Theory]
     [InlineData("alpha", true)]
     [InlineData("a_b-c1", true)]
     [InlineData("1alpha", false)]

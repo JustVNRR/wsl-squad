@@ -6,9 +6,9 @@ namespace wsl_squad.UI.Cli.Views;
 
 public sealed class CliBuildView : CliViewBase, IBuildView
 {
-    public void ShowNameHint()
+    public void ShowNameProblem(string message)
     {
-        Write("  Letters, digits, '.', '_' and '-' only.", ConsoleTone.Hint);
+        Write($"  {message}", ConsoleTone.Warning);
     }
 
     public string? AskInstanceName(string prompt)

@@ -515,7 +515,7 @@ public class PresenterTests
 
         public void Show(DeleteArchiveResponseDto response) { }
 
-        public void ShowNameHint() { }
+        public void ShowNameProblem(string message) { }
 
         public void ShowDiskWarning(string source) { }
 
@@ -621,7 +621,7 @@ public class PresenterTests
 
         public bool? AskRegisterDocker(string name) => false;
 
-        public void ShowNameHint() { }
+        public void ShowNameProblem(string message) { }
 
         public void ShowAbort(IReadOnlyList<string> lines) { }
 

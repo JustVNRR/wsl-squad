@@ -10,7 +10,7 @@ public interface IBuildView : IPresenterViewBase
 {
     string? AskInstanceName(string prompt);
 
-    void ShowNameHint();
+    void ShowNameProblem(string message);
 
     BuildRoad? AskRoad();
 
