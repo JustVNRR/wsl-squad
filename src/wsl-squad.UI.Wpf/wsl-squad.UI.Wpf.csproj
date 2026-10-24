@@ -29,7 +29,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <CliOutputDir>$(RepositoryRoot)artifacts\bin\wsl-squad.UI.Cli\$(Configuration)\net10.0\</CliOutputDir>
-    <RootNamespace>wsl_squad.UI.Wpf</RootNamespace>
+    <RootNamespace>WslSquad.UI.Wpf</RootNamespace>
     <AssemblyName>wsl-squad.gui</AssemblyName>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Nullable>enable</Nullable>

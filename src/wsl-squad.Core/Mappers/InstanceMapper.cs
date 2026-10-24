@@ -1,7 +1,7 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Mappers;
+namespace WslSquad.Core.Mappers;
 
 public sealed class InstanceMapper : IInstanceMapper
 {

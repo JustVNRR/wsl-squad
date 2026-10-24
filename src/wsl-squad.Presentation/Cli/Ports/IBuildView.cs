@@ -1,6 +1,6 @@
-using wsl_squad.Core.Dtos;
+using WslSquad.Core.Dtos;
 
-namespace wsl_squad.Presentation.Cli.Ports;
+namespace WslSquad.Presentation.Cli.Ports;
 
 public sealed record BuildSourceChoice(string Name, string Path);
 

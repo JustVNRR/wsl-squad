@@ -1,5 +1,5 @@
 
-namespace wsl_squad.Presentation.Gui.Ports;
+namespace WslSquad.Presentation.Gui.Ports;
 
 public interface IUiThemeService
 {

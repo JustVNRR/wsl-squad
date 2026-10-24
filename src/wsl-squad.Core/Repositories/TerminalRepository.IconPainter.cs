@@ -1,13 +1,13 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Runtime.Versioning;
 
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 public sealed partial class TerminalRepository
 {

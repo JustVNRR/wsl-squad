@@ -1,8 +1,8 @@
-using wsl_squad.Core.Exceptions;
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Repositories;
+using WslSquad.Core.Exceptions;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Repositories;
 
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public sealed class FleetService : IFleetService
 {

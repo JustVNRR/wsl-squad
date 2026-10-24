@@ -1,4 +1,4 @@
-namespace wsl_squad.Core.Dtos;
+namespace WslSquad.Core.Dtos;
 
 public enum WslCommandKind
 {

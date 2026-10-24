@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public enum FleetTargetProblem
 {

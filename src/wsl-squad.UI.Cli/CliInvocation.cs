@@ -1,4 +1,4 @@
-namespace wsl_squad.UI.Cli;
+namespace WslSquad.UI.Cli;
 
 public sealed record CliInvocation(string? Command, string? Name, string? BuildRequest)
 {

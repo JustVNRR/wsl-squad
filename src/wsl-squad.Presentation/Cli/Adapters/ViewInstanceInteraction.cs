@@ -1,10 +1,10 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Validation;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.Presentation.Workflows;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Validation;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Workflows;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Cli.Adapters;
+namespace WslSquad.Presentation.Cli.Adapters;
 
 public sealed class ViewInstanceInteraction : IInstanceInteraction
 {

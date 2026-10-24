@@ -2,9 +2,9 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-using wsl_squad.Presentation.Gui.ViewModels;
+using WslSquad.Presentation.Gui.ViewModels;
 
-namespace wsl_squad.UI.Wpf.Views.Dialogs;
+namespace WslSquad.UI.Wpf.Views.Dialogs;
 
 public partial class ConfirmWindow : ChromeWindow
 {

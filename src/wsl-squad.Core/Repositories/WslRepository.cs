@@ -1,11 +1,11 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Win32;
 
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 public sealed class WslRepository : IWslRepository
 {
@@ -213,12 +213,12 @@ public sealed class WslRepository : IWslRepository
         string bootstrap = NormalizeShell(bootstrapScript);
         string catalog = Quote(ToWslPath(catalogPath));
         string setup =
-            "cat > /root/manage-packs.sh <<'WSL_SQUAD_PACK_EOF'\n" +
-            normalized + "\nWSL_SQUAD_PACK_EOF\n" +
-            "cat > /root/manage-packs-cleanup.sh <<'WSL_SQUAD_CLEANUP_EOF'\n" +
-            cleanup + "\nWSL_SQUAD_CLEANUP_EOF\n" +
-            "cat > /root/manage-packs-bootstrap.sh <<'WSL_SQUAD_BOOTSTRAP_EOF'\n" +
-            bootstrap + "\nWSL_SQUAD_BOOTSTRAP_EOF\n" +
+            "cat > /root/manage-packs.sh <<'WslSquad_PACK_EOF'\n" +
+            normalized + "\nWslSquad_PACK_EOF\n" +
+            "cat > /root/manage-packs-cleanup.sh <<'WslSquad_CLEANUP_EOF'\n" +
+            cleanup + "\nWslSquad_CLEANUP_EOF\n" +
+            "cat > /root/manage-packs-bootstrap.sh <<'WslSquad_BOOTSTRAP_EOF'\n" +
+            bootstrap + "\nWslSquad_BOOTSTRAP_EOF\n" +
             "chmod 755 /root/manage-packs.sh /root/manage-packs-cleanup.sh /root/manage-packs-bootstrap.sh || exit 1\n" +
             "printf '%s' " + catalog + " > /root/manage-packs.catalog\n";
 

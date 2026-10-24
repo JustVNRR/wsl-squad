@@ -1,10 +1,10 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Cli.Adapters;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.Presentation.Workflows;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Cli.Adapters;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Workflows;
 
-namespace wsl_squad.Presentation.Cli.Presenters.Instance;
+namespace WslSquad.Presentation.Cli.Presenters.Instance;
 
 public sealed class RegisterDockerPresenter : BasePresenter<IInstanceView>
 {

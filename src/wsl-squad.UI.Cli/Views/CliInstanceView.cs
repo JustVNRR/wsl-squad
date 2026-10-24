@@ -1,11 +1,11 @@
 using System.Diagnostics;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.UI.Cli.Interaction;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.UI.Cli.Interaction;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.UI.Cli.Views;
+namespace WslSquad.UI.Cli.Views;
 
 public sealed class CliInstanceView : CliViewBase, IInstanceView
 {

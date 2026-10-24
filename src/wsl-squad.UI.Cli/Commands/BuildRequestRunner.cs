@@ -1,11 +1,11 @@
 using System.Text.Json;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.UI.Cli.Composition;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.UI.Cli.Composition;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.UI.Cli.Commands;
+namespace WslSquad.UI.Cli.Commands;
 
 public static class BuildRequestRunner
 {

@@ -7,11 +7,11 @@ using System.Xml;
 
 using Microsoft.Win32;
 
-using wsl_squad.Presentation.Gui.ViewModels;
-using wsl_squad.UI.Wpf.Services;
-using wsl_squad.UI.Wpf.Views.Dialogs;
+using WslSquad.Presentation.Gui.ViewModels;
+using WslSquad.UI.Wpf.Services;
+using WslSquad.UI.Wpf.Views.Dialogs;
 
-namespace wsl_squad.UI.Wpf.Views;
+namespace WslSquad.UI.Wpf.Views;
 
 public partial class SettingsWindow : ChromeWindow
 {

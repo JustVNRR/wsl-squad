@@ -1,4 +1,4 @@
-namespace wsl_squad.Presentation.Workflows;
+namespace WslSquad.Presentation.Workflows;
 
 public enum WorkflowStatus
 {
@@ -35,9 +35,19 @@ public static class WorkflowResults
         return new WorkflowResult<T>(WorkflowStatus.Success, subject, string.Empty, response);
     }
 
+    public static WorkflowOutcome Success(string subject)
+    {
+        return new WorkflowOutcome(WorkflowStatus.Success, subject, string.Empty);
+    }
+
     public static WorkflowResult<T> Cancelled<T>(string subject)
     {
         return new WorkflowResult<T>(WorkflowStatus.Cancelled, subject, string.Empty, default);
+    }
+
+    public static WorkflowOutcome Cancelled(string subject)
+    {
+        return new WorkflowOutcome(WorkflowStatus.Cancelled, subject, string.Empty);
     }
 
     public static WorkflowResult<T> NoTarget<T>(string message)
@@ -48,16 +58,6 @@ public static class WorkflowResults
     public static WorkflowResult<T> Failed<T>(string subject, string message)
     {
         return new WorkflowResult<T>(WorkflowStatus.Failed, subject, message, default);
-    }
-
-    public static WorkflowOutcome Success(string subject)
-    {
-        return new WorkflowOutcome(WorkflowStatus.Success, subject, string.Empty);
-    }
-
-    public static WorkflowOutcome Cancelled(string subject)
-    {
-        return new WorkflowOutcome(WorkflowStatus.Cancelled, subject, string.Empty);
     }
 
     public static WorkflowOutcome Failed(string subject, string message)

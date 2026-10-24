@@ -1,9 +1,9 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Validation;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Validation;
 
-namespace wsl_squad.Core.Tests.Validation;
+namespace WslSquad.Core.Tests.Validation;
 
 public class DockerRulesTests
 {

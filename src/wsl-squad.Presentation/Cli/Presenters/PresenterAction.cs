@@ -1,6 +1,6 @@
-using wsl_squad.Presentation.Workflows;
+using WslSquad.Presentation.Workflows;
 
-namespace wsl_squad.Presentation.Cli.Presenters;
+namespace WslSquad.Presentation.Cli.Presenters;
 
 public sealed record PresenterAction(
     string Key,

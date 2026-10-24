@@ -1,9 +1,9 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Repositories;
-using wsl_squad.Core.Tests.Support;
+using WslSquad.Core.Repositories;
+using WslSquad.Core.Tests.Support;
 
-namespace wsl_squad.Core.Tests.Repositories;
+namespace WslSquad.Core.Tests.Repositories;
 
 public class ConfigRepositoryTests
 {

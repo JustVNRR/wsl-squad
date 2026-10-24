@@ -1,6 +1,6 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 
-namespace wsl_squad.Presentation.Localization;
+namespace WslSquad.Presentation.Localization;
 
 public static class ErrorMessages
 {

@@ -1,7 +1,7 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Gui.ViewModels;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.ViewModels;
 
-namespace wsl_squad.Presentation.Gui.Ports;
+namespace WslSquad.Presentation.Gui.Ports;
 
 public interface IDialogService
 {

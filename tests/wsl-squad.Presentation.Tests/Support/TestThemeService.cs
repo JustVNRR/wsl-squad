@@ -1,6 +1,6 @@
-using wsl_squad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Gui.Ports;
 
-namespace wsl_squad.Presentation.Tests.Support;
+namespace WslSquad.Presentation.Tests.Support;
 
 public sealed class TestThemeService : IUiThemeService
 {

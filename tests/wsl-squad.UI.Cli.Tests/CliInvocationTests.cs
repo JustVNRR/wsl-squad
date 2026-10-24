@@ -1,6 +1,6 @@
 using FluentAssertions;
 
-namespace wsl_squad.UI.Cli.Tests;
+namespace WslSquad.UI.Cli.Tests;
 
 public class CliInvocationTests
 {

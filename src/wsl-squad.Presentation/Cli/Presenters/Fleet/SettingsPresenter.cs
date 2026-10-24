@@ -1,10 +1,10 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.Presentation.Workflows;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Workflows;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Cli.Presenters.Fleet;
+namespace WslSquad.Presentation.Cli.Presenters.Fleet;
 
 public sealed class SettingsPresenter : BasePresenter<IFleetView>
 {

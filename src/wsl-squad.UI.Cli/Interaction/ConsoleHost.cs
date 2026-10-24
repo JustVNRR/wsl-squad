@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace wsl_squad.UI.Cli.Interaction;
+namespace WslSquad.UI.Cli.Interaction;
 
 [SuppressMessage(
     "Performance",

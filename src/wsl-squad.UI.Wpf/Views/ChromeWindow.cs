@@ -9,7 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 
-namespace wsl_squad.UI.Wpf.Views;
+namespace WslSquad.UI.Wpf.Views;
 
 public partial class ChromeWindow : Window
 {

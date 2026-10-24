@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.Input;
 
-using wsl_squad.Core.Dtos;
+using WslSquad.Core.Dtos;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed class ArchiveViewModel : BaseViewModel
 {

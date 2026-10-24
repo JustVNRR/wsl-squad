@@ -1,8 +1,8 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Workflows;
+namespace WslSquad.Presentation.Workflows;
 
 public sealed class InstanceStorageWorkflow : WorkflowBase
 {

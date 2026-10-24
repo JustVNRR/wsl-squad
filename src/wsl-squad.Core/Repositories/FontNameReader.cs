@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 internal static class FontNameReader
 {

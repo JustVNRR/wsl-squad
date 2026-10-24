@@ -1,8 +1,8 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Dtos;
+using WslSquad.Core.Dtos;
 
-namespace wsl_squad.Core.Tests.Dtos;
+namespace WslSquad.Core.Tests.Dtos;
 
 public class BuildDtoTests
 {

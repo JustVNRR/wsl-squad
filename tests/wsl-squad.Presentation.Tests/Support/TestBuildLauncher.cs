@@ -1,7 +1,7 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Gui.Ports;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.Ports;
 
-namespace wsl_squad.Presentation.Tests.Support;
+namespace WslSquad.Presentation.Tests.Support;
 
 public sealed class TestBuildLauncher : IBuildLauncher
 {

@@ -10,10 +10,9 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>wsl_squad.Presentation</RootNamespace>
+    <RootNamespace>WslSquad.Presentation</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);MVVMTK0042;CA1822;S2325;IDE0055;IDE0072;S4136</NoWarn>
   </PropertyGroup>
 
 </Project>

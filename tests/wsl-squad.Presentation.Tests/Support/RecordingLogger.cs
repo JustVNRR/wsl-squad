@@ -1,7 +1,7 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
 
-namespace wsl_squad.Presentation.Tests.Support;
+namespace WslSquad.Presentation.Tests.Support;
 
 public sealed class RecordingLogger : ILoggerService
 {

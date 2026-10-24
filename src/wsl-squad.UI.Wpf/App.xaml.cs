@@ -1,11 +1,11 @@
 using System.IO;
 using System.Windows;
 
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Gui.ViewModels;
-using wsl_squad.UI.Wpf.Services;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Gui.ViewModels;
+using WslSquad.UI.Wpf.Services;
 
-namespace wsl_squad.UI.Wpf;
+namespace WslSquad.UI.Wpf;
 
 public partial class App : Application
 {

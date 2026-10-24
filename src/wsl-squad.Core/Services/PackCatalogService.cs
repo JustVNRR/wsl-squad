@@ -1,10 +1,10 @@
-using wsl_squad.Core.Exceptions;
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Entities;
-using wsl_squad.Core.Mappers;
-using wsl_squad.Core.Repositories;
+using WslSquad.Core.Exceptions;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Entities;
+using WslSquad.Core.Mappers;
+using WslSquad.Core.Repositories;
 
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public sealed class PackCatalogService : IPackCatalogService
 {

@@ -1,8 +1,8 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 public sealed record SourceRow(string Name, string Path, DateTime Modified);
 

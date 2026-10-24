@@ -1,6 +1,6 @@
-using wsl_squad.Presentation.Gui.ViewModels;
+using WslSquad.Presentation.Gui.ViewModels;
 
-namespace wsl_squad.UI.Wpf.Views.Dialogs;
+namespace WslSquad.UI.Wpf.Views.Dialogs;
 
 public partial class RootMoveWindow : ChromeWindow
 {

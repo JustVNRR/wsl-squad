@@ -1,8 +1,8 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Services;
+using WslSquad.Core.Services;
 
-namespace wsl_squad.Core.Tests.Architecture;
+namespace WslSquad.Core.Tests.Architecture;
 
 public class EmbeddedResourcesTests
 {

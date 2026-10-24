@@ -1,6 +1,6 @@
 using System.Buffers.Binary;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 internal static class FontGlyphReader
 {

@@ -1,8 +1,8 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Validation;
+using WslSquad.Core.Validation;
 
-namespace wsl_squad.Core.Tests.Validation;
+namespace WslSquad.Core.Tests.Validation;
 
 public class NameRulesTests
 {

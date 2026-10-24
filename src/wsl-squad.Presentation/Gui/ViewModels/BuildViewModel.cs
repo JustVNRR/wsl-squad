@@ -1,16 +1,17 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Core.Validation;
-using wsl_squad.Presentation.Gui.Ports;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Core.Validation;
+using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class BuildViewModel : BaseViewModel
 {
@@ -146,6 +147,8 @@ public sealed partial class BuildViewModel : BaseViewModel
         SyncLists();
     }
 
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound as an instance property by WPF.")]
+    [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
     public string Lead => "NEW WSL DISTRIBUTION";
 
     public ObservableCollection<string> DockerfileNames { get; } = [];

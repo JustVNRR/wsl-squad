@@ -1,10 +1,10 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Entities;
-using wsl_squad.Core.Mappers;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Entities;
+using WslSquad.Core.Mappers;
 
-namespace wsl_squad.Core.Tests.Mappers;
+namespace WslSquad.Core.Tests.Mappers;
 
 public class InstanceMapperTests
 {

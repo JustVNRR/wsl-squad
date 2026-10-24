@@ -1,9 +1,9 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 using System.Globalization;
 
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 public sealed class ArchiveRepository : IArchiveRepository
 {

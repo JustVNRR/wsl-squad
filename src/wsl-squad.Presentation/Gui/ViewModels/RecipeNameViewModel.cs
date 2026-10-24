@@ -1,9 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using wsl_squad.Core.Validation;
+using WslSquad.Core.Validation;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class RecipeNameViewModel : BaseViewModel
 {
@@ -18,6 +19,8 @@ public sealed partial class RecipeNameViewModel : BaseViewModel
         ConfirmCommand = new RelayCommand(Confirm);
     }
 
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound as an instance property by WPF.")]
+    [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
     public string Lead => "Create a recipe";
 
     public string? Result { get; private set; }

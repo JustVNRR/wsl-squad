@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>wsl_squad.Core.Tests</RootNamespace>
+    <RootNamespace>WslSquad.Core.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 

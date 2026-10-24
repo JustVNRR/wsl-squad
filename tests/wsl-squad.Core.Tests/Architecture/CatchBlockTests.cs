@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 using FluentAssertions;
 
-namespace wsl_squad.Core.Tests.Architecture;
+namespace WslSquad.Core.Tests.Architecture;
 
 public partial class CatchBlockTests
 {

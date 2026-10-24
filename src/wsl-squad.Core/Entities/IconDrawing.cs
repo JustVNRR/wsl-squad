@@ -1,4 +1,4 @@
-namespace wsl_squad.Core.Entities;
+namespace WslSquad.Core.Entities;
 
 public sealed record IconDrawing(
     string? Text,

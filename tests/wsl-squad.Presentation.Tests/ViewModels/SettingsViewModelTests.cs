@@ -2,13 +2,13 @@ using FluentAssertions;
 
 using Moq;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Gui.Ports;
-using wsl_squad.Presentation.Tests.Support;
-using wsl_squad.Presentation.Gui.ViewModels;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Tests.Support;
+using WslSquad.Presentation.Gui.ViewModels;
 
-namespace wsl_squad.Presentation.Tests.ViewModels;
+namespace WslSquad.Presentation.Tests.ViewModels;
 
 public class SettingsViewModelTests
 {

@@ -1,8 +1,8 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Tests.Entities;
+namespace WslSquad.Core.Tests.Entities;
 
 public class WslInstanceTests
 {

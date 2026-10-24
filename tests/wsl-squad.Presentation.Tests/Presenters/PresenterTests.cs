@@ -2,15 +2,15 @@ using FluentAssertions;
 
 using Moq;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Cli.Presenters;
-using wsl_squad.Presentation.Cli.Presenters.Fleet;
-using wsl_squad.Presentation.Cli.Presenters.Instance;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.Presentation.Workflows;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Cli.Presenters;
+using WslSquad.Presentation.Cli.Presenters.Fleet;
+using WslSquad.Presentation.Cli.Presenters.Instance;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Workflows;
 
-namespace wsl_squad.Presentation.Tests.Presenters;
+namespace WslSquad.Presentation.Tests.Presenters;
 
 public class PresenterTests
 {

@@ -1,7 +1,7 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Cli.Presenters;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Cli.Presenters;
 
-namespace wsl_squad.Presentation.Cli.Ports;
+namespace WslSquad.Presentation.Cli.Ports;
 
 public interface IFleetView : IPresenterViewBase
 {

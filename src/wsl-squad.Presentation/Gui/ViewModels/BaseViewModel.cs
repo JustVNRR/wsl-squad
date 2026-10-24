@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public abstract class BaseViewModel : ObservableObject
 {

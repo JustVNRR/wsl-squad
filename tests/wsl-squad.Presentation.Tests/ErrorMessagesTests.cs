@@ -1,9 +1,9 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Exceptions;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Exceptions;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Tests;
+namespace WslSquad.Presentation.Tests;
 
 public class ErrorMessagesTests
 {

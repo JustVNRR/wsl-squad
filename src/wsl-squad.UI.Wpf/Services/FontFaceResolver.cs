@@ -3,7 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 
-namespace wsl_squad.UI.Wpf.Services;
+namespace WslSquad.UI.Wpf.Services;
 
 public static class FontFaceResolver
 {

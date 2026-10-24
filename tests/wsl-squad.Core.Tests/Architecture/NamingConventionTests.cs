@@ -5,9 +5,9 @@ using FluentAssertions;
 
 using NetArchTest.Rules;
 
-using wsl_squad.Core.Repositories;
+using WslSquad.Core.Repositories;
 
-namespace wsl_squad.Core.Tests.Architecture;
+namespace WslSquad.Core.Tests.Architecture;
 
 public class NamingConventionTests
 {

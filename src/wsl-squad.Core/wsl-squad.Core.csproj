@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <RootNamespace>wsl_squad.Core</RootNamespace>
+        <RootNamespace>WslSquad.Core</RootNamespace>
         <NoWarn>$(NoWarn);CA1822;S2325;IDE0032;S2292;S4144;IDE0019;IDE0017;IDE0047;S3267;S1075;S2589;IDE0045;CA1859;SYSLIB1054</NoWarn>
     </PropertyGroup>
 

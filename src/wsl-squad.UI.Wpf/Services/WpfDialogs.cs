@@ -1,11 +1,11 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Gui.Ports;
-using wsl_squad.Presentation.Gui.ViewModels;
-using wsl_squad.UI.Wpf.Views;
-using wsl_squad.UI.Wpf.Views.Dialogs;
-using wsl_squad.UI.Wpf.Views.Instance;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Gui.ViewModels;
+using WslSquad.UI.Wpf.Views;
+using WslSquad.UI.Wpf.Views.Dialogs;
+using WslSquad.UI.Wpf.Views.Instance;
 
-namespace wsl_squad.UI.Wpf.Services;
+namespace WslSquad.UI.Wpf.Services;
 
 public sealed class WpfDialogs : IDialogService
 {

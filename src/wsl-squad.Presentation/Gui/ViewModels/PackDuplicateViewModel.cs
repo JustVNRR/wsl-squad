@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using wsl_squad.Core.Validation;
+using WslSquad.Core.Validation;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class PackDuplicateViewModel : BaseViewModel
 {

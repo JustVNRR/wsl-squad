@@ -1,4 +1,4 @@
-namespace wsl_squad.Presentation.Cli.Ports;
+namespace WslSquad.Presentation.Cli.Ports;
 
 public interface IPresenterViewBase
 {

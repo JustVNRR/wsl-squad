@@ -1,4 +1,4 @@
-namespace wsl_squad.UI.Cli.Interaction;
+namespace WslSquad.UI.Cli.Interaction;
 
 public sealed class ConsoleMenu
 {

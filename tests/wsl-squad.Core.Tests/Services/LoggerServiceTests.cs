@@ -1,10 +1,10 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Core.Tests.Support;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Core.Tests.Support;
 
-namespace wsl_squad.Core.Tests.Services;
+namespace WslSquad.Core.Tests.Services;
 
 public class LoggerServiceTests
 {

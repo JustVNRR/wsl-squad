@@ -1,8 +1,8 @@
 using System.Diagnostics;
 
-using wsl_squad.Core.Dtos;
+using WslSquad.Core.Dtos;
 
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public sealed class LoggerService : ILoggerService
 {

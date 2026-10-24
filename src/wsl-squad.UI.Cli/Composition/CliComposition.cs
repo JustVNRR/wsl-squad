@@ -1,13 +1,13 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Cli.Presenters;
-using wsl_squad.Presentation.Cli.Presenters.Fleet;
-using wsl_squad.Presentation.Cli.Presenters.Instance;
-using wsl_squad.Presentation.Workflows;
-using wsl_squad.UI.Cli.Interaction;
-using wsl_squad.UI.Cli.Views;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Cli.Presenters;
+using WslSquad.Presentation.Cli.Presenters.Fleet;
+using WslSquad.Presentation.Cli.Presenters.Instance;
+using WslSquad.Presentation.Workflows;
+using WslSquad.UI.Cli.Interaction;
+using WslSquad.UI.Cli.Views;
 
-namespace wsl_squad.UI.Cli.Composition;
+namespace WslSquad.UI.Cli.Composition;
 
 public sealed class CliComposition
 {

@@ -1,7 +1,7 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 using System.Reflection;
 
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public static class CatalogBootstrap
 {

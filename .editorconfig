@@ -13,7 +13,7 @@ indent_size = 2
 
 [*.cs]
 dotnet_analyzer_diagnostic.severity = warning
-# The product name contains an underscore (wsl_squad): accepted convention.
+# The product name contains an underscore (WslSquad): accepted convention.
 dotnet_diagnostic.CA1707.severity = none
 # Explicit constructors are preferred over dependency injection.
 dotnet_diagnostic.IDE0290.severity = none
@@ -52,3 +52,8 @@ dotnet_diagnostic.IDE0058.severity = none
 [src/wsl-squad.UI.Cli/**/*.cs]
 # Spectre.Console builders return chainable objects whose value is ignored.
 dotnet_diagnostic.IDE0058.severity = none
+
+
+[src/wsl-squad.Presentation/**/*.cs]
+# Field-based [ObservableProperty] is intentional; partial properties are a separate migration.
+dotnet_diagnostic.MVVMTK0042.severity = suggestion

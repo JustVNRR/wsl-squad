@@ -1,5 +1,5 @@
 using System.Diagnostics;
-namespace wsl_squad.Core.Tests.Support;
+namespace WslSquad.Core.Tests.Support;
 
 public sealed class TemporaryDirectory : IDisposable
 {

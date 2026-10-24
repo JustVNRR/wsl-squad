@@ -1,8 +1,8 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.UI.Cli.Interaction;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.UI.Cli.Interaction;
 
-namespace wsl_squad.UI.Cli.Views;
+namespace WslSquad.UI.Cli.Views;
 
 public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 {

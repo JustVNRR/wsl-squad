@@ -1,6 +1,6 @@
-using wsl_squad.Core.Dtos;
+using WslSquad.Core.Dtos;
 
-namespace wsl_squad.Presentation.Cli.Ports;
+namespace WslSquad.Presentation.Cli.Ports;
 
 public interface IInstanceView : IPresenterViewBase
 {
@@ -18,8 +18,6 @@ public interface IInstanceView : IPresenterViewBase
 
     void ShowBackingUp(string name);
 
-    void Show(ArchiveResponseDto response);
-
     void ShowBeforeQuestions();
 
     void ShowNoArchive();
@@ -27,8 +25,6 @@ public interface IInstanceView : IPresenterViewBase
     void ShowReplacingArchive(string name);
 
     void ShowCompacting(string name, bool archiveFirst);
-
-    void Show(CompactResponseDto response);
 
     void ShowNameProblem(string message);
 
@@ -38,11 +34,7 @@ public interface IInstanceView : IPresenterViewBase
 
     void ShowDuplicating(string source, string copy);
 
-    void Show(DuplicateResponseDto response);
-
     void ShowOpening(string name);
-
-    void Show(OpenResponseDto response);
 
     void ShowStoppingWarning(string name);
 
@@ -50,29 +42,37 @@ public interface IInstanceView : IPresenterViewBase
 
     void ShowRestarting(string name);
 
-    void Show(RestartResponseDto response);
-
     void ShowManagingPacks(string name);
 
     bool ConfirmDestruction(string instanceName);
 
     void ShowRemovingSteps();
 
-    void Show();
-
     bool? AskDockerAction(string name, bool shouldRegister);
-
-    void Show(RegisterDockerResponseDto response);
-
-    void Show(UnregisterDockerResponseDto response);
 
     void ShowRestoring(string archiveName);
 
     string? AskNewName();
 
-    void Show(RestoreResponseDto response);
-
     void ShowDeleting(string target);
 
+    void Show(ArchiveResponseDto response);
+
+    void Show(CompactResponseDto response);
+
+    void Show(DuplicateResponseDto response);
+
+    void Show(OpenResponseDto response);
+
+    void Show(RestartResponseDto response);
+
+    void Show(RegisterDockerResponseDto response);
+
+    void Show(UnregisterDockerResponseDto response);
+
+    void Show(RestoreResponseDto response);
+
     void Show(DeleteArchiveResponseDto response);
+
+    void Show();
 }

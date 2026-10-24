@@ -2,14 +2,14 @@ using FluentAssertions;
 
 using Moq;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Entities;
-using wsl_squad.Core.Mappers;
-using wsl_squad.Core.Repositories;
-using wsl_squad.Core.Services;
-using wsl_squad.Core.Tests.Support;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Entities;
+using WslSquad.Core.Mappers;
+using WslSquad.Core.Repositories;
+using WslSquad.Core.Services;
+using WslSquad.Core.Tests.Support;
 
-namespace wsl_squad.Core.Tests.Services;
+namespace WslSquad.Core.Tests.Services;
 
 public class FleetServiceTests
 {

@@ -1,8 +1,8 @@
-using wsl_squad.Core.Entities;
-using wsl_squad.Core.Mappers;
-using wsl_squad.Core.Repositories;
+using WslSquad.Core.Entities;
+using WslSquad.Core.Mappers;
+using WslSquad.Core.Repositories;
 
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public sealed class ServiceFactory : IServiceFactory
 {

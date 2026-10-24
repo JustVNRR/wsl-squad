@@ -1,6 +1,6 @@
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 public interface IWslRepository
 {

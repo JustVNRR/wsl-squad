@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace wsl_squad.UI.Cli.Interaction;
+namespace WslSquad.UI.Cli.Interaction;
 
 internal static class ConsoleMode
 {

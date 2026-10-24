@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace wsl_squad.UI.Wpf.Services;
+namespace WslSquad.UI.Wpf.Services;
 
 public static class DialogHost
 {

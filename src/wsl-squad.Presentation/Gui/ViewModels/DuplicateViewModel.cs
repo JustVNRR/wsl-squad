@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Validation;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Validation;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class DuplicateViewModel : BaseViewModel
 {

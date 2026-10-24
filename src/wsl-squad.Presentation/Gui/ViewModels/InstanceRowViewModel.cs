@@ -1,9 +1,9 @@
 using System.Windows.Input;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed record InstanceRowViewModel(
     string Name,

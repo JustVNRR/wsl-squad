@@ -1,7 +1,7 @@
-using wsl_squad.Core.Services;
-using wsl_squad.UI.Cli;
-using wsl_squad.UI.Cli.Commands;
-using wsl_squad.UI.Cli.Composition;
+using WslSquad.Core.Services;
+using WslSquad.UI.Cli;
+using WslSquad.UI.Cli.Commands;
+using WslSquad.UI.Cli.Composition;
 
 try
 {

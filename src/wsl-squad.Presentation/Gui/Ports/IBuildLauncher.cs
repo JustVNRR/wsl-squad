@@ -1,6 +1,6 @@
-using wsl_squad.Core.Dtos;
+using WslSquad.Core.Dtos;
 
-namespace wsl_squad.Presentation.Gui.Ports;
+namespace WslSquad.Presentation.Gui.Ports;
 
 public interface IBuildLauncher
 {

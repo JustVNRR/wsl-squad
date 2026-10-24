@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Windows;
 
-using wsl_squad.Presentation.Gui.ViewModels;
+using WslSquad.Presentation.Gui.ViewModels;
 
-namespace wsl_squad.UI.Wpf.Views.Instance;
+namespace WslSquad.UI.Wpf.Views.Instance;
 
 public partial class RestoreWindow : ChromeWindow
 {

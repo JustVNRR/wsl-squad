@@ -1,8 +1,8 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.Presentation.Workflows;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Workflows;
 
-namespace wsl_squad.Presentation.Cli.Adapters;
+namespace WslSquad.Presentation.Cli.Adapters;
 
 public sealed class ViewAppearanceInteraction : IAppearanceInteraction
 {

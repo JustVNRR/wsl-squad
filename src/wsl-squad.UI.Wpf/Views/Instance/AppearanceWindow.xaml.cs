@@ -8,11 +8,11 @@ using System.Windows.Media.Imaging;
 
 using Microsoft.Win32;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Gui.ViewModels;
-using wsl_squad.UI.Wpf.Services;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.ViewModels;
+using WslSquad.UI.Wpf.Services;
 
-namespace wsl_squad.UI.Wpf.Views.Instance;
+namespace WslSquad.UI.Wpf.Views.Instance;
 
 public partial class AppearanceWindow : ChromeWindow
 {

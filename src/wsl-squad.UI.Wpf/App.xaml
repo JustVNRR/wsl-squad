@@ -1,4 +1,4 @@
-<Application x:Class="wsl_squad.UI.Wpf.App"
+<Application x:Class="WslSquad.UI.Wpf.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>

@@ -1,4 +1,4 @@
-namespace wsl_squad.Presentation.Gui.Ports;
+namespace WslSquad.Presentation.Gui.Ports;
 
 public sealed class UiThemeSettings
 {

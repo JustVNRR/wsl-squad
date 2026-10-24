@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed class ConfirmViewModel : BaseViewModel
 {

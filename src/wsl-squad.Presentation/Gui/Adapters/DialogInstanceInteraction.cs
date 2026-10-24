@@ -1,9 +1,9 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Gui.Ports;
-using wsl_squad.Presentation.Gui.ViewModels;
-using wsl_squad.Presentation.Workflows;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Gui.ViewModels;
+using WslSquad.Presentation.Workflows;
 
-namespace wsl_squad.Presentation.Gui.Adapters;
+namespace WslSquad.Presentation.Gui.Adapters;
 
 public sealed class DialogInstanceInteraction : IInstanceInteraction, IAppearanceInteraction
 {

@@ -4,9 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-using wsl_squad.Presentation.Gui.ViewModels;
+using WslSquad.Presentation.Gui.ViewModels;
 
-namespace wsl_squad.UI.Wpf;
+namespace WslSquad.UI.Wpf;
 
 public partial class MainWindow : Views.ChromeWindow
 {

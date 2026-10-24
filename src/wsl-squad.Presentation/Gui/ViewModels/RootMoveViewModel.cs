@@ -1,10 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Gui.ViewModels;
+namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class RootMoveViewModel : BaseViewModel
 {

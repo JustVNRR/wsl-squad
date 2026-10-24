@@ -1,9 +1,9 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
 
-namespace wsl_squad.Presentation.Workflows;
+namespace WslSquad.Presentation.Workflows;
 
-public sealed class InstanceWorkflow : IInstanceWorkflow
+public sealed class InstanceWorkflow
 {
     private readonly InstanceLifecycleWorkflow _lifecycle;
     private readonly InstanceStorageWorkflow _storage;

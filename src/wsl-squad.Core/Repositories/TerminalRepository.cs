@@ -1,4 +1,4 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,10 +11,10 @@ using System.Text.Json.Nodes;
 
 using Microsoft.Win32;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 public sealed record WslGuids(IReadOnlyList<string> Guids, string? ProfileGuid);
 

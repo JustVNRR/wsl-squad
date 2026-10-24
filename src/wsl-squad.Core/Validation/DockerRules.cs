@@ -1,6 +1,6 @@
-using wsl_squad.Core.Dtos;
+using WslSquad.Core.Dtos;
 
-namespace wsl_squad.Core.Validation;
+namespace WslSquad.Core.Validation;
 
 public enum DockerTargetStatus
 {

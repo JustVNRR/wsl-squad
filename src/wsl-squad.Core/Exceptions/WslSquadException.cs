@@ -1,4 +1,4 @@
-namespace wsl_squad.Core.Exceptions;
+namespace WslSquad.Core.Exceptions;
 
 public enum WslSquadErrorCode
 {

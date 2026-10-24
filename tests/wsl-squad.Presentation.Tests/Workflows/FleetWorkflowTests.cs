@@ -2,11 +2,11 @@ using FluentAssertions;
 
 using Moq;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Presentation.Workflows;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Presentation.Workflows;
 
-namespace wsl_squad.Presentation.Tests.Workflows;
+namespace WslSquad.Presentation.Tests.Workflows;
 
 public class FleetWorkflowTests
 {

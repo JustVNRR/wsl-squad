@@ -1,6 +1,6 @@
-using wsl_squad.Core.Services;
+using WslSquad.Core.Services;
 
-namespace wsl_squad.UI.Cli.Composition;
+namespace WslSquad.UI.Cli.Composition;
 
 public sealed class CliServices
 {

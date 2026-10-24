@@ -1,13 +1,13 @@
 using System.Diagnostics;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Core.Validation;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.Presentation.Workflows;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Core.Validation;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Workflows;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Cli.Presenters.Instance;
+namespace WslSquad.Presentation.Cli.Presenters.Instance;
 
 public sealed class BuildPresenter : BasePresenter<IBuildView>
 {
@@ -58,275 +58,281 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             switch (step)
             {
                 case "name":
-                {
-                    bool ok = false;
-
-                    while (true)
                     {
-                        string? answer = View.AskInstanceName("Name of the instance (CTRL+C to abort)");
+                        bool ok = false;
 
-                        if (string.IsNullOrWhiteSpace(answer))
+                        while (true)
                         {
-                            break;
-                        }
+                            string? answer = View.AskInstanceName("Name of the instance (CTRL+C to abort)");
 
-                        answer = answer.Trim();
+                            if (string.IsNullOrWhiteSpace(answer))
+                            {
+                                break;
+                            }
 
-                        NameProblem problem = NameRules.ValidateInstanceName(answer, takenNames);
+                            answer = answer.Trim();
 
-                        if (problem != NameProblem.None)
-                        {
-                            View.ShowNameProblem(problem.ToMessage(answer)!);
+                            NameProblem problem = NameRules.ValidateInstanceName(answer, takenNames);
 
-                            continue;
-                        }
+                            if (problem != NameProblem.None)
+                            {
+                                View.ShowNameProblem(problem.ToMessage(answer)!);
 
-                        name = answer;
-                        ok = true;
+                                continue;
+                            }
 
-                        break;
-                    }
-
-                    if (ok)
-                    {
-                        stack.Push("road");
-                    }
-                    else
-                    {
-                        stack.Clear();
-                    }
-
-                    break;
-                }
-
-                case "road":
-                {
-                    BuildRoad? picked = View.AskRoad();
-
-                    if (picked is null)
-                    {
-                        _ = stack.Pop();
-
-                        break;
-                    }
-
-                    road = picked;
-
-                    if (road.Type == WslBuildType.Registry)
-                    {
-                        stack.Push("reference");
-
-                        break;
-                    }
-
-                    IReadOnlyList<BuildSourceChoice> rows = road.Type switch
-                    {
-                        WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
-                            image.Name ?? string.Empty,
-                            image.Path ?? string.Empty))],
-                        WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
-                        _ => [.. sources.Dockerfiles.Select(ToChoice)],
-                    };
-
-                    if (rows.Count == 0)
-                    {
-                        View.ShowAbort(AbortLines(road.Type));
-
-                        return WorkflowResults.Failed(string.Empty, road.Type switch
-                        {
-                            WslBuildType.Image => "Build : no Docker image",
-                            WslBuildType.Recipe => "Build : no recipe",
-                            _ => "Build : no Dockerfile",
-                        });
-                    }
-
-                    stack.Push("source");
-
-                    break;
-                }
-
-                case "reference":
-                {
-                    bool ok = false;
-
-                    while (true)
-                    {
-                        string? reference = View.AskRegistryReference(
-                            "Docker image from a registry (e.g. alpine:latest)");
-
-                        if (string.IsNullOrWhiteSpace(reference))
-                        {
-                            break;
-                        }
-
-                        IsRegistryImageValidResponseDto verdict = _service.IsRegistryImageValid(reference);
-
-                        if (verdict.Valid)
-                        {
-                            source = reference;
+                            name = answer;
                             ok = true;
 
                             break;
                         }
 
-                        View.ShowUnknownRegistry(reference, verdict.Error.ToMessage(verdict.TechnicalDetail));
+                        if (ok)
+                        {
+                            stack.Push("road");
+                        }
+                        else
+                        {
+                            stack.Clear();
+                        }
+
+                        break;
                     }
 
-                    if (!ok)
+                case "road":
                     {
-                        _ = stack.Pop();
-                    }
-                    else
-                    {
-                        stack.Push(NextAfterSource(sources.Onboardings.Count, road!));
-                    }
+                        BuildRoad? picked = View.AskRoad();
 
-                    break;
-                }
+                        if (picked is null)
+                        {
+                            _ = stack.Pop();
 
-                case "source":
-                {
-                    IReadOnlyList<BuildSourceChoice> rows = road!.Type switch
-                    {
-                        WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
+                            break;
+                        }
+
+                        road = picked;
+
+                        if (road.Type == WslBuildType.Registry)
+                        {
+                            stack.Push("reference");
+
+                            break;
+                        }
+
+                        IReadOnlyList<BuildSourceChoice> rows = road.Type switch
+                        {
+                            WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
                             image.Name ?? string.Empty,
                             image.Path ?? string.Empty))],
-                        WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
-                        _ => [.. sources.Dockerfiles.Select(ToChoice)],
-                    };
-                    BuildSourceChoice? picked = View.AskSource(road.Label, rows);
+                            WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
+                            WslBuildType.Dockerfile => [.. sources.Dockerfiles.Select(ToChoice)],
+                            WslBuildType.Registry => [],
+                            _ => [],
+                        };
 
-                    if (picked is null)
-                    {
-                        _ = stack.Pop();
+                        if (rows.Count == 0)
+                        {
+                            View.ShowAbort(AbortLines(road.Type));
+
+                            return WorkflowResults.Failed(string.Empty, road.Type switch
+                            {
+                                WslBuildType.Image => "Build : no Docker image",
+                                WslBuildType.Recipe => "Build : no recipe",
+                                WslBuildType.Dockerfile => "Build : no Dockerfile",
+                                WslBuildType.Registry => "Build : no registry image",
+                                _ => "Build : no source",
+                            });
+                        }
+
+                        stack.Push("source");
 
                         break;
                     }
 
-                    source = picked.Path;
-                    stack.Push(NextAfterSource(sources.Onboardings.Count, road));
+                case "reference":
+                    {
+                        bool ok = false;
 
-                    break;
-                }
+                        while (true)
+                        {
+                            string? reference = View.AskRegistryReference(
+                                "Docker image from a registry (e.g. alpine:latest)");
+
+                            if (string.IsNullOrWhiteSpace(reference))
+                            {
+                                break;
+                            }
+
+                            IsRegistryImageValidResponseDto verdict = _service.IsRegistryImageValid(reference);
+
+                            if (verdict.Valid)
+                            {
+                                source = reference;
+                                ok = true;
+
+                                break;
+                            }
+
+                            View.ShowUnknownRegistry(reference, verdict.Error.ToMessage(verdict.TechnicalDetail));
+                        }
+
+                        if (!ok)
+                        {
+                            _ = stack.Pop();
+                        }
+                        else
+                        {
+                            stack.Push(NextAfterSource(sources.Onboardings.Count, road!));
+                        }
+
+                        break;
+                    }
+
+                case "source":
+                    {
+                        IReadOnlyList<BuildSourceChoice> rows = road!.Type switch
+                        {
+                            WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
+                            image.Name ?? string.Empty,
+                            image.Path ?? string.Empty))],
+                            WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
+                            WslBuildType.Dockerfile => [.. sources.Dockerfiles.Select(ToChoice)],
+                            WslBuildType.Registry => [],
+                            _ => [],
+                        };
+                        BuildSourceChoice? picked = View.AskSource(road.Label, rows);
+
+                        if (picked is null)
+                        {
+                            _ = stack.Pop();
+
+                            break;
+                        }
+
+                        source = picked.Path;
+                        stack.Push(NextAfterSource(sources.Onboardings.Count, road));
+
+                        break;
+                    }
 
                 case "onboarding":
-                {
-                    bool? run = View.AskRunOnboarding();
-
-                    if (run is null)
                     {
-                        _ = stack.Pop();
+                        bool? run = View.AskRunOnboarding();
+
+                        if (run is null)
+                        {
+                            _ = stack.Pop();
+
+                            break;
+                        }
+
+                        if (run == false)
+                        {
+                            onboarding = string.Empty;
+                            stack.Push(NextAfterOnboarding(road!));
+
+                            break;
+                        }
+
+                        BuildSourceChoice? picked = View.AskOnboarding([.. sources.Onboardings.Select(ToChoice)]);
+
+                        if (picked is not null)
+                        {
+                            onboarding = picked.Path;
+                            stack.Push("user");
+                        }
 
                         break;
                     }
-
-                    if (run == false)
-                    {
-                        onboarding = string.Empty;
-                        stack.Push(NextAfterOnboarding(road!));
-
-                        break;
-                    }
-
-                    BuildSourceChoice? picked = View.AskOnboarding([.. sources.Onboardings.Select(ToChoice)]);
-
-                    if (picked is not null)
-                    {
-                        onboarding = picked.Path;
-                        stack.Push("user");
-                    }
-
-                    break;
-                }
 
                 case "user":
-                {
-                    string proposal = NameRules.ProposeUserName();
-                    string prompt = proposal.Length > 0
-                        ? $"User name for '{name}' [{proposal}] (CTRL+C to abort)"
-                        : $"User name for '{name}' (CTRL+C to abort)";
-                    View.ShowBeforeAccount();
-                    bool ok = false;
-
-                    while (true)
                     {
-                        string? answer = View.AskUserName(prompt);
+                        string proposal = NameRules.ProposeUserName();
+                        string prompt = proposal.Length > 0
+                            ? $"User name for '{name}' [{proposal}] (CTRL+C to abort)"
+                            : $"User name for '{name}' (CTRL+C to abort)";
+                        View.ShowBeforeAccount();
+                        bool ok = false;
+
+                        while (true)
+                        {
+                            string? answer = View.AskUserName(prompt);
+
+                            if (answer is null)
+                            {
+                                break;
+                            }
+
+                            if (answer.Length == 0 && proposal.Length > 0)
+                            {
+                                answer = proposal;
+                            }
+
+                            if (NameRules.IsValidUser(answer))
+                            {
+                                user = answer;
+                                ok = true;
+
+                                break;
+                            }
+
+                            View.ShowUserHint();
+                        }
+
+                        if (!ok)
+                        {
+                            _ = stack.Pop();
+                        }
+                        else
+                        {
+                            stack.Push(NextAfterOnboarding(road!));
+                        }
+
+                        break;
+                    }
+
+                case "keep":
+                    {
+                        bool? answer = View.AskKeepImage();
 
                         if (answer is null)
                         {
-                            break;
+                            _ = stack.Pop();
                         }
-
-                        if (answer.Length == 0 && proposal.Length > 0)
+                        else
                         {
-                            answer = proposal;
+                            keep = answer.Value;
+                            stack.Push("register");
                         }
 
-                        if (NameRules.IsValidUser(answer))
-                        {
-                            user = answer;
-                            ok = true;
-
-                            break;
-                        }
-
-                        View.ShowUserHint();
+                        break;
                     }
-
-                    if (!ok)
-                    {
-                        _ = stack.Pop();
-                    }
-                    else
-                    {
-                        stack.Push(NextAfterOnboarding(road!));
-                    }
-
-                    break;
-                }
-
-                case "keep":
-                {
-                    bool? answer = View.AskKeepImage();
-
-                    if (answer is null)
-                    {
-                        _ = stack.Pop();
-                    }
-                    else
-                    {
-                        keep = answer.Value;
-                        stack.Push("register");
-                    }
-
-                    break;
-                }
 
                 case "register":
-                {
-                    bool? answer = View.AskRegisterDocker(name);
-
-                    if (answer is null)
                     {
-                        _ = stack.Pop();
-                    }
-                    else
-                    {
-                        register = answer.Value;
-                        done = true;
-                        stack.Clear();
-                    }
+                        bool? answer = View.AskRegisterDocker(name);
 
-                    break;
-                }
+                        if (answer is null)
+                        {
+                            _ = stack.Pop();
+                        }
+                        else
+                        {
+                            register = answer.Value;
+                            done = true;
+                            stack.Clear();
+                        }
+
+                        break;
+                    }
 
                 case "done":
-                {
-                    done = true;
-                    stack.Clear();
+                    {
+                        done = true;
+                        stack.Clear();
 
-                    break;
-                }
+                        break;
+                    }
 
                 default:
                     stack.Clear();
@@ -418,6 +424,12 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             [
                 "No recipe under 'assets\\recipes'.",
                 "Create one with the window's + button.",
+                "Nothing was modified.",
+            ],
+            WslBuildType.Dockerfile or WslBuildType.Registry =>
+            [
+                "No Dockerfile under 'assets\\dockerfiles'.",
+                "Upload one, or delete that folder to get the repository's own back.",
                 "Nothing was modified.",
             ],
             _ =>

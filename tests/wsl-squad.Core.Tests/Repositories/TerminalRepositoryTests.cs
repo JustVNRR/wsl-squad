@@ -1,9 +1,9 @@
 using FluentAssertions;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Repositories;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Repositories;
 
-namespace wsl_squad.Core.Tests.Repositories;
+namespace WslSquad.Core.Tests.Repositories;
 
 public class TerminalRepositoryTests
 {

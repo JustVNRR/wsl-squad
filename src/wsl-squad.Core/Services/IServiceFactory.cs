@@ -1,4 +1,4 @@
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public interface IServiceFactory
 {

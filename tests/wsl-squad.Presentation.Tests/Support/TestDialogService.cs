@@ -1,8 +1,8 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Gui.Ports;
-using wsl_squad.Presentation.Gui.ViewModels;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Gui.ViewModels;
 
-namespace wsl_squad.Presentation.Tests.Support;
+namespace WslSquad.Presentation.Tests.Support;
 
 public sealed class TestDialogService : IDialogService
 {

@@ -1,9 +1,9 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Core.Services;
-using wsl_squad.Core.Validation;
-using wsl_squad.Presentation.Localization;
+using WslSquad.Core.Dtos;
+using WslSquad.Core.Services;
+using WslSquad.Core.Validation;
+using WslSquad.Presentation.Localization;
 
-namespace wsl_squad.Presentation.Workflows;
+namespace WslSquad.Presentation.Workflows;
 
 public sealed class InstanceIntegrationWorkflow : WorkflowBase
 {
@@ -78,6 +78,8 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
                 {
                     DockerTargetStatus.AlreadyRegistered => "already registered",
                     DockerTargetStatus.NotRegistered => "not registered",
+                    DockerTargetStatus.Unknown => "the Docker Desktop state cannot be read",
+                    DockerTargetStatus.Eligible => string.Empty,
                     _ => "the Docker Desktop state cannot be read",
                 };
 

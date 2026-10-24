@@ -1,8 +1,8 @@
 using FluentAssertions;
 
-using wsl_squad.UI.Cli.Interaction;
+using WslSquad.UI.Cli.Interaction;
 
-namespace wsl_squad.UI.Cli.Tests;
+namespace WslSquad.UI.Cli.Tests;
 
 public class ConsoleMenuTests
 {

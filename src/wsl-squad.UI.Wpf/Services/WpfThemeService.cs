@@ -8,11 +8,11 @@ using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Media;
 
-using wsl_squad.Core.Repositories;
-using wsl_squad.Presentation.Gui.Ports;
-using wsl_squad.UI.Wpf.Views;
+using WslSquad.Core.Repositories;
+using WslSquad.Presentation.Gui.Ports;
+using WslSquad.UI.Wpf.Views;
 
-namespace wsl_squad.UI.Wpf.Services;
+namespace WslSquad.UI.Wpf.Services;
 
 public sealed class WpfThemeService : IUiThemeService
 {

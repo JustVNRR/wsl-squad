@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>wsl_squad.Presentation.Tests</RootNamespace>
+    <RootNamespace>WslSquad.Presentation.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);S4136;IDE0022;IDE0090;CA1826;S3459;S1144</NoWarn>
   </PropertyGroup>

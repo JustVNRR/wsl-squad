@@ -1,6 +1,6 @@
-using wsl_squad.Core.Repositories;
+using WslSquad.Core.Repositories;
 
-namespace wsl_squad.Core.Services;
+namespace WslSquad.Core.Services;
 
 public static class WslService
 {

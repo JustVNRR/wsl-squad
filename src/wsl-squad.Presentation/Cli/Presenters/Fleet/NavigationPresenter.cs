@@ -1,8 +1,8 @@
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Cli.Ports;
-using wsl_squad.Presentation.Workflows;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Workflows;
 
-namespace wsl_squad.Presentation.Cli.Presenters.Fleet;
+namespace WslSquad.Presentation.Cli.Presenters.Fleet;
 
 public sealed class NavigationPresenter
 {
@@ -44,103 +44,103 @@ public sealed class NavigationPresenter
         switch (top.Kind)
         {
             case "instances":
-            {
-                WslIndexDto? row = _browse.AskInstances();
-
-                if (row is null)
                 {
-                    return Pop(_browse, "Instances");
-                }
+                    WslIndexDto? row = _browse.AskInstances();
 
-                _stack.Push(new NavigationState("instance-actions", row));
-                return null;
-            }
+                    if (row is null)
+                    {
+                        return Pop(_browse, "Instances");
+                    }
+
+                    _stack.Push(new NavigationState("instance-actions", row));
+                    return null;
+                }
 
             case "archives":
-            {
-                WslIndexDto? row = _browse.AskArchives();
-
-                if (row is null)
                 {
-                    return Pop(_browse, "Archives");
-                }
+                    WslIndexDto? row = _browse.AskArchives();
 
-                _stack.Push(new NavigationState("archive-actions", row));
-                return null;
-            }
+                    if (row is null)
+                    {
+                        return Pop(_browse, "Archives");
+                    }
+
+                    _stack.Push(new NavigationState("archive-actions", row));
+                    return null;
+                }
 
             case "instance-actions":
             case "archive-actions":
-            {
-                PresenterAction? action = top.Row is null ? null : _browse.AskAction(top.Row);
-
-                if (action is null)
                 {
-                    _ = _stack.Pop();
-                    return null;
+                    PresenterAction? action = top.Row is null ? null : _browse.AskAction(top.Row);
+
+                    if (action is null)
+                    {
+                        _ = _stack.Pop();
+                        return null;
+                    }
+
+                    _view.Clear();
+                    IWorkflowResult result = action.Execute(top.Row?.Name ?? string.Empty);
+
+                    return IsCancelled(result) ? null : result;
                 }
-
-                _view.Clear();
-                IWorkflowResult result = action.Execute(top.Row?.Name ?? string.Empty);
-
-                return IsCancelled(result) ? null : result;
-            }
 
             case "settings":
-            {
-                PresenterAction? item = _settings.AskMenu();
-
-                if (item is null)
                 {
-                    return Pop(_settings, "Settings");
+                    PresenterAction? item = _settings.AskMenu();
+
+                    if (item is null)
+                    {
+                        return Pop(_settings, "Settings");
+                    }
+
+                    if (item.Key == "availables packs")
+                    {
+                        _stack.Push(new NavigationState("packs"));
+                        return null;
+                    }
+
+                    _view.Clear();
+                    IWorkflowResult result = item.Execute(string.Empty);
+
+                    return IsCancelled(result) ? null : result;
                 }
-
-                if (item.Key == "availables packs")
-                {
-                    _stack.Push(new NavigationState("packs"));
-                    return null;
-                }
-
-                _view.Clear();
-                IWorkflowResult result = item.Execute(string.Empty);
-
-                return IsCancelled(result) ? null : result;
-            }
 
             case "packs":
-            {
-                WslPackDto? pack = _settings.AskPack();
-
-                if (pack is null)
                 {
-                    return Pop(_settings, "Settings");
-                }
+                    WslPackDto? pack = _settings.AskPack();
 
-                _stack.Push(new NavigationState("pack", Pack: pack));
-                return null;
-            }
+                    if (pack is null)
+                    {
+                        return Pop(_settings, "Settings");
+                    }
 
-            case "pack":
-            {
-                string? choice = top.Pack is null ? null : _settings.AskPackAction(top.Pack);
-
-                if (choice is null)
-                {
-                    _ = _stack.Pop();
+                    _stack.Push(new NavigationState("pack", Pack: pack));
                     return null;
                 }
 
-                _view.Clear();
-                IWorkflowResult? outcome = choice switch
+            case "pack":
                 {
-                    "edit" => _settings.Edit(top.Pack!),
-                    "duplicate" => _settings.Duplicate(top.Pack!),
-                    "delete" => _settings.Delete(top.Pack!),
-                    _ => null,
-                };
+                    string? choice = top.Pack is null ? null : _settings.AskPackAction(top.Pack);
 
-                return outcome;
-            }
+                    if (choice is null)
+                    {
+                        _ = _stack.Pop();
+                        return null;
+                    }
+
+                    _view.Clear();
+                    IWorkflowResult? outcome = choice switch
+                    {
+                        "edit" => _settings.Edit(top.Pack!),
+                        "duplicate" => _settings.Duplicate(top.Pack!),
+                        "delete" => _settings.Delete(top.Pack!),
+                        _ => null,
+                    };
+
+                    return outcome;
+                }
 
             default:
                 return WorkflowResults.Cancelled("Navigate");

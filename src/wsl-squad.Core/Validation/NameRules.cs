@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace wsl_squad.Core.Validation;
+namespace WslSquad.Core.Validation;
 
 public enum NameProblem
 {

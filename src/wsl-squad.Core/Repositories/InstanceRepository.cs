@@ -1,11 +1,11 @@
-using wsl_squad.Core.Exceptions;
+using WslSquad.Core.Exceptions;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
-using wsl_squad.Core.Entities;
+using WslSquad.Core.Entities;
 
-namespace wsl_squad.Core.Repositories;
+namespace WslSquad.Core.Repositories;
 
 public sealed class InstanceRepository : IInstanceRepository
 {

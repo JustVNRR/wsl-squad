@@ -2,10 +2,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 
-using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation.Gui.Ports;
+using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.Ports;
 
-namespace wsl_squad.UI.Wpf.Services;
+namespace WslSquad.UI.Wpf.Services;
 
 public sealed class WpfBuildLauncher : IBuildLauncher
 {

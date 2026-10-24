@@ -1,6 +1,6 @@
-using wsl_squad.Core.Validation;
+using WslSquad.Core.Validation;
 
-namespace wsl_squad.Core.Entities;
+namespace WslSquad.Core.Entities;
 
 public sealed class WslInstance
 {
