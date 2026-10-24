@@ -12,14 +12,14 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
     public void ShowNoInstances()
     {
         Write(string.Empty);
-        Write("[ABORT] No instance of this template is registered on this machine.", ConsoleTone.Error);
-        Write("        Build one with  wsl-squad build", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliNoInstance"], ConsoleTone.Error);
+        Write(Localizer.Instance["CliBuildOne"], ConsoleTone.Hint);
     }
 
     public string? AskOffered(IReadOnlyList<WslIndexDto> instances)
     {
         WslIndexDto? picked = Pick(
-            "Our Instances",
+            Localizer.Instance["CliOurInstances"],
             instances,
             row => $"{row.Name,-30} {Size(row.Size),10}");
 
@@ -29,42 +29,42 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
     public void ShowStopWarning(string name)
     {
         Write(string.Empty);
-        Write($"  If '{name}' is running, this will stop it: an archive reads a still disk.", ConsoleTone.Warning);
-        Write("  Save what you have open in there - stopping it loses anything unsaved.", ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliStopWarning1", name), ConsoleTone.Warning);
+        Write(Localizer.Instance["CliStopWarning2"], ConsoleTone.Warning);
     }
 
     public void ShowReplacing(string archiveName)
     {
-        Write($"  '{archiveName}' exists: replacing it.", ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliReplacing", archiveName), ConsoleTone.Warning);
     }
 
     public void ShowBackingUp(string name)
     {
         Write(string.Empty);
-        Write($"==> Backing up '{name}'", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliBackingUp", name), ConsoleTone.Info);
     }
 
     public void Show(ArchiveResponseDto response)
     {
         Write(string.Empty);
-        Write("============================================================", ConsoleTone.Success);
-        Write($"       Backup of '{response.InstanceName}' written", ConsoleTone.Success);
-        Write("============================================================", ConsoleTone.Success);
+        Write(Localizer.Instance["CliRule"], ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliBackupWritten", response.InstanceName), ConsoleTone.Success);
+        Write(Localizer.Instance["CliRule"], ConsoleTone.Success);
         Write(string.Empty);
-        Write($"  * Look             : font '{response.LookFont}', colours '{response.LookColourScheme}'", ConsoleTone.Muted);
-        Write($"  * Docker Desktop   : {DockerText(response.Docker)}", ConsoleTone.Muted);
-        Write($"  * Archive          : {response.ArchiveDir}", ConsoleTone.Info);
-        Write($"  * Tar              : {Path.GetFileName(response.Tar ?? string.Empty)}", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliLookLine", response.LookFont, response.LookColourScheme), ConsoleTone.Muted);
+        Write(Localizer.Instance.Format("CliDockerLine", DockerText(response.Docker)), ConsoleTone.Muted);
+        Write(Localizer.Instance.Format("CliArchiveLine", response.ArchiveDir), ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliTarLine", Path.GetFileName(response.Tar ?? string.Empty)), ConsoleTone.Info);
         Write(string.Empty);
-        Write("------------------------------------------------------------", ConsoleTone.Muted);
-        Write("To restore it as a new instance:", ConsoleTone.Hint);
-        Write("  wsl-squad restore        (it lists the archives, this one included)", ConsoleTone.Hint);
-        Write("------------------------------------------------------------", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliHr"], ConsoleTone.Muted);
+        Write(Localizer.Instance["CliRestoreHint"], ConsoleTone.Hint);
+        Write(Localizer.Instance["CliRestoreExample"], ConsoleTone.Hint);
+        Write(Localizer.Instance["CliHr"], ConsoleTone.Muted);
         Write(string.Empty);
         Write(
             response.Stopped
-                ? $"'{response.InstanceName}' is running again."
-                : $"'{response.InstanceName}' is left stopped.",
+                ? Localizer.Instance.Format("CliRunningAgain", response.InstanceName)
+                : Localizer.Instance.Format("CliLeftStopped", response.InstanceName),
             response.Stopped ? ConsoleTone.Success : ConsoleTone.Muted);
         Write(string.Empty);
     }
@@ -72,58 +72,58 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
     public void ShowBeforeQuestions()
     {
         Write(string.Empty);
-        Write("  WARNING: THE INSTANCE WILL BE STOPPED.", ConsoleTone.Warning);
-        Write("  Make sure nothing is running inside.", ConsoleTone.Warning);
+        Write(Localizer.Instance["CliWarningStopped"], ConsoleTone.Warning);
+        Write(Localizer.Instance["CliNothingRunning"], ConsoleTone.Warning);
     }
 
     public void ShowNoArchive()
     {
-        Write("  No archive will be written.", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliNoArchiveWritten"], ConsoleTone.Muted);
     }
 
     public void ShowReplacingArchive(string name)
     {
-        Write($"  '{name}_archive' exists: replacing it.", ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliReplacingArchive", name), ConsoleTone.Warning);
     }
 
     public void ShowCompacting(string name, bool archiveFirst)
     {
         Write(string.Empty);
-        Write($"==> Compacting '{name}'{(archiveFirst ? " (archived first)" : string.Empty)}", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliCompacting", name, archiveFirst ? Localizer.Instance["CliArchivedFirst"] : string.Empty), ConsoleTone.Info);
     }
 
     public void Show(CompactResponseDto response)
     {
         Write(string.Empty);
-        Write($"==> '{response.InstanceName}' compacted.", ConsoleTone.Success);
-        Write($"    Before {Size(response.SizeBefore)}, after {Size(response.SizeAfter)}, gained {Size(response.Gained)}.", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliCompacted", response.InstanceName), ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliCompactStats", Size(response.SizeBefore), Size(response.SizeAfter), Size(response.Gained)), ConsoleTone.Info);
 
         if (response.Archived)
         {
-            Write("    An archive was written first.", ConsoleTone.Muted);
+            Write(Localizer.Instance["CliArchiveWrittenFirst"], ConsoleTone.Muted);
         }
 
         Write(
             response.Restarted
-                ? $"    '{response.InstanceName}' is running again."
-                : $"    '{response.InstanceName}' is left stopped.",
+                ? Localizer.Instance.Format("CliIndentedRunningAgain", response.InstanceName)
+                : Localizer.Instance.Format("CliIndentedLeftStopped", response.InstanceName),
             response.Restarted ? ConsoleTone.Success : ConsoleTone.Muted);
     }
 
     public void ShowDeleting(string target)
     {
         Write(string.Empty);
-        Write($"==> Deleting the archive '{target}'", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliDeletingArchive", target), ConsoleTone.Info);
     }
 
     public void Show(DeleteArchiveResponseDto response)
     {
-        Write($"==> '{response.ArchiveName}' deleted.", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliArchiveDeleted", response.ArchiveName), ConsoleTone.Success);
     }
 
     public string? AskCopyName()
     {
-        string? answer = AskLine("Name of the copy (Enter to cancel)");
+        string? answer = AskLine(Localizer.Instance["CliAskCopyName"]);
 
         return answer?.Trim();
     }
@@ -136,30 +136,30 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
     public void ShowDiskWarning(string source)
     {
         Write(string.Empty);
-        Write($"  '{source}' will be stopped while it is copied, and needs room for twice its disk.", ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliDiskWarning", source), ConsoleTone.Warning);
     }
 
     public void ShowDuplicating(string source, string copy)
     {
         Write(string.Empty);
-        Write($"==> Duplicating '{source}' as '{copy}'", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliDuplicating", source, copy), ConsoleTone.Info);
     }
 
     public void Show(DuplicateResponseDto response)
     {
-        Write($"==> '{response.CopyName}' created from '{response.SourceName}'.", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliDuplicateCreated", response.CopyName, response.SourceName), ConsoleTone.Success);
     }
 
     public void ShowManagingPacks(string name)
     {
         Write(string.Empty);
-        Write($"==> Opening the pack manager for '{name}'...", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliOpeningPackManager", name), ConsoleTone.Info);
     }
 
     public void ShowOpening(string name)
     {
         Write(string.Empty);
-        Write($"==> Opening a shell in '{name}'...", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliOpeningShell", name), ConsoleTone.Info);
     }
 
     public void Show(OpenResponseDto response)
@@ -170,25 +170,25 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
     public bool? AskDockerAction(string name, bool shouldRegister)
     {
         string question = shouldRegister
-            ? $"Register '{name}' with Docker Desktop?"
-            : $"Unregister '{name}' from Docker Desktop?";
+            ? Localizer.Instance.Format("CliDockerRegister", name)
+            : Localizer.Instance.Format("CliDockerUnregister", name);
 
         if (AskConfirmation(question, defaultNo: false) != true)
         {
             return null;
         }
 
-        return AskConfirmation("Restart Docker Desktop to apply now?", defaultNo: false) == true;
+        return AskConfirmation(Localizer.Instance["CliRestartDockerNow"], defaultNo: false) == true;
     }
 
     public void Show(RegisterDockerResponseDto response)
     {
-        Write($"==> Docker Desktop: {response.InstanceName} {response.Restart.ToMessage()}.", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliDockerResult", response.InstanceName, response.Restart.ToMessage()), ConsoleTone.Success);
     }
 
     public void Show(UnregisterDockerResponseDto response)
     {
-        Write($"==> Docker Desktop: {response.InstanceName} {response.Restart.ToMessage()}.", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliDockerResult", response.InstanceName, response.Restart.ToMessage()), ConsoleTone.Success);
     }
 
     public bool ConfirmDestruction(string instanceName)
@@ -206,27 +206,27 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
         }
 
         Write(string.Empty);
-        Banner("DANGER: TOTAL DATA LOSS IMMINENT");
+        Banner(Localizer.Instance["CliDangerBanner"]);
         Write(string.Empty);
-        Write($"  The WSL distribution '{instanceName}' and ALL its data will be deleted:", ConsoleTone.Error);
+        Write(Localizer.Instance.Format("CliRemoveIntro", instanceName), ConsoleTone.Error);
         Write(string.Empty);
-        Write("  Proceeding will PERMANENTLY DESTROY this distribution:", ConsoleTone.Warning);
-        Write($"    - Executing: wsl --unregister {instanceName}", ConsoleTone.Muted);
-        Write("    - IRREVERSIBLE DELETION of the virtual disk (VHDX)", ConsoleTone.Muted);
-        Write("    - TOTAL LOSS of projects, SSH keys, and all files in /home", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliRemoveDestroy"], ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliRemoveStepUnregister", instanceName), ConsoleTone.Muted);
+        Write(Localizer.Instance["CliRemoveStepDisk"], ConsoleTone.Muted);
+        Write(Localizer.Instance["CliRemoveStepHome"], ConsoleTone.Muted);
         Write(string.Empty);
-        Write("  THIS OPERATION CANNOT BE UNDONE.", ConsoleTone.Error);
+        Write(Localizer.Instance["CliCannotUndo"], ConsoleTone.Error);
         Write(string.Empty);
-        Write(" ----------------------------------------------------------------------", ConsoleTone.Muted);
-        Write(" Press ENTER to abort immediately.", ConsoleTone.Hint);
-        Write(" To confirm DESTRUCTION, type the name of the distribution:", ConsoleTone.Hint);
-        string? typed = AskLine(" Confirm");
-        Write(" ----------------------------------------------------------------------", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliShortRule"], ConsoleTone.Muted);
+        Write(Localizer.Instance["CliPressEnterAbort"], ConsoleTone.Hint);
+        Write(Localizer.Instance["CliTypeDestroy"], ConsoleTone.Hint);
+        string? typed = AskLine(Localizer.Instance["CliConfirm"]);
+        Write(Localizer.Instance["CliShortRule"], ConsoleTone.Muted);
         Write(string.Empty);
 
         if (typed != instanceName)
         {
-            Write("[ABORT] Operation cancelled. No data was modified.", ConsoleTone.Warning);
+            Write(Localizer.Instance["CliAbortedNothingChanged"], ConsoleTone.Warning);
 
             return false;
         }
@@ -238,52 +238,52 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
 
     public void ShowRemovingSteps()
     {
-        Write("==> Stopping the distro processes...", ConsoleTone.Info);
-        Write("==> Unregistering the distro...", ConsoleTone.Info);
+        Write(Localizer.Instance["CliStoppingProcesses"], ConsoleTone.Info);
+        Write(Localizer.Instance["CliUnregistering"], ConsoleTone.Info);
     }
 
     public void Show()
     {
         Write(string.Empty);
-        Write("============================================================", ConsoleTone.Success);
-        Write("                WSL SQUAD Instance Removed!                 ", ConsoleTone.Success);
-        Write("============================================================", ConsoleTone.Success);
+        Write(Localizer.Instance["CliRule"], ConsoleTone.Success);
+        Write(Localizer.Instance["CliRemovedBanner"], ConsoleTone.Success);
+        Write(Localizer.Instance["CliRule"], ConsoleTone.Success);
         Write(string.Empty);
-        Write(" Restart Windows Terminal to refresh the profile list.");
+        Write(Localizer.Instance["CliRestartTerminal"]);
         Write(string.Empty);
     }
 
     public void ShowStoppingWarning(string name)
     {
         Write(string.Empty);
-        Write($"  '{name}' will be stopped before it is started again.", ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliStoppedBeforeStart", name), ConsoleTone.Warning);
     }
 
     public bool? AskRestart()
     {
-        return AskConfirmation("Restart it now?", defaultNo: false);
+        return AskConfirmation(Localizer.Instance["CliRestartNow"], defaultNo: false);
     }
 
     public void ShowRestarting(string name)
     {
-        Write($"==> Restarting '{name}'...", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliRestarting", name), ConsoleTone.Info);
     }
 
     public void Show(RestartResponseDto response)
     {
-        Write($"==> '{response.InstanceName}' restarted.", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliRestarted", response.InstanceName), ConsoleTone.Success);
     }
 
     public void ShowNoArchives()
     {
         Write(string.Empty);
-        Write("[ABORT] There are no archives.", ConsoleTone.Error);
+        Write(Localizer.Instance["CliNoArchives"], ConsoleTone.Error);
     }
 
     public string? AskArchive(IReadOnlyList<WslIndexDto> archives)
     {
         WslIndexDto? picked = Pick(
-            "Our Archives",
+            Localizer.Instance["CliOurArchives"],
             archives,
             row => $"{row.Name,-30} {Size(row.Size),10}");
 
@@ -293,28 +293,28 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
     public void ShowRestoring(string archiveName)
     {
         Write(string.Empty);
-        Write($"==> Restoring '{archiveName}'", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliRestoring", archiveName), ConsoleTone.Info);
     }
 
     public string? AskNewName()
     {
-        string? answer = AskLine("Name of the restored instance");
+        string? answer = AskLine(Localizer.Instance["CliAskRestoredName"]);
 
         return answer?.Trim();
     }
 
     public void Show(RestoreResponseDto response)
     {
-        Write($"==> '{response.InstanceName}' restored from '{response.ArchiveName}'.", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliRestored", response.InstanceName, response.ArchiveName), ConsoleTone.Success);
     }
 
     private static string DockerText(string? state)
     {
         return state switch
         {
-            "yes" => "knows this instance",
-            "no" => "does not know it",
-            _ => "not installed, or unreadable",
+            "yes" => Localizer.Instance["CliDockerKnows"],
+            "no" => Localizer.Instance["CliDockerDoesNotKnow"],
+            _ => Localizer.Instance["CliDockerUnknown"],
         };
     }
 }

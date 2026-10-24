@@ -19,13 +19,12 @@ public sealed partial class RootMoveViewModel : BaseViewModel
     public RootMoveViewModel(string current)
     {
         _current = current.TrimEnd('\\');
-        Lead = $"Move the fleet from '{current}'".ToUpperInvariant();
-        Warning = "Every instance will be archived and unregistered before migration.";
+        Warning = Localizer.Instance["RootMoveWarning"];
         NewRoot = current;
         ConfirmCommand = new RelayCommand(Confirm);
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadRootMove", _current).ToUpperInvariant();
 
     public string? Result { get; private set; }
 

@@ -4,6 +4,7 @@ using WslSquad.Presentation.Cli.Presenters;
 using WslSquad.Presentation.Cli.Presenters.Fleet;
 using WslSquad.Presentation.Cli.Presenters.Instance;
 using WslSquad.Presentation.Workflows;
+using WslSquad.Presentation.Localization;
 using WslSquad.UI.Cli.Interaction;
 using WslSquad.UI.Cli.Views;
 
@@ -59,21 +60,23 @@ public sealed class CliComposition
         _wslConfig = new WslConfigPresenter(fleet, fleetView);
         _deleteArchive = new DeleteArchivePresenter(instance, instanceView);
 
-        PresenterAction shell = new("shell", "open a shell inside an instance", name => _open.Run(name));
-        PresenterAction restart = new("restart", "restart an instance", name => _restart.Run(name));
-        PresenterAction managePacks = new("manage_packs", "open the pack manager inside an instance", name => _managePacks.Run(name));
-        PresenterAction theme = new("theme", "choose the icon, font and colours", name => _appearance.Run(name));
-        PresenterAction duplicate = new("duplicate", "copy an instance under another name", name => _duplicate.Run(name));
-        PresenterAction archive = new("archive", "write an instance to a named archive", name => _archive.Run(name));
-        PresenterAction compact = new("compact", "reclaim the space an instance has freed", name => _compact.Run(name));
-        PresenterAction remove = new("unregister", "remove an instance", name => _remove.Run(name));
-        PresenterAction register = new("register_docker", "register an instance with Docker Desktop", name => _registerDocker.Run(name));
-        PresenterAction unregister = new("unregister_docker", "take an instance out of Docker Desktop", name => _unregisterDocker.Run(name));
-        PresenterAction restore = new("restore", "rebuild an instance from an archive", name => _restore.Run(name));
-        PresenterAction deleteArchive = new("delete_archive", "delete an archive", name => _deleteArchive.Run(name));
-        PresenterAction migrate = new("migrate", "move the fleet to another folder", _ => _migrate.Run(null));
-        PresenterAction wslConfig = new("wslconfig", "open the Windows-wide WSL settings", _ => _wslConfig.Run());
-        PresenterAction packs = new("availables packs", "edit, duplicate or delete a catalogue pack", _ => WorkflowResults.Cancelled("Settings"));
+        PresenterAction shell = new("shell", "CliActionShell", name => _open.Run(name), "CliCommandShell");
+        PresenterAction restart = new("restart", "CliActionRestart", name => _restart.Run(name), "CliCommandRestart");
+        PresenterAction managePacks = new("manage_packs", "CliActionManagePacks", name => _managePacks.Run(name), "CliCommandManagePacks");
+        PresenterAction theme = new("theme", "CliActionTheme", name => _appearance.Run(name), "CliCommandTheme");
+        PresenterAction duplicate = new("duplicate", "CliActionDuplicate", name => _duplicate.Run(name), "CliCommandDuplicate");
+        PresenterAction archive = new("archive", "CliActionArchive", name => _archive.Run(name), "CliCommandArchive");
+        PresenterAction compact = new("compact", "CliActionCompact", name => _compact.Run(name), "CliCommandCompact");
+        PresenterAction remove = new("unregister", "CliActionRemove", name => _remove.Run(name), "CliCommandRemove");
+        PresenterAction register = new("register_docker", "CliActionRegisterDocker", name => _registerDocker.Run(name), "CliCommandRegisterDocker");
+        PresenterAction unregister = new("unregister_docker", "CliActionUnregisterDocker", name => _unregisterDocker.Run(name), "CliCommandUnregisterDocker");
+        PresenterAction restore = new("restore", "CliActionRestore", name => _restore.Run(name), "CliCommandRestore");
+        PresenterAction deleteArchive = new("delete_archive", "CliActionDeleteArchive", name => _deleteArchive.Run(name), "CliCommandDeleteArchive");
+        LanguagePresenter language = new(fleetView);
+        PresenterAction languageAction = new("language", "CliActionLanguage", _ => language.Run(), "CliCommandLanguage");
+        PresenterAction migrate = new("migrate", "CliActionMigrate", _ => _migrate.Run(null), "CliCommandMigrate");
+        PresenterAction wslConfig = new("wslconfig", "CliActionWslConfig", _ => _wslConfig.Run(), "CliCommandWslConfig");
+        PresenterAction packs = new("availables packs", "CliActionPacks", _ => WorkflowResults.Cancelled("Settings"), "CliCommandPacks");
 
         Dictionary<WslCommandKind, PresenterAction> actions = new()
         {
@@ -93,7 +96,7 @@ public sealed class CliComposition
 
         BrowsePresenter browse = new(instance, fleetView, actions);
 
-        SettingsPresenter settings = new(catalogue, fleetView, [migrate, wslConfig, packs]);
+        SettingsPresenter settings = new(catalogue, fleetView, [languageAction, migrate, wslConfig, packs]);
         _navigation = new NavigationPresenter(browse, settings, fleetView);
     }
 
@@ -113,7 +116,7 @@ public sealed class CliComposition
         catch (ConsoleQuitException)
         {
             _host.Line(string.Empty);
-            _host.Line("Bye.", ConsoleTone.Muted);
+            _host.Line(Localizer.Instance["CliBye"], ConsoleTone.Muted);
 
             return 130;
         }
@@ -121,19 +124,18 @@ public sealed class CliComposition
 
     private int RunMenu()
     {
-        ConsoleMenu menu = new("WSL SQUAD CLI", _host);
-        menu.Add("build", "build an instance from the image");
-        menu.Add("settings", "the working folder, .wslconfig, and the packs catalog");
-        menu.Add("instances", "choose an instance and act on it");
-        menu.Add("archives", "choose an archive: restore or delete");
-        menu.Add("exit", "leave the CLI");
-
         bool alternate = ConsoleMode.EnterAlternateScreen();
 
         try
         {
             while (true)
             {
+                ConsoleMenu menu = new(Localizer.Instance["CliMenuTitle"], _host);
+                menu.Add("build", Localizer.Instance["CliCommandBuild"], Localizer.Instance["CliMenuBuild"]);
+                menu.Add("settings", Localizer.Instance["CliCommandSettings"], Localizer.Instance["CliMenuSettings"]);
+                menu.Add("instances", Localizer.Instance["CliCommandInstances"], Localizer.Instance["CliMenuInstances"]);
+                menu.Add("archives", Localizer.Instance["CliCommandArchives"], Localizer.Instance["CliMenuArchives"]);
+                menu.Add("exit", Localizer.Instance["CliCommandExit"], Localizer.Instance["CliMenuExit"]);
                 _host.Clear();
                 IReadOnlyList<ConsoleMenuItem>? picked = menu.Prompt();
 
@@ -154,7 +156,7 @@ public sealed class CliComposition
                 }
 
                 _host.Line(string.Empty);
-                _host.Line("Press Enter to return to the menu.", ConsoleTone.Muted);
+                _host.Line(Localizer.Instance["CliPressEnterMenu"], ConsoleTone.Muted);
                 Console.ReadLine();
             }
         }
@@ -198,11 +200,11 @@ public sealed class CliComposition
     private WorkflowOutcome Unknown(string command)
     {
         _host.Line(string.Empty);
-        _host.Line($"Unknown command '{command}'.", ConsoleTone.Error);
-        _host.Line("Commands: build, settings, instances, archives, restart, shell, manage_packs, theme,", ConsoleTone.Hint);
-        _host.Line("          register_docker, unregister_docker, unregister, archive, restore, duplicate,", ConsoleTone.Hint);
-        _host.Line("          compact, migrate, wslconfig, delete_archive.", ConsoleTone.Hint);
+        _host.Line(Localizer.Instance.Format("CliUnknownCommand", command), ConsoleTone.Error);
+        _host.Line(Localizer.Instance["CliCommandsHint1"], ConsoleTone.Hint);
+        _host.Line(Localizer.Instance["CliCommandsHint2"], ConsoleTone.Hint);
+        _host.Line(Localizer.Instance["CliCommandsHint3"], ConsoleTone.Hint);
 
-        return WorkflowResults.Failed(string.Empty, $"Unknown command '{command}'.");
+        return WorkflowResults.Failed(string.Empty, Localizer.Instance.Format("CliUnknownCommand", command));
     }
 }

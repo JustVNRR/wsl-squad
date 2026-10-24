@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -7,15 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Resources\packs\**\*"
+        <EmbeddedResource Include="..\..\Assets\packs\**\*"
                             LogicalName="packs/%(RecursiveDir)%(Filename)%(Extension)" />
-        <EmbeddedResource Include="Resources\ingredients\**\*"
+        <EmbeddedResource Include="..\..\Assets\ingredients\**\*"
                             LogicalName="ingredients/%(RecursiveDir)%(Filename)%(Extension)" />
-        <EmbeddedResource Include="Resources\recipes\**\*"
+        <EmbeddedResource Include="..\..\Assets\recipes\**\*"
                             LogicalName="recipes/%(RecursiveDir)%(Filename)%(Extension)" />
         <EmbeddedResource Include="..\..\Assets\fonts\**\*.ttf"
-                            Link="Resources\Fonts\%(RecursiveDir)%(Filename)%(Extension)"
                             LogicalName="fonts/%(RecursiveDir)%(Filename)%(Extension)" />
+        <EmbeddedResource Include="..\..\Assets\languages\**\*.json"
+                            LogicalName="languages/%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 
     <ItemGroup>

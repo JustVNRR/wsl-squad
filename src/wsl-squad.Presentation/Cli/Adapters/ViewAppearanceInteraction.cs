@@ -1,6 +1,7 @@
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Cli.Ports;
 using WslSquad.Presentation.Workflows;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Cli.Adapters;
 
@@ -15,6 +16,8 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
 
     public string? PickInstance(IReadOnlyList<WslIndexDto> candidates)
     {
+        _view.Clear();
+
         return _view.AskOffered(candidates);
     }
 
@@ -36,6 +39,7 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
 
         while (true)
         {
+            _view.Clear();
             string? chosen = _view.AskTheme(instanceName);
 
             if (chosen is null)
@@ -51,6 +55,7 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
 
             if (chosen == "font")
             {
+                _view.Clear();
                 string? picked = _view.AskFont(instanceName, context.Fonts, font);
 
                 if (!string.IsNullOrEmpty(picked))
@@ -62,6 +67,7 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
             }
             else if (chosen == "color")
             {
+                _view.Clear();
                 string? picked = _view.AskColour(instanceName, context.ColorSchemes, scheme);
 
                 if (!string.IsNullOrEmpty(picked))
@@ -75,6 +81,7 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
             {
                 while (true)
                 {
+                    _view.Clear();
                     string? how = _view.AskIconType(instanceName);
 
                     if (how is null)
@@ -99,10 +106,11 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
 
                     if (how == "letters")
                     {
+                        _view.Clear();
                         string suggestion = recipe.Text ?? string.Empty;
                         string question = suggestion.Length > 0
-                            ? $"Letters, 1 to 3 [{suggestion}]"
-                            : "Letters, 1 to 3";
+                            ? Localizer.Instance.Format("CliLettersQuestion", suggestion)
+                            : Localizer.Instance["CliLetters"];
                         bool settled = false;
 
                         while (true)
@@ -152,6 +160,7 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
 
                     if (how == "colours")
                     {
+                        _view.Clear();
                         WslIconPairDto? pair = _view.AskIconPair(
                             instanceName,
                             context.IconPairs,
@@ -177,6 +186,7 @@ public sealed class ViewAppearanceInteraction : IAppearanceInteraction
                     }
 
                     bool imageSettled = false;
+                    _view.Clear();
 
                     while (true)
                     {

@@ -1,4 +1,6 @@
+using WslSquad.Core.Repositories;
 using WslSquad.Core.Services;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.UI.Cli.Composition;
 
@@ -24,6 +26,8 @@ public sealed class CliServices
             "wsl-squad");
         Directory.CreateDirectory(assets);
         CatalogBootstrap.Ensure(assets);
+        Localizer.Instance.LoadLanguages(Path.Combine(assets, "languages"));
+        Localizer.Instance.UsePreferences(new ConfigRepository(assets));
 
         ServiceFactory factory = new();
         string root = factory.ResolveRoot(assets, assets);

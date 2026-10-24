@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\wsl-squad.Core\wsl-squad.Core.csproj" />
@@ -6,6 +6,11 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\Assets\languages\*.json"
+                      LogicalName="WslSquad.Presentation.languages.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>

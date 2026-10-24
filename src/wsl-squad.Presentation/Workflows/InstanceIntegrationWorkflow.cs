@@ -23,7 +23,7 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
         return RunDockerAsync(
             target,
             register: true,
-            name => $"Registering '{name}' with Docker Desktop...",
+            name => Localizer.Instance.Format("ProgressRegisteringDocker", name),
             (name, restart) => Service.RegisterDocker(new RegisterDockerDto
             {
                 InstanceName = name,
@@ -36,7 +36,7 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
         return RunDockerAsync(
             target,
             register: false,
-            name => $"Taking '{name}' out of Docker Desktop...",
+            name => Localizer.Instance.Format("ProgressUnregisteringDocker", name),
             (name, restart) => Service.UnregisterDocker(new UnregisterDockerDto
             {
                 InstanceName = name,
@@ -67,7 +67,7 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
 
             if (row is null)
             {
-                return WorkflowResults.Failed<TResponse>(target, "not an instance of this machine");
+                return WorkflowResults.Failed<TResponse>(target, Localizer.Instance["NotAnInstance"]);
             }
 
             DockerTargetStatus status = DockerRules.Status(row.Docker, register);
@@ -76,11 +76,11 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
             {
                 string reason = status switch
                 {
-                    DockerTargetStatus.AlreadyRegistered => "already registered",
-                    DockerTargetStatus.NotRegistered => "not registered",
-                    DockerTargetStatus.Unknown => "the Docker Desktop state cannot be read",
+                    DockerTargetStatus.AlreadyRegistered => Localizer.Instance["DockerTargetAlreadyRegistered"],
+                    DockerTargetStatus.NotRegistered => Localizer.Instance["DockerTargetNotRegistered"],
+                    DockerTargetStatus.Unknown => Localizer.Instance["DockerTargetUnknown"],
                     DockerTargetStatus.Eligible => string.Empty,
-                    _ => "the Docker Desktop state cannot be read",
+                    _ => Localizer.Instance["DockerTargetUnknown"],
                 };
 
                 return WorkflowResults.Failed<TResponse>(target, reason);
@@ -97,8 +97,8 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
                 string noTargetMessage = live.Count > 0 &&
                                          live.TrueForAll(row =>
                                              DockerRules.Status(row.Docker, register) == DockerTargetStatus.Unknown)
-                    ? "the Docker Desktop state cannot be read"
-                    : "No Docker Desktop candidate is available.";
+                    ? Localizer.Instance["DockerTargetUnknown"]
+                    : Localizer.Instance["NoDockerCandidate"];
 
                 return WorkflowResults.NoTarget<TResponse>(noTargetMessage);
             }

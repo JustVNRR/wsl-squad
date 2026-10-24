@@ -1,5 +1,6 @@
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Localization;
 using WslSquad.Presentation.Gui.ViewModels;
 using WslSquad.Presentation.Workflows;
 
@@ -26,7 +27,9 @@ public sealed class DialogInstanceInteraction : IInstanceInteraction, IAppearanc
 
     public bool PromptRestart(string instanceName)
     {
-        return _dialogs.Confirm("Restart", $"Restart '{instanceName}'?");
+        return _dialogs.Confirm(
+            Localizer.Instance["ConfirmRestartTitle"],
+            Localizer.Instance.Format("ConfirmRestart", instanceName));
     }
 
     public ArchiveDto? PromptArchive(string instanceName, bool replacesArchive)

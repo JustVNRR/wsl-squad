@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -25,6 +26,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private bool InFlight { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RootLine))]
     public partial string Root { get; set; }
 
     [ObservableProperty]
@@ -59,6 +61,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _fleetWorkflow = new FleetWorkflow(fleet, executionStarted: message => SetBusy(true, message));
         _logger = logger;
         Root = string.Empty;
+        Localizer.Instance.PropertyChanged += OnLocalizerChanged;
 
         UiThemeSettings theme = ui.GetTheme();
         ColourSet = theme.ColourSet;
@@ -71,11 +74,15 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
     public bool Free => !Busy;
 
+    public string RootLine => Localizer.Instance.Format("RootDisplay", Root);
+
     private bool IsLocked => Busy || InFlight;
 
     public string ThemeGlyph => Variant == "Light" ? "\uF186" : "\uF185";
 
-    public string ThemeTooltip => Variant == "Light" ? "Switch to dark" : "Switch to light";
+    public string ThemeTooltip => Variant == "Light"
+        ? Localizer.Instance["ThemeTooltipDark"]
+        : Localizer.Instance["ThemeTooltipLight"];
 
     partial void OnVariantChanged(string value)
     {
@@ -91,7 +98,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        SetBusy(true, "Reading the fleet...");
+        SetBusy(true, Localizer.Instance["StatusReadingFleet"]);
 
         try
         {
@@ -171,7 +178,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
 
         await RunWorkflowAsync(
-            "Build",
+            Localizer.Instance["OperationBuild"],
             request.Name ?? string.Empty,
             () => _workflow.BuildAsync(request),
             reload: true,
@@ -217,7 +224,9 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            SetStatus($"Settings : {fontFamily}/{colourSet} - {exception.ToMessage()}", true);
+            SetStatus(
+                Localizer.Instance.Format("StatusSettingsError", fontFamily, colourSet, exception.ToMessage()),
+                true);
 
             return;
         }
@@ -238,7 +247,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         if (outcome.NewRoot is not null)
         {
             await RunWorkflowAsync(
-                "Migrate",
+                Localizer.Instance["OperationMigrate"],
                 outcome.NewRoot,
                 () => _fleetWorkflow.MigrateRootAsync(outcome.NewRoot),
                 reload: true);
@@ -248,7 +257,11 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
         await LoadAsync();
         SetStatus(
-            $"Window face: '{fontFamily}' at {fontSize} pt, theme '{(ColourSet.Length > 0 ? ColourSet : "default")}'. Popups follow on their next open.",
+            Localizer.Instance.Format(
+                "StatusWindowFace",
+                fontFamily,
+                fontSize,
+                ColourSet.Length > 0 ? ColourSet : Localizer.Instance["DefaultOption"]),
             false);
     }
 
@@ -277,14 +290,21 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            SetStatus($"Could not keep the {other} version: {exception.ToMessage()}", true);
+            SetStatus(
+                Localizer.Instance.Format(
+                    "StatusThemeError",
+                    Localizer.Instance[other == "Light" ? "ThemeLight" : "ThemeDark"].ToLowerInvariant(),
+                    exception.ToMessage()),
+                true);
 
             return;
         }
 
         Variant = other;
-        string setName = ColourSet.Length > 0 ? ColourSet : "default";
-        SetStatus($"The window wears '{setName}', {other.ToLowerInvariant()} version.", false);
+        string setName = ColourSet.Length > 0 ? ColourSet : Localizer.Instance["DefaultOption"];
+        SetStatus(
+            Localizer.Instance.Format("StatusWindowWears", setName, other.ToLowerInvariant()),
+            false);
     }
 
     private async Task OpenAsync(string? name)
@@ -294,7 +314,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("Open", name, () => _workflow.OpenAsync(name), reload: false);
+        await RunWorkflowAsync(Localizer.Instance["OperationOpen"], name, () => _workflow.OpenAsync(name), reload: false);
     }
 
     private async Task RestartAsync(string? name)
@@ -304,7 +324,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("Restart", name, () => _workflow.RestartAsync(name), reload: false);
+        await RunWorkflowAsync(Localizer.Instance["OperationRestart"], name, () => _workflow.RestartAsync(name), reload: false);
     }
 
     private async Task EditAsync(string? name)
@@ -314,7 +334,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("ManagePacks", name, () => _workflow.ManagePacksAsync(name), reload: false);
+        await RunWorkflowAsync(Localizer.Instance["OperationManagePacks"], name, () => _workflow.ManagePacksAsync(name), reload: false);
     }
 
     private async Task AppearanceAsync(string? name)
@@ -324,7 +344,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("SetAppearance", name, () => _workflow.AppearanceAsync(name), reload: false);
+        await RunWorkflowAsync(Localizer.Instance["OperationSetAppearance"], name, () => _workflow.AppearanceAsync(name), reload: false);
     }
 
     private async Task ArchiveAsync(string? name)
@@ -334,7 +354,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("Archive", name, () => _workflow.ArchiveAsync(name), reload: true);
+        await RunWorkflowAsync(Localizer.Instance["OperationArchive"], name, () => _workflow.ArchiveAsync(name), reload: true);
     }
 
     private async Task CompactAsync(string? name)
@@ -344,7 +364,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("Compact", name, () => _workflow.CompactAsync(name), reload: true);
+        await RunWorkflowAsync(Localizer.Instance["OperationCompact"], name, () => _workflow.CompactAsync(name), reload: true);
     }
 
     private async Task RemoveAsync(string? name)
@@ -354,7 +374,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("Remove", name, () => _workflow.RemoveAsync(name), reload: true);
+        await RunWorkflowAsync(Localizer.Instance["OperationRemove"], name, () => _workflow.RemoveAsync(name), reload: true);
     }
 
     private async Task DockerAsync(string? name, bool register)
@@ -367,7 +387,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         if (register)
         {
             await RunWorkflowAsync(
-                "RegisterDocker",
+                Localizer.Instance["OperationRegisterDocker"],
                 name,
                 () => _workflow.RegisterDockerAsync(name),
                 reload: false);
@@ -376,7 +396,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
 
         await RunWorkflowAsync(
-            "UnregisterDocker",
+            Localizer.Instance["OperationUnregisterDocker"],
             name,
             () => _workflow.UnregisterDockerAsync(name),
             reload: false);
@@ -389,7 +409,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("Restore", name, () => _workflow.RestoreAsync(name), reload: true);
+        await RunWorkflowAsync(Localizer.Instance["OperationRestore"], name, () => _workflow.RestoreAsync(name), reload: true);
     }
 
     private async Task DuplicateAsync(string? name)
@@ -399,7 +419,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("Duplicate", name, () => _workflow.DuplicateAsync(name), reload: true);
+        await RunWorkflowAsync(Localizer.Instance["OperationDuplicate"], name, () => _workflow.DuplicateAsync(name), reload: true);
     }
 
     private async Task DeleteArchiveAsync(string? name)
@@ -409,7 +429,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        await RunWorkflowAsync("DeleteArchive", name, () => _workflow.DeleteArchiveAsync(name), reload: true);
+        await RunWorkflowAsync(Localizer.Instance["OperationDeleteArchive"], name, () => _workflow.DeleteArchiveAsync(name), reload: true);
     }
 
     private async Task RunWorkflowAsync<T>(
@@ -440,27 +460,30 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
                     string successText = successMessage is not null && result.Response is not null
                         ? successMessage(result.Response)
-                        : $"{operation} : {result.Subject}";
+                        : Localizer.Instance.Format("StatusOperation", operation, result.Subject);
                     SetStatus(successText, false);
 
                     break;
                 case WorkflowStatus.Cancelled:
-                    SetStatus($"{operation} : cancelled", false);
+                    SetStatus(Localizer.Instance.Format("StatusOperationCancelled", operation), false);
 
                     break;
                 case WorkflowStatus.NoTarget:
-                    SetStatus($"{operation} : {result.Message}", true);
+                    SetStatus(
+                        Localizer.Instance.Format("StatusOperation", operation, result.Message),
+                        true);
 
                     break;
                 case WorkflowStatus.Failed:
                     string detail = (result.Subject, result.Message) switch
                     {
-                        ({ Length: > 0 } subject, { Length: > 0 } message) => $"{subject} - {message}",
+                        ({ Length: > 0 } subject, { Length: > 0 } message) =>
+                            Localizer.Instance.Format("StatusSubjectDetail", subject, message),
                         ({ Length: > 0 } subject, _) => subject,
                         (_, { Length: > 0 } message) => message,
-                        _ => "failed",
+                        _ => Localizer.Instance["StatusFailed"],
                     };
-                    SetStatus($"{operation} : {detail}", true);
+                    SetStatus(Localizer.Instance.Format("StatusOperation", operation, detail), true);
 
                     break;
                 default:
@@ -470,7 +493,10 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         catch (Exception exception) when (
             exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            SetStatus($"{operation} : {name} - {exception.ToMessage()}", true);
+            SetStatus(
+                Localizer.Instance.Format(
+                    "StatusOperationError", operation, name, exception.ToMessage()),
+                true);
         }
         finally
         {
@@ -481,7 +507,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
 
     private static string DescribeBuild(BuildResponseDto response)
     {
-        string summary = $"Built '{response.InstanceName}'.";
+        string summary = Localizer.Instance.Format("StatusBuilt", response.InstanceName);
         string[] notices = [.. response.Notices
             .Select(notice => notice.ToMessage().ReplaceLineEndings(" "))
             .Where(message => message.Length > 0)];
@@ -489,7 +515,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         return notices.Length == 0 ? summary : $"{summary} {string.Join(" ", notices)}";
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(bool announce = true)
     {
         try
         {
@@ -506,14 +532,33 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                 Rows.Add(InstanceRowViewModel.From(row, RunRowCommand));
             }
 
-            SetStatus(
-                Rows.Count == 0 ? "No WSL SQUAD instances found." : $"{Rows.Count} row(s) loaded.",
-                false);
+            if (announce)
+            {
+                SetStatus(
+                    Rows.Count == 0
+                        ? Localizer.Instance["StatusNoInstances"]
+                        : Localizer.Instance.Format("StatusRowsLoaded", Rows.Count),
+                    false);
+            }
         }
         catch (InvalidOperationException exception)
         {
-            SetStatus($"Error reading instances: {exception.ToMessage()}", true);
+            SetStatus(
+                Localizer.Instance.Format("StatusReadingError", exception.ToMessage()),
+                true);
         }
+    }
+
+    private void OnLocalizerChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != "Item[]")
+        {
+            return;
+        }
+
+        OnPropertyChanged(nameof(ThemeTooltip));
+        OnPropertyChanged(nameof(RootLine));
+        _ = LoadAsync(announce: false);
     }
 
     private void SetBusy(bool busy, string? message)

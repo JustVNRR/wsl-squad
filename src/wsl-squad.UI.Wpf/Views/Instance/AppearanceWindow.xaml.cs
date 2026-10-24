@@ -24,8 +24,9 @@ public partial class AppearanceWindow : ChromeWindow
 
         _viewModel = viewModel;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
-        viewModel.CloseRequested += (_, _) => Close();
+        viewModel.CloseRequested += (_, _) => DialogResult = true;
         ContentRendered += (_, _) => TxtIconText.Focus();
+        Closed += (_, _) => viewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
         PaintPreview();
         PaintIcon();
@@ -136,7 +137,7 @@ public partial class AppearanceWindow : ChromeWindow
 
             foreach (Run run in block.Inlines.OfType<Run>())
             {
-                run.Foreground = new SolidColorBrush(ParseColor(ColorForTag(run.Tag as string, foreground, palette), Colors.White));
+                run.Foreground = new SolidColorBrush(ParseColor(ColorForTag(run.Tag, foreground, palette), Colors.White));
             }
         }
 
@@ -186,24 +187,18 @@ public partial class AppearanceWindow : ChromeWindow
     }
 
     private static string ColorForTag(
-        string? tag,
+        object? tag,
         string foreground,
         IReadOnlyList<string> palette)
     {
-        if (string.IsNullOrEmpty(tag) || tag == "fg")
+        if (tag is not PreviewInk ink || ink == PreviewInk.Foreground)
         {
             return foreground;
         }
 
-        if (tag.Length >= 2 &&
-            tag[0] == 'c' &&
-            int.TryParse(tag[1..], out int index) &&
-            index < palette.Count)
-        {
-            return palette[index];
-        }
+        int index = (int)ink;
 
-        return foreground;
+        return index < palette.Count ? palette[index] : foreground;
     }
 
     private static bool TryHex(char digit, out byte value)

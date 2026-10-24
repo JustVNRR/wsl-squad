@@ -2,7 +2,8 @@
                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:views="clr-namespace:WslSquad.UI.Wpf.Views"
-                    Title="Settings"
+                    xmlns:loc="clr-namespace:WslSquad.Presentation.Localization;assembly=wsl-squad.Presentation"
+                    Title="{Binding Source={x:Static loc:Localizer.Instance}, Path=[SettingsTitle]}"
                     SizeToContent="WidthAndHeight"
                     WindowStartupLocation="CenterScreen"
                     ResizeMode="NoResize"
@@ -11,30 +12,35 @@
         <DataTemplate x:Key="ChoiceLabelTemplate">
             <TextBlock Text="{Binding Label}"/>
         </DataTemplate>
+        <DataTemplate x:Key="LanguageLabelTemplate">
+            <TextBlock Text="{Binding DisplayName}"/>
+        </DataTemplate>
     </views:ChromeWindow.Resources>
     <StackPanel Margin="18">
-        <TextBlock Text="SETTINGS" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[SettingsHeading]}" FontWeight="SemiBold"/>
         <Border BorderBrush="{DynamicResource AppDividerBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
-        <TextBlock Margin="0,10,0,0" Text="Root folder" FontWeight="SemiBold"/>
+        <TextBlock Margin="0,10,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[Language]}" FontWeight="SemiBold"/>
+        <ComboBox ItemsSource="{Binding Languages}" ItemTemplate="{StaticResource LanguageLabelTemplate}" SelectedIndex="{Binding LanguageIndex, Mode=TwoWay}" Margin="0,6,0,0"/>
+        <TextBlock Margin="0,12,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelRootFolder]}" FontWeight="SemiBold"/>
         <Grid Margin="0,6,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox Text="{Binding Root}" IsEnabled="False" Background="{DynamicResource AppInputBackgroundBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
-            <Button Grid.Column="1" Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Edit the working folder" Command="{Binding EditRootCommand}"/>
+            <TextBox Text="{Binding Root}" IsEnabled="False"/>
+            <Button Grid.Column="1" Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipEditWorkingFolder]}" Command="{Binding EditRootCommand}"/>
         </Grid>
-        <TextBlock Margin="0,12,0,0" Text="WSL config" FontWeight="SemiBold"/>
+        <TextBlock Margin="0,12,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelWslConfig]}" FontWeight="SemiBold"/>
         <Grid Margin="0,6,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox Text="{Binding WslConfigPath, Mode=OneWay}" IsEnabled="False" Background="{DynamicResource AppInputBackgroundBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
-            <Button Grid.Column="1" Command="{Binding WslConfigCommand}" Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Open .wslconfig in the default editor"/>
+            <TextBox Text="{Binding WslConfigPath, Mode=OneWay}" IsEnabled="False"/>
+            <Button Grid.Column="1" Command="{Binding WslConfigCommand}" Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenWslConfig]}"/>
         </Grid>
         <TextBlock Text="{Binding ConfigError}" Visibility="{Binding ConfigError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
-        <TextBlock Text="Appearance" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,12,0,0"/>
+        <TextBlock Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[AppearanceTitle]}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,12,0,0"/>
         <Grid Margin="0,12,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -44,32 +50,32 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Font"/>
+            <TextBlock Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelFontShort]}"/>
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,6,0,0">
                 <ComboBox ItemsSource="{Binding Fonts}" ItemTemplate="{StaticResource ChoiceLabelTemplate}" SelectedIndex="{Binding FontIndex, Mode=TwoWay}"/>
-                <Button Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Upload a font file..." Command="{Binding UploadFontCommand}"/>
+                <Button Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipUploadFont]}" Command="{Binding UploadFontCommand}"/>
             </StackPanel>
             <ComboBox ItemsSource="{Binding Sizes}" ItemTemplate="{StaticResource ChoiceLabelTemplate}" SelectedIndex="{Binding SizeIndex, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" Margin="16,6,0,0"/>
         </Grid>
-        <TextBlock Margin="0,10,0,0" Text="Theme"/>
+        <TextBlock Margin="0,10,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelTheme]}"/>
         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
             <ComboBox ItemsSource="{Binding Colours}" ItemTemplate="{StaticResource ChoiceLabelTemplate}" SelectedIndex="{Binding ColourIndex, Mode=TwoWay}"/>
-            <Button Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding OpenThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="Open the selected theme in the default editor"/>
-            <Button Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding UploadThemeCommand}" ToolTip="Upload a theme file..."/>
-            <Button Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding ExportThemeCommand}" ToolTip="Save the selected theme..."/>
-            <Button Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding DeleteThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="Delete the selected theme"/>
+            <Button Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding OpenThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenTheme]}"/>
+            <Button Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding UploadThemeCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipUploadTheme]}"/>
+            <Button Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding ExportThemeCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipSaveTheme]}"/>
+            <Button Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding DeleteThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeleteTheme]}"/>
         </StackPanel>
         <TextBlock Text="{Binding ThemeError}" Visibility="{Binding ThemeError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
-        <TextBlock Margin="0,12,0,0" Text="Packs Catalog" FontWeight="SemiBold"/>
+        <TextBlock Margin="0,12,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelPacksCatalog]}" FontWeight="SemiBold"/>
         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
             <ComboBox ItemsSource="{Binding Packs}" ItemTemplate="{StaticResource ChoiceLabelTemplate}" SelectedIndex="{Binding PackIndex, Mode=TwoWay}"/>
-            <Button Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding OpenPackCommand}" IsEnabled="{Binding CanPack}" ToolTip="Open the selected pack's folder"/>
-            <Button Content="&#xF0C5;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding DuplicatePackCommand}" IsEnabled="{Binding CanPack}" ToolTip="Duplicate the selected pack under a new name"/>
-            <Button Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding DeletePackCommand}" IsEnabled="{Binding CanPack}" ToolTip="Delete the selected pack"/>
+            <Button Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding OpenPackCommand}" IsEnabled="{Binding CanPack}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenPackFolder]}"/>
+            <Button Content="&#xF0C5;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding DuplicatePackCommand}" IsEnabled="{Binding CanPack}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDuplicatePack]}"/>
+            <Button Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding DeletePackCommand}" IsEnabled="{Binding CanPack}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeletePack]}"/>
         </StackPanel>
         <TextBlock Text="{Binding CatalogueError}" Visibility="{Binding CatalogueError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="CLOSE" IsDefault="True" IsCancel="True" Command="{Binding CloseCommand}"
+            <Button Content="{Binding Source={x:Static loc:Localizer.Instance}, Path=[ActionClose]}" IsDefault="True" IsCancel="True" Command="{Binding CloseCommand}"
                     Style="{DynamicResource BtnApply}"/>
         </StackPanel>
     </StackPanel>

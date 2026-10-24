@@ -29,7 +29,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
                 rows,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (selectionError is not null)
         {
@@ -46,7 +46,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<ArchiveResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Archiving '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressArchiving", instance));
 
         try
         {
@@ -75,7 +75,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
                 rows,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (selectionError is not null)
         {
@@ -92,7 +92,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<CompactResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Compacting '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressCompacting", instance));
 
         try
         {
@@ -121,7 +121,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
                 rows,
                 archives: true,
                 _interaction.PickArchive,
-                "No archive is available.");
+                Localizer.Instance["NoArchiveAvailable"]);
 
         if (selectionError is not null)
         {
@@ -139,7 +139,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<RestoreResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Restoring '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressRestoring", instance));
 
         try
         {
@@ -160,7 +160,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
                 target,
                 archives: true,
                 _interaction.PickArchive,
-                "No archive is available.");
+                Localizer.Instance["NoArchiveAvailable"]);
 
         if (error is not null)
         {
@@ -174,7 +174,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<DeleteArchiveResponseDto>(archive);
         }
 
-        ExecutionStarted?.Invoke($"Deleting the archive '{archive}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressDeletingArchive", archive));
 
         try
         {

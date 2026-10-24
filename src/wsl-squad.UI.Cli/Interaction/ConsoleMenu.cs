@@ -1,3 +1,5 @@
+using WslSquad.Presentation.Localization;
+
 namespace WslSquad.UI.Cli.Interaction;
 
 public sealed class ConsoleMenu
@@ -79,6 +81,11 @@ public sealed class ConsoleMenu
         return Add(new ConsoleMenuItem(key, description));
     }
 
+    public ConsoleMenu Add(string key, string label, string description)
+    {
+        return Add(new ConsoleMenuItem(key, label, description));
+    }
+
     public IReadOnlyList<ConsoleMenuItem>? Prompt()
     {
         if (_items.Count == 0)
@@ -95,7 +102,7 @@ public sealed class ConsoleMenu
             12,
             _items
                 .Where(item => !string.IsNullOrEmpty(item.Key))
-                .Select(item => item.Key.Length)
+                .Select(item => item.Label.Length)
                 .DefaultIfEmpty(0)
                 .Max());
 
@@ -130,8 +137,8 @@ public sealed class ConsoleMenu
 
         IReadOnlyList<string> texts = [.. _items.Select(item => item.Text)];
         string hint = Multi
-            ? "  up/down to move, space to check, Enter to apply, Escape to cancel"
-            : "  up/down to move, Enter to choose, Escape to cancel";
+            ? Localizer.Instance["CliMenuHintMulti"]
+            : Localizer.Instance["CliMenuHintSingle"];
         (int width, int height) = _console.Size();
         int extra = string.IsNullOrEmpty(Note) ? 0 : 1;
         IReadOnlyList<string> shown = Fit(texts, width, Multi ? 8 : 4);
@@ -305,13 +312,13 @@ public sealed class ConsoleMenu
                     _console.Line($"  {index + 1,2}.  {box} {texts[index]}");
                 }
 
-                _console.Line("   0.  Cancel");
+                _console.Line(Localizer.Instance["CliMenuCancel"]);
                 if (!string.IsNullOrEmpty(Note))
                 {
                     _console.Line($"  {Note}", ConsoleTone.Muted);
                 }
 
-                string? answer = _console.Prompt("Number toggles, v applies, 0 cancels");
+                string? answer = _console.Prompt(Localizer.Instance["CliMenuNumberHint"]);
 
                 if (string.IsNullOrWhiteSpace(answer) || answer.Trim() == "0")
                 {
@@ -330,7 +337,7 @@ public sealed class ConsoleMenu
                     continue;
                 }
 
-                _console.Line($"  '{answer}' is not one of the numbers above.", ConsoleTone.Warning);
+                _console.Line(Localizer.Instance.Format("CliMenuNotANumber", answer), ConsoleTone.Warning);
             }
         }
 
@@ -345,7 +352,7 @@ public sealed class ConsoleMenu
             _console.Line($"  {index + 1,2}.  {texts[index]}");
         }
 
-        _console.Line("   0.  Cancel");
+        _console.Line(Localizer.Instance["CliMenuCancel"]);
         if (!string.IsNullOrEmpty(Note))
         {
             _console.Line($"  {Note}", ConsoleTone.Muted);
@@ -353,7 +360,7 @@ public sealed class ConsoleMenu
 
         while (true)
         {
-            string? answer = _console.Prompt("Which one? (0 to cancel)");
+            string? answer = _console.Prompt(Localizer.Instance["CliMenuWhich"]);
 
             if (string.IsNullOrWhiteSpace(answer))
             {
@@ -373,7 +380,7 @@ public sealed class ConsoleMenu
                 }
             }
 
-            _console.Line($"  '{answer}' is not one of the numbers above.", ConsoleTone.Warning);
+            _console.Line(Localizer.Instance.Format("CliMenuNotANumber", answer), ConsoleTone.Warning);
         }
     }
 

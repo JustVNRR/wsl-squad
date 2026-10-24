@@ -1,5 +1,8 @@
 using WslSquad.Core.Exceptions;
+using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace WslSquad.Core.Repositories;
 
@@ -213,6 +216,69 @@ public sealed class ConfigRepository : IConfigRepository
         AtomicFile.WriteText(file, root.TrimEnd('\\'));
     }
 
+    public string GetLanguage()
+    {
+        string? text = AtomicFile.ReadText(ConfigFile());
+
+        if (text is null)
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(text, _documentOptions);
+
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return string.Empty;
+            }
+
+            foreach (JsonProperty property in document.RootElement.EnumerateObject())
+            {
+                if (string.Equals(property.Name, "language", StringComparison.OrdinalIgnoreCase) &&
+                    property.Value.ValueKind == JsonValueKind.String)
+                {
+                    return property.Value.GetString()?.Trim() ?? string.Empty;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            return string.Empty;
+        }
+
+        return string.Empty;
+    }
+
+    public void SaveLanguage(string code)
+    {
+        JsonObject root;
+
+        try
+        {
+            string? text = AtomicFile.ReadText(ConfigFile());
+            root = text is null
+                ? []
+                : JsonNode.Parse(text, documentOptions: _documentOptions) as JsonObject ?? [];
+        }
+        catch (JsonException)
+        {
+            root = [];
+        }
+
+        root["language"] = code;
+
+        try
+        {
+            AtomicFile.WriteText(ConfigFile(), root.ToJsonString(AtomicFile.JsonOptions));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Trace.TraceWarning($"[ConfigRepository] Could not save the language preference: {exception.Message}");
+        }
+    }
+
     public string EnsureWslConfig()
     {
         string path = Path.Combine(
@@ -342,6 +408,17 @@ public sealed class ConfigRepository : IConfigRepository
         byte[] hash = SHA256.HashData(stream);
 
         return Convert.ToHexStringLower(hash)[..8];
+    }
+
+    private static readonly JsonDocumentOptions _documentOptions = new()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip,
+    };
+
+    private string ConfigFile()
+    {
+        return Path.Combine(_assetsDir, "config.json");
     }
 
     private static string RootFile()

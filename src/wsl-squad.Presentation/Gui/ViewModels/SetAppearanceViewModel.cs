@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -14,6 +15,7 @@ public sealed record LookSchemeRow(WslColorSchemeDto Scheme, string Label);
 
 public sealed partial class SetAppearanceViewModel : BaseViewModel
 {
+    private string SourceName { get; }
     private readonly GetAppearanceResponseDto _appearance;
     private readonly IDialogService _dialogs;
 
@@ -44,9 +46,9 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
         IDialogService dialogs)
     {
         InstanceName = name;
+        SourceName = name;
         _appearance = appearance;
         _dialogs = dialogs;
-        Lead = $"{name}'s appearance.".ToUpperInvariant();
         IconError = string.Empty;
         ImagePath = string.Empty;
         ApplyCommand = new RelayCommand(Apply, () => IconError.Length == 0);
@@ -59,7 +61,7 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
             bool current = appearance.Icon is not null &&
                            pair.Top == appearance.Icon.Top &&
                            pair.Bottom == appearance.Icon.Bottom;
-            pairRows.Add(new LookPairRow(pair, current ? $"{pair.Name}  (current)" : pair.Name ?? string.Empty));
+            pairRows.Add(new LookPairRow(pair, current ? $"{pair.Name}{Localizer.Instance["CurrentSuffix"]}" : pair.Name ?? string.Empty));
         }
 
         Pairs = pairRows;
@@ -80,7 +82,7 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
         {
             fontRows.Add(new LookFontRow(
                 font,
-                string.Equals(font, appearance.Font, StringComparison.Ordinal) ? $"{font}  (current)" : font));
+                string.Equals(font, appearance.Font, StringComparison.Ordinal) ? $"{font}{Localizer.Instance["CurrentSuffix"]}" : font));
         }
 
         Fonts = fontRows;
@@ -94,7 +96,7 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
             schemeRows.Add(new LookSchemeRow(
                 scheme,
                 string.Equals(scheme.Name, appearance.ColourScheme, StringComparison.Ordinal)
-                    ? $"{scheme.Name}  (current)"
+                    ? $"{scheme.Name}{Localizer.Instance["CurrentSuffix"]}"
                     : scheme.Name ?? string.Empty));
         }
 
@@ -113,7 +115,7 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
 
     public string InstanceName { get; }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadAppearance", SourceName).ToUpperInvariant();
 
     public IReadOnlyList<LookPairRow> Pairs { get; }
 
@@ -161,8 +163,8 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
     private void PickImage()
     {
         string? path = _dialogs.PickOpenFile(
-            $"Icon image for '{InstanceName}'",
-            "Images (*.png;*.jpg;*.jpeg;*.ico;*.bmp)|*.png;*.jpg;*.jpeg;*.ico;*.bmp");
+            Localizer.Instance.Format("FileDialogIcon", InstanceName),
+            Localizer.Instance["FileFilterImages"]);
 
         if (path is not null)
         {
@@ -175,7 +177,7 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
         string text = IconText.Trim();
         bool valid = text.Length is >= 1 and <= 3 && text.All(char.IsAsciiLetterOrDigit);
 
-        IconError = valid ? string.Empty : "One to three letters or digits.";
+        IconError = valid ? string.Empty : Localizer.Instance["ErrorIconFormat"];
         ApplyCommand.NotifyCanExecuteChanged();
     }
 

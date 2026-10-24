@@ -3,6 +3,7 @@ using WslSquad.Core.Services;
 using WslSquad.Presentation.Cli.Adapters;
 using WslSquad.Presentation.Cli.Ports;
 using WslSquad.Presentation.Workflows;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Cli.Presenters.Fleet;
 
@@ -24,7 +25,7 @@ public sealed class MigratePresenter : BasePresenter<IFleetView>
 
         if (result.Status == WorkflowStatus.Cancelled)
         {
-            View.ShowCancelled("moved");
+            View.ShowCancelled(Localizer.Instance["CliMoved"]);
         }
 
         return Finish(result, View.Show);

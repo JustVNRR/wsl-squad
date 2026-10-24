@@ -10,10 +10,10 @@ public static class ValidationMessages
         return problem switch
         {
             NameProblem.None => null,
-            NameProblem.Empty => "Give a name.",
-            NameProblem.InvalidFormat => "Letters, digits, '.', '_' and '-' only.",
-            NameProblem.AlreadyTaken => $"An instance named '{attemptedName}' already exists.",
-            _ => "Invalid name.",
+            NameProblem.Empty => Localizer.Instance["ValidationNameEmpty"],
+            NameProblem.InvalidFormat => Localizer.Instance["ValidationNameFormat"],
+            NameProblem.AlreadyTaken => Localizer.Instance.Format("ValidationNameTaken", attemptedName),
+            _ => Localizer.Instance["ValidationNameInvalid"],
         };
     }
 
@@ -25,14 +25,14 @@ public static class ValidationMessages
         return problem switch
         {
             FleetTargetProblem.None => null,
-            FleetTargetProblem.Empty => "no destination was given.",
+            FleetTargetProblem.Empty => Localizer.Instance["ValidationFleetEmpty"],
             FleetTargetProblem.NotAbsolutePath =>
-                $"'{path}' is not an absolute folder - give a full path, like 'D:\\WSL'.",
+                Localizer.Instance.Format("ValidationFleetNotAbsolute", path),
             FleetTargetProblem.DriveUnavailable =>
-                $"the drive '{root.TrimEnd('\\')}' does not answer.",
+                Localizer.Instance.Format("ValidationFleetDrive", root.TrimEnd('\\')),
             FleetTargetProblem.ArchivesFolderAlreadyExists =>
-                $"'{Path.Combine(path, "archives")}' already exists - move it away first.",
-            _ => "Invalid fleet target.",
+                Localizer.Instance.Format("ValidationFleetArchivesExists", Path.Combine(path, "archives")),
+            _ => Localizer.Instance["ValidationFleetInvalid"],
         };
     }
 }

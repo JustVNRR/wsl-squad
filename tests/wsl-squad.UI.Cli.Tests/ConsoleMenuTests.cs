@@ -32,6 +32,16 @@ public class ConsoleMenuTests
     }
 
     [Fact]
+    public void Menu_items_keep_the_command_key_separate_from_the_displayed_label()
+    {
+        ConsoleMenuItem item = new("build", "construire", "Construire une instance");
+
+        item.Key.Should().Be("build");
+        item.Text.Should().StartWith("construire");
+        item.Text.Should().EndWith("Construire une instance");
+    }
+
+    [Fact]
     public void Menu_items_expose_their_value()
     {
         object value = new();

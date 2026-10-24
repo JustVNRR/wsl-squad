@@ -1,10 +1,15 @@
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Cli.Presenters;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Cli.Ports;
 
 public interface IFleetView : IPresenterViewBase
 {
+    UiLanguage? PickLanguage(IReadOnlyList<UiLanguage> languages);
+
+    void ShowLanguage(string displayName);
+
     void Clear();
 
     string? PickInstance(

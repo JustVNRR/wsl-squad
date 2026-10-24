@@ -10,6 +10,7 @@ using System.Windows.Media;
 
 using WslSquad.Core.Repositories;
 using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Localization;
 using WslSquad.UI.Wpf.Views;
 
 namespace WslSquad.UI.Wpf.Services;
@@ -144,7 +145,7 @@ public sealed class WpfThemeService : IUiThemeService
     {
         if (!LoadsAsTheme(source))
         {
-            throw new InvalidOperationException("The chosen file is not a theme.");
+            throw new InvalidOperationException(Localizer.Instance["ErrorNotATheme"]);
         }
 
         string name = Path.GetFileNameWithoutExtension(source);
@@ -161,7 +162,7 @@ public sealed class WpfThemeService : IUiThemeService
 
         if (!File.Exists(target))
         {
-            throw new InvalidOperationException($"No theme named '{name}' lives in the themes folder.");
+            throw new InvalidOperationException(Localizer.Instance.Format("ErrorThemeMissing", name));
         }
 
         File.Delete(target);
@@ -173,7 +174,7 @@ public sealed class WpfThemeService : IUiThemeService
 
         if (!File.Exists(target))
         {
-            throw new InvalidOperationException($"No theme named '{name}' lives in the themes folder.");
+            throw new InvalidOperationException(Localizer.Instance.Format("ErrorThemeMissing", name));
         }
 
         Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
@@ -395,7 +396,9 @@ public sealed class WpfThemeService : IUiThemeService
             using XmlReader reader = XmlReader.Create(path);
             object? loaded = XamlReader.Load(reader);
 
-            return loaded is ResourceDictionary;
+            return loaded is ResourceDictionary dictionary &&
+                   dictionary["Dark"] is ResourceDictionary &&
+                   dictionary["Light"] is ResourceDictionary;
         }
         catch (XamlParseException)
         {
@@ -405,7 +408,7 @@ public sealed class WpfThemeService : IUiThemeService
         {
             return false;
         }
-        catch (IOException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             return false;
         }

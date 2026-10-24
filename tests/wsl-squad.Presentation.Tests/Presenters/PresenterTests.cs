@@ -8,6 +8,7 @@ using WslSquad.Presentation.Cli.Presenters;
 using WslSquad.Presentation.Cli.Presenters.Fleet;
 using WslSquad.Presentation.Cli.Presenters.Instance;
 using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Localization;
 using WslSquad.Presentation.Workflows;
 
 namespace WslSquad.Presentation.Tests.Presenters;
@@ -354,6 +355,15 @@ public class PresenterTests
             return PickedInstance;
         }
 
+        public UiLanguage? PickLanguage(IReadOnlyList<UiLanguage> languages)
+        {
+            return languages.FirstOrDefault();
+        }
+
+        public void ShowLanguage(string displayName)
+        {
+        }
+
         public void ShowNoInstances(IReadOnlyList<WslOrphanDto> orphans)
         {
         }
@@ -556,6 +566,8 @@ public class PresenterTests
     private sealed class TestAppearanceView : IAppearanceView
     {
         public Queue<string?> Themes { get; } = new();
+
+        public void Clear() { }
 
         public List<SetAppearanceResponseDto> Shown { get; } = [];
 

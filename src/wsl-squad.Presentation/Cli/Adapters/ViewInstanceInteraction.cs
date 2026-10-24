@@ -36,7 +36,7 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
     {
         _view.ShowStopWarning(instanceName);
 
-        if (_view.Confirm("Continue?", defaultNo: false) != true)
+        if (_view.Confirm(Localizer.Instance["CliContinue"], defaultNo: false) != true)
         {
             return null;
         }
@@ -59,7 +59,7 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
     public CompactDto? PromptCompact(string instanceName, bool replacesArchive)
     {
         _view.ShowBeforeQuestions();
-        bool? archiveFirst = _view.Confirm("Archive it first?", defaultNo: false);
+        bool? archiveFirst = _view.Confirm(Localizer.Instance["CliArchiveFirstQuestion"], defaultNo: false);
 
         if (archiveFirst is null)
         {
@@ -114,7 +114,7 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
 
         _view.ShowDiskWarning(instanceName);
 
-        if (_view.Confirm("Continue?", defaultNo: false) != true)
+        if (_view.Confirm(Localizer.Instance["CliContinue"], defaultNo: false) != true)
         {
             return null;
         }
@@ -136,7 +136,7 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
             return null;
         }
 
-        bool? archiveFirst = _view.Confirm("Archive it before deleting?", defaultNo: true);
+        bool? archiveFirst = _view.Confirm(Localizer.Instance["CliArchiveBeforeDelete"], defaultNo: true);
 
         if (archiveFirst is null)
         {
@@ -189,7 +189,7 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
     public bool PromptDeleteArchive(string archiveName)
     {
         return _view.Confirm(
-            $"Delete the archive '{archiveName}'? It cannot be restored.",
+            Localizer.Instance.Format("CliDeleteArchiveQuestion", archiveName),
             defaultNo: true) == true;
     }
 

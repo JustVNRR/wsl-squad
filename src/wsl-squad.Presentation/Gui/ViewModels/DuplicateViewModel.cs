@@ -24,12 +24,11 @@ public sealed partial class DuplicateViewModel : BaseViewModel
         _source = source;
         _taken = taken;
         NameError = string.Empty;
-        Lead = $"Duplicate '{source}'.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, () => _nameOk);
         Name = $"{source}-copy";
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadDuplicate", _source).ToUpperInvariant();
 
     public DuplicateDto? Result { get; private set; }
 

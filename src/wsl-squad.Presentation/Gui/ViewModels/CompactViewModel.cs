@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -16,11 +17,10 @@ public sealed partial class CompactViewModel : BaseViewModel
     {
         _name = name;
         ReplacesArchive = replacesArchive;
-        Lead = $"Compacting '{name}'.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm);
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadCompact", _name).ToUpperInvariant();
 
     public bool ReplacesArchive { get; }
 

@@ -1,22 +1,28 @@
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Localization;
 using WslSquad.UI.Cli.Interaction;
 
 namespace WslSquad.UI.Cli.Views;
 
 public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 {
+    public void Clear()
+    {
+        Host.Clear();
+    }
+
     public void ShowNoInstances()
     {
         Write(string.Empty);
-        Write("[ABORT] No instance of this template is registered on this machine.", ConsoleTone.Error);
-        Write("        Build one with  wsl-squad build", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliNoInstance"], ConsoleTone.Error);
+        Write(Localizer.Instance["CliBuildOne"], ConsoleTone.Hint);
     }
 
     public string? AskOffered(IReadOnlyList<WslIndexDto> instances)
     {
         WslIndexDto? picked = Pick(
-            "Our Instances",
+            Localizer.Instance["CliOurInstances"],
             instances,
             row => $"{row.Name,-30} {Size(row.Size),10}");
 
@@ -26,45 +32,45 @@ public sealed class CliAppearanceView : CliViewBase, IAppearanceView
     public string? AskTheme(string name)
     {
         return Pick(
-            $"Theme of '{name}'",
+            Localizer.Instance.Format("CliThemeOf", name),
             [
-                new Choice("icon", "the tile in the tab"),
-                new Choice("font", "what the whole terminal is written in"),
-                new Choice("color", "the background, the text, and sixteen colours"),
+                new Choice("icon", Localizer.Instance["CliTile"], Localizer.Instance["CliChoiceIcon"]),
+                new Choice("font", Localizer.Instance["CliWholeTerminal"], Localizer.Instance["CliChoiceFont"]),
+                new Choice("color", Localizer.Instance["CliBackground"], Localizer.Instance["CliChoiceColor"]),
             ],
-            choice => $"{choice.What,-6} {choice.About}")?.What;
+            choice => $"{choice.Label,-6} {choice.About}")?.What;
     }
 
     public string? AskFont(string name, IReadOnlyList<string> fonts, string current)
     {
         return Pick(
-            $"Font of '{name}'",
+            Localizer.Instance.Format("CliFontOf", name),
             fonts,
             font => string.Equals(font, current, StringComparison.Ordinal)
-                ? $"{font,-33} (current)"
+                ? $"{font,-33}{Localizer.Instance["CurrentSuffix"]}"
                 : font,
-            "Get more Nerd Fonts at https://www.nerdfonts.com");
+            Localizer.Instance["FontsHint"]);
     }
 
     public string? AskColour(string name, IReadOnlyList<WslColorSchemeDto> schemes, string current)
     {
         return Pick(
-            $"Colours of '{name}'",
+            Localizer.Instance.Format("CliColoursOf", name),
             [.. schemes.OrderBy(scheme => scheme.Name, StringComparer.Ordinal)],
             scheme => string.Equals(scheme.Name, current, StringComparison.Ordinal)
-                ? $"{scheme.Name,-20} (current)"
+                ? $"{scheme.Name,-20}{Localizer.Instance["CurrentSuffix"]}"
                 : $"{scheme.Name,-20}")?.Name;
     }
 
     public string? AskIconType(string name)
     {
         return Pick(
-            $"Icon of '{name}'",
+            Localizer.Instance.Format("CliIconOf", name),
             [
-                new Choice("auto", "By Default"),
-                new Choice("letters", "text"),
-                new Choice("colours", "colors"),
-                new Choice("image", "local file"),
+                new Choice("auto", Localizer.Instance["CliByDefault"]),
+                new Choice("letters", Localizer.Instance["CliText"]),
+                new Choice("colours", Localizer.Instance["CliColors"]),
+                new Choice("image", Localizer.Instance["CliLocalFile"]),
             ],
             choice => choice.About)?.What;
     }
@@ -76,7 +82,7 @@ public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 
     public void ShowLettersHint()
     {
-        Write("  One to three letters or digits.", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliLettersHint"], ConsoleTone.Hint);
     }
 
     public WslIconPairDto? AskIconPair(
@@ -87,37 +93,37 @@ public sealed class CliAppearanceView : CliViewBase, IAppearanceView
         string? bottom)
     {
         return Pick(
-            $"Colours for '{name}'",
+            Localizer.Instance.Format("CliColoursFor", name),
             pairs,
             pair =>
             {
                 bool current = pair.Top == top && pair.Bottom == bottom;
 
-                return $"{suggestion,-4} {pair.Name,-9}{(current ? "  (current)" : string.Empty)}";
+                return $"{suggestion,-4} {pair.Name,-9}{(current ? Localizer.Instance["CurrentSuffix"] : string.Empty)}";
             });
     }
 
     public string? AskImagePath()
     {
-        return AskLine("Path of the image, PNG JPG ICO or BMP (CTRL+C to abort)")?.Trim('"');
+        return AskLine(Localizer.Instance["CliImagePath"])?.Trim('"');
     }
 
     public void ShowNoFile()
     {
-        Write("  No file at that path.", ConsoleTone.Warning);
+        Write(Localizer.Instance["CliNoFileAtPath"], ConsoleTone.Warning);
     }
 
     public void ShowBadExtension()
     {
-        Write("  The name has to end in .png, .jpg, .jpeg, .ico or .bmp.", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliBadImageExtension"], ConsoleTone.Hint);
     }
 
     public void Show(SetAppearanceResponseDto response)
     {
         Write(string.Empty);
-        Write($"==> Theme of '{response.InstanceName}': {string.Join(", ", response.Changes)}", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliThemeApplied", response.InstanceName, string.Join(", ", response.Changes)), ConsoleTone.Success);
         Write(string.Empty);
     }
 
-    private sealed record Choice(string What, string About);
+    private sealed record Choice(string What, string About, string? Label = null);
 }

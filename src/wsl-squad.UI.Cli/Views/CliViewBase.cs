@@ -1,5 +1,6 @@
 using WslSquad.Core.Services;
 using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Localization;
 using WslSquad.UI.Cli.Interaction;
 
 namespace WslSquad.UI.Cli.Views;
@@ -19,7 +20,7 @@ public abstract class CliViewBase : IPresenterViewBase
     public void ShowError(string message)
     {
         Write(string.Empty);
-        Write($"[FAIL] {message}", ConsoleTone.Error);
+        Write(Localizer.Instance.Format("CliFail", message), ConsoleTone.Error);
         Write(string.Empty);
     }
 
@@ -45,7 +46,7 @@ public abstract class CliViewBase : IPresenterViewBase
 
     protected bool? AskConfirmation(string question, bool defaultNo)
     {
-        string shown = defaultNo ? $"{question} [y/N]" : $"{question} [Y/n]";
+        string shown = Localizer.Instance.Format(defaultNo ? "CliConfirmDefaultNo" : "CliConfirmDefaultYes", question);
 
         while (true)
         {
@@ -73,7 +74,7 @@ public abstract class CliViewBase : IPresenterViewBase
                 return false;
             }
 
-            Write("  Answer 'y' or 'n'.", ConsoleTone.Hint);
+            Write(Localizer.Instance["CliAnswerYesNo"], ConsoleTone.Hint);
         }
     }
 
@@ -135,7 +136,7 @@ public abstract class CliViewBase : IPresenterViewBase
     protected void Cancelled(string what)
     {
         Write(string.Empty);
-        Write($"[ABORT] Operation cancelled by user. Nothing was {what}.", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliCancelled", what), ConsoleTone.Success);
     }
 
     protected void Banner(string message)

@@ -31,7 +31,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         Miss = string.Empty;
         Error = string.Empty;
 
-        return View.PickAction("Settings", Actions);
+        return View.PickAction(Localizer.Instance["CliSettingsTitle"], Actions);
     }
 
     public WslPackDto? AskPack()
@@ -91,7 +91,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         {
             ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed("Settings", exception.ToMessage());
+            return WorkflowResults.Failed(Localizer.Instance["CliSettingsTitle"], exception.ToMessage());
         }
 
         View.ShowOpening(pack.Name ?? string.Empty);
@@ -124,7 +124,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         {
             ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed("Settings", exception.ToMessage());
+            return WorkflowResults.Failed(Localizer.Instance["CliSettingsTitle"], exception.ToMessage());
         }
 
         View.ShowDuplicated(newName);
@@ -141,7 +141,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
             View.ShowDependents(pack.Name ?? string.Empty, pack.Dependents);
         }
 
-        bool? confirmed = View.Confirm($"Remove the pack '{pack.Name}'?", defaultNo: true);
+        bool? confirmed = View.Confirm(Localizer.Instance.Format("ConfirmRemovePack", pack.Name), defaultNo: true);
 
         if (confirmed != true)
         {
@@ -156,7 +156,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         {
             ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed("Settings", exception.ToMessage());
+            return WorkflowResults.Failed(Localizer.Instance["CliSettingsTitle"], exception.ToMessage());
         }
 
         View.ShowRemoved(pack.Name ?? string.Empty);

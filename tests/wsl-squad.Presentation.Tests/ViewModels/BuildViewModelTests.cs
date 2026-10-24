@@ -265,7 +265,7 @@ public class BuildViewModelTests
         BuildViewModel viewModel = Create();
         List<string> changes = RecordChanges(viewModel);
 
-        viewModel.DeleteSelected("Recipes");
+        viewModel.DeleteSelected(WslCatalogSection.Recipes);
 
         viewModel.RecipeNames.Should().BeEmpty();
         viewModel.RecipeIndex.Should().Be(-1);
@@ -273,11 +273,14 @@ public class BuildViewModelTests
     }
 
     [Theory]
-    [InlineData("Dockerfiles", "Delete Dockerfile", "ubuntu (01/01 12:00)")]
-    [InlineData("Onboardings", "Delete onboarding shell", "setup (01/01 12:00)")]
-    [InlineData("DockerImages", "Delete Docker image", "base.tar")]
-    [InlineData("Recipes", "Delete recipe", "mine (01/01 12:00)")]
-    public void Deleting_an_uploaded_source_asks_for_confirmation(string listName, string title, string rowName)
+    [InlineData(WslCatalogSection.Dockerfiles, "Delete Dockerfile", "ubuntu (01/01 12:00)")]
+    [InlineData(WslCatalogSection.Onboardings, "Delete onboarding shell", "setup (01/01 12:00)")]
+    [InlineData(WslCatalogSection.DockerImages, "Delete Docker image", "base.tar")]
+    [InlineData(WslCatalogSection.Recipes, "Delete recipe", "mine (01/01 12:00)")]
+    public void Deleting_an_uploaded_source_asks_for_confirmation(
+        WslCatalogSection kind,
+        string title,
+        string rowName)
     {
         _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
@@ -320,7 +323,7 @@ public class BuildViewModelTests
         ]);
         BuildViewModel viewModel = Create();
 
-        viewModel.DeleteSelected(listName);
+        viewModel.DeleteSelected(kind);
 
         _dialogs.LastConfirm.Should().NotBeNull();
         _dialogs.LastConfirm!.Value.Title.Should().Be(title);
@@ -364,7 +367,7 @@ public class BuildViewModelTests
             .Throws(new InvalidOperationException("editor failed"));
         BuildViewModel viewModel = Create();
 
-        Action act = () => viewModel.EditSource("Dockerfiles");
+        Action act = () => viewModel.EditSource(WslCatalogSection.Dockerfiles);
 
         act.Should().NotThrow();
     }
@@ -376,7 +379,7 @@ public class BuildViewModelTests
             .Throws(new InvalidOperationException("export failed"));
         BuildViewModel viewModel = Create();
 
-        Action act = () => viewModel.ExportRecipeTo("Dockerfiles", "/tmp/out");
+        Action act = () => viewModel.ExportRecipeTo(WslCatalogSection.Dockerfiles, "/tmp/out");
 
         act.Should().NotThrow();
     }
@@ -422,6 +425,18 @@ public class BuildViewModelTests
     }
 
     [Fact]
+    public void AddOnboarding_reports_an_upload_failure()
+    {
+        _instance.Setup(service => service.UploadRecipe(It.IsAny<UploadRecipeDto>()))
+            .Throws(new InvalidOperationException("upload failed"));
+        BuildViewModel viewModel = Create();
+
+        viewModel.AddOnboarding("/tmp/onboarding.sh");
+
+        viewModel.OnboardingError.Should().Be("upload failed");
+    }
+
+    [Fact]
     public void AddDockerfile_survives_an_upload_failure()
     {
         _instance.Setup(service => service.UploadRecipe(It.IsAny<UploadRecipeDto>()))
@@ -432,6 +447,45 @@ public class BuildViewModelTests
 
         act.Should().NotThrow();
         viewModel.DockerfileNames.Should().ContainSingle();
+    }
+
+    [Fact]
+    public void ExportRecipeTo_reports_an_onboarding_export_failure()
+    {
+        _instance.Setup(service => service.ExportRecipe(It.IsAny<ExportRecipeDto>()))
+            .Throws(new InvalidOperationException("export failed"));
+        BuildViewModel viewModel = Create();
+
+        viewModel.ExportRecipeTo(WslCatalogSection.Onboardings, "/tmp/out");
+
+        viewModel.OnboardingError.Should().Be("export failed");
+    }
+
+    [Fact]
+    public void DeleteSelected_reports_an_onboarding_delete_failure()
+    {
+        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
+        {
+            Onboardings =
+            [
+                new WslBuildSourceDto
+                {
+                    Name = "setup (01/01 12:00)",
+                    Path = "/catalog/setup/onboarding.sh",
+                    Uploaded = true,
+                },
+            ],
+            Dockerfiles = [],
+            Recipes = [],
+        });
+        _instance.Setup(service => service.DeleteRecipe(It.IsAny<string>()))
+            .Throws(new InvalidOperationException("delete failed"));
+        _dialogs.ConfirmAnswer = true;
+        BuildViewModel viewModel = Create();
+
+        viewModel.DeleteSelected(WslCatalogSection.Onboardings);
+
+        viewModel.OnboardingError.Should().Be("delete failed");
     }
 
     [Fact]
@@ -456,7 +510,7 @@ public class BuildViewModelTests
         _dialogs.ConfirmAnswer = true;
         BuildViewModel viewModel = Create();
 
-        Action act = () => viewModel.DeleteSelected("Dockerfiles");
+        Action act = () => viewModel.DeleteSelected(WslCatalogSection.Dockerfiles);
 
         act.Should().NotThrow();
         viewModel.DockerfileNames.Should().ContainSingle();

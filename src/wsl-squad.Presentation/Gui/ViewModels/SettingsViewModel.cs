@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -38,6 +40,9 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     [ObservableProperty]
     public partial int PackIndex { get; set; }
+
+    [ObservableProperty]
+    public partial int LanguageIndex { get; set; }
 
     [ObservableProperty]
     public partial string Root { get; set; }
@@ -125,7 +130,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
         sets.AddRange(themes);
 
-        Colours = [.. sets.Select(name => new SettingsRow(name, name.Length == 0 ? "Default" : name))];
+        Colours = [.. sets.Select(name => new SettingsRow(name, name.Length == 0 ? Localizer.Instance["DefaultOption"] : name))];
         int colourIndex = Math.Max(0, Colours.FindIndex(row =>
             string.Equals(row.Name, theme.ColourSet, StringComparison.Ordinal)));
 
@@ -160,11 +165,17 @@ public sealed partial class SettingsViewModel : BaseViewModel
         SizeIndex = sizeIndex;
         ColourIndex = colourIndex;
         PackIndex = packIndex;
+        LanguageIndex = Math.Max(0, Languages.ToList().FindIndex(
+            language => string.Equals(language.Code, Localizer.Instance.CurrentLanguage, StringComparison.OrdinalIgnoreCase)));
         CanPack = PackIndex >= 0;
         CanTheme = HasRealTheme();
     }
 
     public string WslConfigPath { get; }
+
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound as an instance property by WPF.")]
+    [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
+    public IReadOnlyList<UiLanguage> Languages => Localizer.Instance.Languages;
 
     public List<SettingsRow> Fonts { get; private set; }
 
@@ -231,6 +242,14 @@ public sealed partial class SettingsViewModel : BaseViewModel
         CanPack = value >= 0;
     }
 
+    partial void OnLanguageIndexChanged(int value)
+    {
+        if (value >= 0 && value < Languages.Count)
+        {
+            Localizer.Instance.SetLanguage(Languages[value].Code);
+        }
+    }
+
     public bool HasRealTheme()
     {
         return SelectedColour.Length > 0;
@@ -255,8 +274,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
     private void PickUploadFont()
     {
         string? source = _dialogs.PickOpenFile(
-            "A font file for the window",
-            "Fonts (*.ttf;*.otf)|*.ttf;*.otf");
+            Localizer.Instance["FileDialogFont"],
+            Localizer.Instance["FileFilterFonts"]);
 
         if (source is not null)
         {
@@ -273,7 +292,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
             return null;
         }
 
-        List<SettingsRow> fonts = [.. Fonts, new SettingsRow(family, $"{family}  (just uploaded)")];
+        List<SettingsRow> fonts = [.. Fonts, new SettingsRow(family, $"{family}{Localizer.Instance["JustUploadedSuffix"]}")];
         Fonts = fonts;
         OnPropertyChanged(nameof(Fonts));
         FontIndex = fonts.Count - 1;
@@ -284,8 +303,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
     private void PickUploadTheme()
     {
         string? source = _dialogs.PickOpenFile(
-            "A theme file for the windows",
-            "Themes (*.xaml)|*.xaml");
+            Localizer.Instance["FileDialogTheme"],
+            Localizer.Instance["FileFilterThemes"]);
 
         if (source is not null)
         {
@@ -303,7 +322,9 @@ public sealed partial class SettingsViewModel : BaseViewModel
         string name = Path.GetFileNameWithoutExtension(source);
 
         if (HasTheme(name) &&
-            !_dialogs.Confirm("Replace theme", $"Replace the theme '{name}' with the chosen file?"))
+            !_dialogs.Confirm(
+                Localizer.Instance["ReplaceThemeTitle"],
+                Localizer.Instance.Format("ConfirmReplaceTheme", name)))
         {
             return;
         }
@@ -315,9 +336,10 @@ public sealed partial class SettingsViewModel : BaseViewModel
             string uploaded = _ui.UploadTheme(source);
             AddColour(uploaded);
         }
-        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            ThemeError = $"The theme was not uploaded: {exception.ToMessage()}";
+            ThemeError = Localizer.Instance.Format("ThemeUploadFailed", exception.ToMessage());
         }
     }
 
@@ -325,7 +347,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
     {
         string name = SelectedColour;
         string proposed = _ui.ThemeFileFor(name);
-        string? target = _dialogs.PickSaveFile($"Save '{proposed}'", proposed);
+        string? target = _dialogs.PickSaveFile(
+            Localizer.Instance.Format("FileDialogSave", proposed), proposed);
 
         if (target is not null)
         {
@@ -336,7 +359,9 @@ public sealed partial class SettingsViewModel : BaseViewModel
     public void DeleteTheme(string? name)
     {
         if (string.IsNullOrEmpty(name) ||
-            !_dialogs.Confirm("Delete theme", $"Remove '{name}'?"))
+            !_dialogs.Confirm(
+                Localizer.Instance["DeleteThemeTitle"],
+                Localizer.Instance.Format("ConfirmDeleteTheme", name)))
         {
             return;
         }
@@ -374,7 +399,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            ThemeError = $"The file did not open: {exception.ToMessage()}";
+            ThemeError = Localizer.Instance.Format("FileDidNotOpen", exception.ToMessage());
         }
     }
 
@@ -393,7 +418,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            CatalogueError = $"The folder did not open: {exception.ToMessage()}";
+            CatalogueError = Localizer.Instance.Format("FolderDidNotOpen", exception.ToMessage());
         }
     }
 
@@ -427,7 +452,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
-            CatalogueError = $"The pack was not duplicated: {exception.ToMessage()}";
+            CatalogueError = Localizer.Instance.Format("PackNotDuplicated", exception.ToMessage());
 
             return;
         }
@@ -444,19 +469,19 @@ public sealed partial class SettingsViewModel : BaseViewModel
             return;
         }
 
-        string question = $"Remove the pack '{row.Name}'?";
+        string question = Localizer.Instance.Format("ConfirmRemovePack", row.Name);
         string danger = string.Empty;
 
         if (row.Dependents.Count > 0)
         {
-            question += "\n\nThese packs depend on it:";
+            question += "\n\n" + Localizer.Instance["PackDependentsIntro"];
             question += "\n" + string.Join(
                 "\n",
                 row.Dependents.Select(dependent => $"- {dependent}"));
-            danger = "Removing it may break them.";
+            danger = Localizer.Instance["PackDependentsDanger"];
         }
 
-        if (!_dialogs.Confirm("Remove the pack", question, danger))
+        if (!_dialogs.Confirm(Localizer.Instance["RemovePackTitle"], question, danger))
         {
             return;
         }
@@ -467,7 +492,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
-            CatalogueError = $"The pack was not removed: {exception.ToMessage()}";
+            CatalogueError = Localizer.Instance.Format("PackNotRemoved", exception.ToMessage());
 
             return;
         }
@@ -480,7 +505,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         WorkflowResult<WslConfigResponseDto> result = _fleetWorkflow.OpenWslConfig();
         ConfigError = result.Status == WorkflowStatus.Success
             ? string.Empty
-            : $"The file did not open: {result.Message}";
+            : Localizer.Instance.Format("FileDidNotOpen", result.Message);
     }
 
     public void EditRoot()

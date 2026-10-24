@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using WslSquad.Core.Validation;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -23,7 +24,7 @@ public sealed partial class RecipeNameViewModel : BaseViewModel
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound as an instance property by WPF.")]
     [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
-    public string Lead => "Create a recipe";
+    public string Lead => Localizer.Instance["LeadRecipe"];
 
     public string? Result { get; private set; }
 
@@ -40,7 +41,7 @@ public sealed partial class RecipeNameViewModel : BaseViewModel
 
         if (!NameRules.IsValid(chosen))
         {
-            NameError = "Letters, digits, '.', '_' and '-' only, starting with a letter or a digit.";
+            NameError = Localizer.Instance["ErrorRecipeName"];
 
             return;
         }

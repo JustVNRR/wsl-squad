@@ -23,12 +23,11 @@ public sealed partial class RestoreViewModel : BaseViewModel
         _archiveName = archiveName;
         _taken = taken;
         NameError = string.Empty;
-        Lead = $"The archive '{archiveName}' comes back as a new instance.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
         Name = archiveName;
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadRestore", _archiveName).ToUpperInvariant();
 
     public RestoreDto? Result { get; private set; }
 

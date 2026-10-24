@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 
 using WslSquad.Core.Dtos;
 
+using WslSquad.Presentation.Localization;
+
 namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class RemoveViewModel : BaseViewModel
@@ -18,12 +20,11 @@ public sealed partial class RemoveViewModel : BaseViewModel
     public RemoveViewModel(string name)
     {
         _name = name;
-        Lead = $"The WSL distribution '{name}' and ALL its data will be deleted.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
         Typed = string.Empty;
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadRemove", _name).ToUpperInvariant();
 
     public RemoveDto? Result { get; private set; }
 

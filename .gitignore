@@ -496,5 +496,5 @@ scaffold-sln.ps1
 scripts/build-installer.ps1
 
 # Pack helper scripts are embedded resources, not build output
-!src/wsl-squad.Core/Resources/packs/**/bin/
-!src/wsl-squad.Core/Resources/packs/**/bin/**
+!Assets/packs/**/bin/
+!Assets/packs/**/bin/**

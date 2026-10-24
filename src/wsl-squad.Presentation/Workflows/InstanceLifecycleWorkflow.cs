@@ -19,7 +19,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         ArgumentNullException.ThrowIfNull(request);
 
         string name = request.Name ?? string.Empty;
-        ExecutionStarted?.Invoke($"Building '{name}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressBuilding", name));
 
         try
         {
@@ -66,7 +66,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 target,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (error is not null)
         {
@@ -74,7 +74,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         }
 
         string instance = name!;
-        ExecutionStarted?.Invoke($"Opening '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressOpening", instance));
 
         try
         {
@@ -95,7 +95,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 target,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (error is not null)
         {
@@ -109,7 +109,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<RestartResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Restarting '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressRestarting", instance));
 
         try
         {
@@ -130,7 +130,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 target,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (error is not null)
         {
@@ -138,7 +138,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         }
 
         string instance = name!;
-        ExecutionStarted?.Invoke($"Opening the pack manager for '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressManagePacks", instance));
 
         try
         {
@@ -167,7 +167,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 rows,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (selectionError is not null)
         {
@@ -185,7 +185,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<DuplicateResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Duplicating '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressDuplicating", instance));
 
         try
         {
@@ -214,7 +214,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
                 rows,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (selectionError is not null)
         {
@@ -231,7 +231,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<RemoveDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Removing '{instance}'...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressRemoving", instance));
 
         try
         {

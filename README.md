@@ -66,6 +66,27 @@ Make sure Docker Desktop is running before you start.
 
 ---
 
+## Languages
+
+English and French are built in. At startup the app seeds the bundled
+`Assets/languages/*.json` files into `%LOCALAPPDATA%\wsl-squad\languages\`. To add another
+language without rebuilding, drop a JSON file in that folder:
+
+```json
+{
+  "code": "de",
+  "displayName": "Deutsch",
+  "strings": {
+    "SettingsTitle": "Einstellungen",
+    "ActionCancel": "Abbrechen"
+  }
+}
+```
+
+The keys are listed in the seeded `languages\en.json`. Missing keys fall back to English. The language
+chosen in the GUI or CLI Settings is saved in `%LOCALAPPDATA%\wsl-squad\config.json` and restored
+at the next start.
+
 ## Repo Structure
 
 ### Instance Manager Structure
@@ -74,15 +95,15 @@ Make sure Docker Desktop is running before you start.
 wsl-squad/
 ├── .github/workflows/            # release workflow
 ├── src/
-│   ├── wsl-squad.Core/           # Entities, Dtos, Mappers, Repositories, Services, Resources
+│   ├── wsl-squad.Core/           # Entities, Dtos, Mappers, Repositories, Services
 │   ├── wsl-squad.Presentation/   # Workflows, CLI presenters, GUI view models, localization
 │   ├── wsl-squad.UI.Cli/         # CLI menu, console views, composition root
-│   └── wsl-squad.UI.Wpf/         # WPF views, themes, services, assets
+│   └── wsl-squad.UI.Wpf/         # WPF views, styles, services
 ├── tests/
 │   ├── wsl-squad.Core.Tests/
 │   ├── wsl-squad.Presentation.Tests/
 │   └── wsl-squad.UI.Cli.Tests/
-├── Assets/fonts/                 # bundled fonts
+├── Assets/                       # app.ico, fonts/, languages/, packs/, recipes/, themes/
 ├── scripts/                      # publish scripts; scaffold-sln.ps1 is local
 ├── installer/                    # Inno Setup sources; redist binaries are ignored
 ├── artifacts/                    # generated output, ignored: bin, obj, publish, dist

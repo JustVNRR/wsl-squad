@@ -24,7 +24,8 @@ public static class CatalogBootstrap
             if (!resource.StartsWith("packs/", StringComparison.Ordinal) &&
                 !resource.StartsWith("ingredients/", StringComparison.Ordinal) &&
                 !resource.StartsWith("recipes/", StringComparison.Ordinal) &&
-                !resource.StartsWith("fonts/", StringComparison.Ordinal))
+                !resource.StartsWith("fonts/", StringComparison.Ordinal) &&
+                !resource.StartsWith("languages/", StringComparison.Ordinal))
             {
                 continue;
             }

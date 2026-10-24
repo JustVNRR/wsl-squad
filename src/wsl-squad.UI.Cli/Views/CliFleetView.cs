@@ -1,6 +1,7 @@
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Cli.Presenters;
 using WslSquad.Presentation.Cli.Ports;
+using WslSquad.Presentation.Localization;
 using WslSquad.UI.Cli.Interaction;
 
 namespace WslSquad.UI.Cli.Views;
@@ -12,6 +13,17 @@ public sealed class CliFleetView : CliViewBase, IFleetView
         Host.Clear();
     }
 
+    public UiLanguage? PickLanguage(IReadOnlyList<UiLanguage> languages)
+    {
+        return Pick(Localizer.Instance["Language"], languages, language => language.DisplayName);
+    }
+
+    public void ShowLanguage(string displayName)
+    {
+        Write(string.Empty);
+        Write($"==> {Localizer.Instance.Format("LanguageChanged", displayName)}", ConsoleTone.Success);
+    }
+
     public string? PickInstance(
         IReadOnlyList<WslIndexDto> instances,
         IReadOnlyList<WslOrphanDto> orphans,
@@ -20,11 +32,13 @@ public sealed class CliFleetView : CliViewBase, IFleetView
         ShowOrphans(orphans);
 
         WslIndexDto? picked = Pick(
-            "Our Instances",
+            Localizer.Instance["CliOurInstances"],
             instances,
             row =>
             {
-                string state = running.Contains(row.Name ?? string.Empty) ? "running" : "stopped";
+                string state = running.Contains(row.Name ?? string.Empty)
+                    ? Localizer.Instance["CliRunning"]
+                    : Localizer.Instance["CliStopped"];
 
                 return $"{row.Name,-30} {state,-8} {Size(row.Size),10}";
             });
@@ -36,14 +50,14 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     {
         ShowOrphans(orphans);
         Write(string.Empty);
-        Write("[ABORT] No instance of this template is registered on this machine.", ConsoleTone.Error);
-        Write("        Build one with  wsl-squad build", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliNoInstance"], ConsoleTone.Error);
+        Write(Localizer.Instance["CliBuildOne"], ConsoleTone.Hint);
     }
 
     public string? PickArchive(IReadOnlyList<WslIndexDto> archives)
     {
         WslIndexDto? picked = Pick(
-            "Our Archives",
+            Localizer.Instance["CliOurArchives"],
             archives,
             row => $"{row.Name,-30} {Size(row.Size),10}");
 
@@ -53,21 +67,21 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     public void ShowNoArchives()
     {
         Write(string.Empty);
-        Write("[ABORT] There are no archives.", ConsoleTone.Error);
-        Write("        Create one with  wsl-squad archive", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliNoArchives"], ConsoleTone.Error);
+        Write(Localizer.Instance["CliCreateArchiveHint"], ConsoleTone.Hint);
     }
 
     public PresenterAction? PickAction(string title, IReadOnlyList<PresenterAction> actions)
     {
-        int keyWidth = Math.Max(12, actions.Max(action => action.Key.Length));
+        int keyWidth = Math.Max(12, actions.Max(action => action.Display.Length));
 
-        return Pick(title, actions, action => $"{action.Key.PadRight(keyWidth)} {action.Label}");
+        return Pick(title, actions, action => $"{action.Display.PadRight(keyWidth)} {action.Text}");
     }
 
     public WslPackDto? PickPack(IReadOnlyList<WslPackDto> packs)
     {
         return Pick(
-            "Packs Catalog",
+            Localizer.Instance["CliPacksCatalog"],
             packs,
             pack => $"{pack.Name,-20} {pack.Family,-10} {pack.Description}");
     }
@@ -75,19 +89,19 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     public void ShowNoPacks()
     {
         Write(string.Empty);
-        Write("[ABORT] The catalog holds no pack.", ConsoleTone.Error);
-        Write("        A pack is a folder under assets\\packs carrying a pack.conf.", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliNoPacks"], ConsoleTone.Error);
+        Write(Localizer.Instance["CliPackFolderHint"], ConsoleTone.Hint);
     }
 
     public string? PickPackAction(string packName)
     {
         List<ConsoleMenuItem> items =
         [
-            new("edit", "open the pack's folder"),
-            new("duplicate", "duplicate it under a new name"),
-            new("delete", "delete it from the catalog"),
+            new("edit", Localizer.Instance["CliPackActionEdit"], Localizer.Instance["CliPackEdit"]),
+            new("duplicate", Localizer.Instance["CliPackActionDuplicate"], Localizer.Instance["CliPackDuplicate"]),
+            new("delete", Localizer.Instance["CliPackActionDelete"], Localizer.Instance["CliPackDelete"]),
         ];
-        ConsoleMenu menu = new($"Pack '{packName}'", new ConsoleHost(Theme));
+        ConsoleMenu menu = new(Localizer.Instance.Format("CliPackOf", packName), new ConsoleHost(Theme));
 
         foreach (ConsoleMenuItem item in items)
         {
@@ -101,7 +115,7 @@ public sealed class CliFleetView : CliViewBase, IFleetView
 
     public string? AskName(string sourceName)
     {
-        string? answer = AskLine($"Name of the copy of '{sourceName}' (Enter to cancel)");
+        string? answer = AskLine(Localizer.Instance.Format("CliAskCopyOf", sourceName));
 
         return answer?.Trim();
     }
@@ -109,45 +123,45 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     public void ShowOpening(string name)
     {
         Write(string.Empty);
-        Write($"==> Opening the folder of '{name}'", ConsoleTone.Info);
+        Write(Localizer.Instance.Format("CliOpeningFolder", name), ConsoleTone.Info);
     }
 
     public void ShowDuplicated(string name)
     {
         Write(string.Empty);
-        Write($"==> '{name}' created in the catalog", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliCreatedInCatalog", name), ConsoleTone.Success);
     }
 
     public void ShowRemoved(string name)
     {
         Write(string.Empty);
-        Write($"==> '{name}' deleted from the catalog", ConsoleTone.Success);
+        Write(Localizer.Instance.Format("CliDeletedFromCatalog", name), ConsoleTone.Success);
     }
 
     public void ShowDependents(string name, IReadOnlyList<string> dependents)
     {
         Write(string.Empty);
-        Write($"These packs depend on '{name}':", ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliDependentsHeader", name), ConsoleTone.Warning);
 
         foreach (string dependent in dependents)
         {
             Write($"- {dependent}", ConsoleTone.Warning);
         }
 
-        Write("Removing it may break them.", ConsoleTone.Error);
+        Write(Localizer.Instance["CliDependentsDanger"], ConsoleTone.Error);
     }
 
     public string? AskTarget(string root)
     {
         Write(string.Empty);
 
-        return AskLine($"Move the fleet from '{root}' to")?.Trim();
+        return AskLine(Localizer.Instance.Format("CliAskTarget", root))?.Trim();
     }
 
     public void ShowSameFolder()
     {
         Write(string.Empty);
-        Write("  That is the working folder - nothing to move.", ConsoleTone.Warning);
+        Write(Localizer.Instance["CliSameFolder"], ConsoleTone.Warning);
     }
 
     public void ShowTargetProblem(string problem)
@@ -159,8 +173,8 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     public void ShowLead()
     {
         Write(string.Empty);
-        Write("==> Archiving the fleet", ConsoleTone.Info);
-        Write("  Instances are stopped one by one as they are archived.", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliArchivingFleet"], ConsoleTone.Info);
+        Write(Localizer.Instance["CliArchivingFleetDetail"], ConsoleTone.Muted);
     }
 
     public void Show(MigrateResponseDto response)
@@ -170,14 +184,14 @@ public sealed class CliFleetView : CliViewBase, IFleetView
 
         if (moved.Length > 0)
         {
-            Write($"==> Moved {moved} and the archives to '{response.Target}'.", ConsoleTone.Success);
+            Write(Localizer.Instance.Format("CliMovedInstances", moved, response.Target), ConsoleTone.Success);
         }
         else
         {
-            Write($"==> Moved the archives to '{response.Target}'.", ConsoleTone.Success);
+            Write(Localizer.Instance.Format("CliMovedArchives", response.Target), ConsoleTone.Success);
         }
 
-        Write("    Restore them on the other side with  wsl-squad restore", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliRestoreOtherSide"], ConsoleTone.Muted);
         Write(string.Empty);
     }
 
@@ -185,11 +199,11 @@ public sealed class CliFleetView : CliViewBase, IFleetView
     {
         if (response.Created)
         {
-            Write("  * .wslconfig : file created", ConsoleTone.Success);
+            Write(Localizer.Instance["CliWslConfigCreated"], ConsoleTone.Success);
         }
         else
         {
-            Write($"  * .wslconfig : {response.Path}", ConsoleTone.Info);
+            Write(Localizer.Instance.Format("CliWslConfigPath", response.Path), ConsoleTone.Info);
         }
     }
 
@@ -201,13 +215,13 @@ public sealed class CliFleetView : CliViewBase, IFleetView
         }
 
         Write(string.Empty);
-        Write("Folders left behind by an instance that is gone:", ConsoleTone.Hint);
+        Write(Localizer.Instance["CliOrphansHeader"], ConsoleTone.Hint);
 
         foreach (WslOrphanDto row in orphans)
         {
             Write($"      {row.Name,-30} {Size(row.Size),10}  {row.Path}", ConsoleTone.Hint);
         }
 
-        Write("      No instance claims them, and no command removes them: delete them by hand.", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliOrphansNote"], ConsoleTone.Muted);
     }
 }

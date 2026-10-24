@@ -1,4 +1,5 @@
 using WslSquad.Core.Services;
+using WslSquad.Presentation.Localization;
 using WslSquad.UI.Cli;
 using WslSquad.UI.Cli.Composition;
 
@@ -8,8 +9,8 @@ try
 
     if (!WslService.IsAvailable())
     {
-        await Console.Error.WriteLineAsync("WSL 2 is required but was not detected.");
-        await Console.Error.WriteLineAsync("Install it with: wsl --install");
+        await Console.Error.WriteLineAsync(Localizer.Instance["CliWslMissing"]);
+        await Console.Error.WriteLineAsync(Localizer.Instance["CliWslInstall"]);
         await Console.Error.WriteLineAsync("https://learn.microsoft.com/windows/wsl/install");
 
         return 1;

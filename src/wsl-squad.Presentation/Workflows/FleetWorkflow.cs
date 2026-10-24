@@ -110,7 +110,7 @@ public sealed class FleetWorkflow : IFleetWorkflow
         }
 
         _interaction?.ShowLead();
-        _executionStarted?.Invoke($"Moving the fleet to '{destination}'...");
+        _executionStarted?.Invoke(Localizer.Instance.Format("ProgressMovingFleet", destination));
 
         try
         {

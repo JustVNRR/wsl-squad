@@ -73,6 +73,9 @@ public sealed partial class BuildViewModel : BaseViewModel
     public partial string DockerfileError { get; set; }
 
     [ObservableProperty]
+    public partial string OnboardingError { get; set; }
+
+    [ObservableProperty]
     public partial bool SaveImage { get; set; }
 
     [ObservableProperty]
@@ -117,28 +120,17 @@ public sealed partial class BuildViewModel : BaseViewModel
         RegistryError = string.Empty;
         RecipeError = string.Empty;
         DockerfileError = string.Empty;
+        OnboardingError = string.Empty;
         RegisterDocker = true;
         CreateCommand = new RelayCommand(Create, () => _nameOk && _userOk);
         UploadDockerfileCommand = new RelayCommand(PickDockerfile);
         UploadOnboardingCommand = new RelayCommand(PickOnboarding);
         UploadImageCommand = new RelayCommand(PickImage);
-        DownloadDockerfileCommand = new RelayCommand(() => Download("Dockerfiles"));
-        DownloadOnboardingCommand = new RelayCommand(() => Download("Onboardings"));
-        DownloadImageCommand = new RelayCommand(() => Download("DockerImages"));
-        EditSourceCommand = new RelayCommand<string>(listName =>
-        {
-            if (listName is not null)
-            {
-                EditSource(listName);
-            }
-        });
-        DeleteSelectedCommand = new RelayCommand<string>(listName =>
-        {
-            if (listName is not null)
-            {
-                DeleteSelected(listName);
-            }
-        });
+        DownloadDockerfileCommand = new RelayCommand(() => Download(WslCatalogSection.Dockerfiles));
+        DownloadOnboardingCommand = new RelayCommand(() => Download(WslCatalogSection.Onboardings));
+        DownloadImageCommand = new RelayCommand(() => Download(WslCatalogSection.DockerImages));
+        EditSourceCommand = new RelayCommand<WslCatalogSection>(EditSource);
+        DeleteSelectedCommand = new RelayCommand<WslCatalogSection>(DeleteSelected);
         NewRecipeCommand = new RelayCommand(NewRecipe);
 
         try
@@ -172,7 +164,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound as an instance property by WPF.")]
     [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
-    public string Lead => "NEW WSL DISTRIBUTION";
+    public string Lead => Localizer.Instance["LeadBuild"];
 
     public bool ShowDockerfile => RoadIndex == 0;
 
@@ -208,9 +200,9 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public IRelayCommand DownloadImageCommand { get; }
 
-    public IRelayCommand<string> EditSourceCommand { get; }
+    public IRelayCommand<WslCatalogSection> EditSourceCommand { get; }
 
-    public IRelayCommand<string> DeleteSelectedCommand { get; }
+    public IRelayCommand<WslCatalogSection> DeleteSelectedCommand { get; }
 
     public IRelayCommand NewRecipeCommand { get; }
 
@@ -256,12 +248,12 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public void AddDockerfile(string source)
     {
-        AddRecipe("dockerfiles", source, "Dockerfile", "Dockerfiles");
+        AddRecipe(WslCatalogSection.Dockerfiles, source);
     }
 
     public void AddOnboarding(string source)
     {
-        AddRecipe("onboardings", source, "onboarding.sh", "Onboardings");
+        AddRecipe(WslCatalogSection.Onboardings, source);
     }
 
     public void AddImage(string source)
@@ -271,14 +263,14 @@ public sealed partial class BuildViewModel : BaseViewModel
             return;
         }
 
-        AddRecipe("dockerimages", source, Path.GetFileName(source), "DockerImages");
+        AddRecipe(WslCatalogSection.DockerImages, source);
     }
 
     private void PickDockerfile()
     {
         string? source = _dialogs.PickOpenFile(
-            "A Dockerfile for the build",
-            "Dockerfiles (Dockerfile*)|Dockerfile*|All files (*.*)|*.*");
+            Localizer.Instance["FileDialogDockerfile"],
+            Localizer.Instance["FileFilterDockerfiles"]);
 
         if (source is not null)
         {
@@ -289,8 +281,8 @@ public sealed partial class BuildViewModel : BaseViewModel
     private void PickOnboarding()
     {
         string? source = _dialogs.PickOpenFile(
-            "An onboarding script for the build",
-            "Shell scripts (*.sh)|*.sh|All files (*.*)|*.*");
+            Localizer.Instance["FileDialogOnboarding"],
+            Localizer.Instance["FileFilterShell"]);
 
         if (source is not null)
         {
@@ -301,8 +293,8 @@ public sealed partial class BuildViewModel : BaseViewModel
     private void PickImage()
     {
         string? source = _dialogs.PickOpenFile(
-            "A Docker image for the build",
-            "Docker images (*.tar)|*.tar|All files (*.*)|*.*");
+            Localizer.Instance["FileDialogImage"],
+            Localizer.Instance["FileFilterTar"]);
 
         if (source is not null)
         {
@@ -310,7 +302,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
     }
 
-    private void Download(string kind)
+    private void Download(WslCatalogSection kind)
     {
         string proposed = DownloadName(kind);
 
@@ -319,7 +311,8 @@ public sealed partial class BuildViewModel : BaseViewModel
             return;
         }
 
-        string? target = _dialogs.PickSaveFile($"Save '{proposed}'", proposed);
+        string? target = _dialogs.PickSaveFile(
+            Localizer.Instance.Format("FileDialogSave", proposed), proposed);
 
         if (target is not null)
         {
@@ -327,27 +320,29 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
     }
 
-    public void DeleteSelected(string listName)
+    public void DeleteSelected(WslCatalogSection kind)
     {
-        string title = listName switch
+        string title = kind switch
         {
-            "Dockerfiles" => "Delete Dockerfile",
-            "Onboardings" => "Delete onboarding shell",
-            "DockerImages" => "Delete Docker image",
-            "Recipes" => "Delete recipe",
+            WslCatalogSection.Dockerfiles => Localizer.Instance["DeleteDockerfileTitle"],
+            WslCatalogSection.Onboardings => Localizer.Instance["DeleteOnboardingTitle"],
+            WslCatalogSection.DockerImages => Localizer.Instance["DeleteImageTitle"],
+            WslCatalogSection.Recipes => Localizer.Instance["DeleteRecipeTitle"],
             _ => string.Empty,
         };
 
-        WslBuildSourceDto? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(kind);
 
         if (title.Length == 0 || row is null || !row.Uploaded)
         {
             return;
         }
 
-        if (_dialogs.Confirm(title, $"Remove '{row.Name ?? string.Empty}'?"))
+        if (_dialogs.Confirm(
+                title,
+                Localizer.Instance.Format("RemoveFileQuestion", row.Name ?? string.Empty)))
         {
-            RemoveRecipe(listName);
+            RemoveRecipe(kind);
         }
     }
 
@@ -374,9 +369,9 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
     }
 
-    public void EditSource(string listName)
+    public void EditSource(WslCatalogSection kind)
     {
-        WslBuildSourceDto? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(kind);
 
         if (row is null)
         {
@@ -393,19 +388,19 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
     }
 
-    public string DownloadName(string listName)
+    public string DownloadName(WslCatalogSection kind)
     {
-        return SelectedRow(listName)?.SuggestedExportFileName ?? string.Empty;
+        return SelectedRow(kind)?.SuggestedExportFileName ?? string.Empty;
     }
 
-    public void ExportRecipeTo(string listName, string? target)
+    public void ExportRecipeTo(WslCatalogSection kind, string? target)
     {
         if (string.IsNullOrEmpty(target))
         {
             return;
         }
 
-        WslBuildSourceDto? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(kind);
 
         if (row is null)
         {
@@ -419,9 +414,20 @@ public sealed partial class BuildViewModel : BaseViewModel
                 Path = row.Path ?? string.Empty,
                 Target = target,
             });
+
+            if (kind == WslCatalogSection.Onboardings)
+            {
+                OnboardingError = string.Empty;
+            }
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex) when (
+            ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
+            if (kind == WslCatalogSection.Onboardings)
+            {
+                OnboardingError = ex.ToMessage();
+            }
+
             Trace.TraceWarning($"[BuildViewModel] Failed to export recipe to '{target}': {ex.Message}");
         }
     }
@@ -438,9 +444,15 @@ public sealed partial class BuildViewModel : BaseViewModel
             _userOk = true;
         }
 
-        DockerfileError = RoadIndex == 0 && DockerfileIndex < 0 ? "Upload a Dockerfile first." : string.Empty;
-        ImageError = RoadIndex == 1 && ImageIndex < 0 ? "Upload a Docker image first." : string.Empty;
-        RecipeError = RoadIndex == 3 && RecipeIndex < 0 ? "Create a recipe first with the + button." : string.Empty;
+        DockerfileError = RoadIndex == 0 && DockerfileIndex < 0
+            ? Localizer.Instance["ErrorDockerfileMissing"]
+            : string.Empty;
+        ImageError = RoadIndex == 1 && ImageIndex < 0
+            ? Localizer.Instance["ErrorImageMissing"]
+            : string.Empty;
+        RecipeError = RoadIndex == 3 && RecipeIndex < 0
+            ? Localizer.Instance["ErrorRecipeMissing"]
+            : string.Empty;
         RegistryError = string.Empty;
 
         if (RoadIndex == 2)
@@ -449,7 +461,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
             if (reference.Length == 0)
             {
-                RegistryError = "Name the image first, e.g. alpine:latest.";
+                RegistryError = Localizer.Instance["ErrorRegistryEmpty"];
             }
             else
             {
@@ -459,7 +471,10 @@ public sealed partial class BuildViewModel : BaseViewModel
 
                     if (!verdict.Valid)
                     {
-                        RegistryError = $"Unknown registry image '{reference}' - {verdict.Error.ToMessage(verdict.TechnicalDetail)}";
+                        RegistryError = Localizer.Instance.Format(
+                            "ErrorRegistryUnknown",
+                            reference,
+                            verdict.Error.ToMessage(verdict.TechnicalDetail));
                     }
                 }
                 catch (InvalidOperationException ex)
@@ -541,7 +556,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         _userOk = NameRules.IsValidUser(User);
         UserError = _userOk
             ? string.Empty
-            : "Lowercase letters, digits, '_' and '-' only, starting with a letter.";
+            : Localizer.Instance["ErrorUserName"];
         CreateCommand.NotifyCanExecuteChanged();
     }
 
@@ -575,20 +590,21 @@ public sealed partial class BuildViewModel : BaseViewModel
         CanTrashImage = Uploaded(_images, ImageIndex);
     }
 
-    private WslBuildSourceDto? SelectedRow(string listName)
+    private WslBuildSourceDto? SelectedRow(WslCatalogSection kind)
     {
-        return listName switch
+        return kind switch
         {
-            "Dockerfiles" => Selected(_dockerfiles, DockerfileIndex),
-            "Onboardings" => Selected(_onboardings, OnboardingIndex),
-            "Recipes" => Selected(_recipes, RecipeIndex),
-            _ => Selected(_images, ImageIndex),
+            WslCatalogSection.Dockerfiles => Selected(_dockerfiles, DockerfileIndex),
+            WslCatalogSection.Onboardings => Selected(_onboardings, OnboardingIndex),
+            WslCatalogSection.DockerImages => Selected(_images, ImageIndex),
+            WslCatalogSection.Recipes => Selected(_recipes, RecipeIndex),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
     }
 
-    private void RemoveRecipe(string listName)
+    private void RemoveRecipe(WslCatalogSection kind)
     {
-        WslBuildSourceDto? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(kind);
 
         if (row is null || !row.Uploaded)
         {
@@ -598,98 +614,134 @@ public sealed partial class BuildViewModel : BaseViewModel
         try
         {
             _instance.DeleteRecipe(row.Path ?? string.Empty);
+
+            if (kind == WslCatalogSection.Onboardings)
+            {
+                OnboardingError = string.Empty;
+            }
         }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (
+            ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
+            if (kind == WslCatalogSection.Onboardings)
+            {
+                OnboardingError = ex.ToMessage();
+            }
+
             return;
         }
 
-        if (listName == "Dockerfiles")
+        switch (kind)
         {
-            _dockerfiles.RemoveAll(item => item.Path == row.Path);
-        }
-        else if (listName == "Onboardings")
-        {
-            _onboardings.RemoveAll(item => item.Path == row.Path);
-        }
-        else if (listName == "Recipes")
-        {
-            _recipes.RemoveAll(item => item.Path == row.Path);
-        }
-        else
-        {
-            _images.RemoveAll(item => item.Path == row.Path);
+            case WslCatalogSection.Dockerfiles:
+                _dockerfiles.RemoveAll(item => item.Path == row.Path);
+                break;
+            case WslCatalogSection.Onboardings:
+                _onboardings.RemoveAll(item => item.Path == row.Path);
+                break;
+            case WslCatalogSection.DockerImages:
+                _images.RemoveAll(item => item.Path == row.Path);
+                break;
+            case WslCatalogSection.Recipes:
+                _recipes.RemoveAll(item => item.Path == row.Path);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(kind));
         }
 
         SyncLists();
 
-        if (listName == "Dockerfiles")
+        switch (kind)
         {
-            DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
-        }
-        else if (listName == "Onboardings")
-        {
-            OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
-        }
-        else if (listName == "Recipes")
-        {
-            RecipeIndex = _recipes.Count > 0 ? 0 : -1;
-        }
-        else
-        {
-            ImageIndex = _images.Count > 0 ? 0 : -1;
+            case WslCatalogSection.Dockerfiles:
+                DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
+                break;
+            case WslCatalogSection.Onboardings:
+                OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
+                break;
+            case WslCatalogSection.DockerImages:
+                ImageIndex = _images.Count > 0 ? 0 : -1;
+                break;
+            case WslCatalogSection.Recipes:
+                RecipeIndex = _recipes.Count > 0 ? 0 : -1;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(kind));
         }
     }
 
-    private void AddRecipe(string kind, string source, string fileName, string listName)
+    private void AddRecipe(WslCatalogSection kind, string source)
     {
         if (string.IsNullOrEmpty(source))
         {
             return;
         }
 
+        (string uploadKind, string fileName) = kind switch
+        {
+            WslCatalogSection.Dockerfiles => ("dockerfiles", "Dockerfile"),
+            WslCatalogSection.Onboardings => ("onboardings", "onboarding.sh"),
+            WslCatalogSection.DockerImages => ("dockerimages", Path.GetFileName(source)),
+            WslCatalogSection.Recipes => throw new ArgumentOutOfRangeException(nameof(kind)),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+
         try
         {
             WslBuildSourceDto row = _instance.UploadRecipe(new UploadRecipeDto
             {
-                Kind = kind,
+                Kind = uploadKind,
                 Source = source,
                 FileName = fileName,
             });
 
-            if (listName == "Dockerfiles")
+            switch (kind)
             {
-                _dockerfiles.Add(row);
-            }
-            else if (listName == "Onboardings")
-            {
-                _onboardings.Add(row);
-            }
-            else
-            {
-                _images.Add(row);
+                case WslCatalogSection.Dockerfiles:
+                    _dockerfiles.Add(row);
+                    break;
+                case WslCatalogSection.Onboardings:
+                    _onboardings.Add(row);
+                    OnboardingError = string.Empty;
+                    break;
+                case WslCatalogSection.DockerImages:
+                    _images.Add(row);
+                    break;
+                case WslCatalogSection.Recipes:
+                    throw new ArgumentOutOfRangeException(nameof(kind));
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind));
             }
 
             SyncLists();
 
-            if (listName == "Dockerfiles")
+            switch (kind)
             {
-                DockerfileIndex = _dockerfiles.Count - 1;
-            }
-            else if (listName == "Onboardings")
-            {
-                OnboardingIndex = _onboardings.Count - 1;
-            }
-            else
-            {
-                ImageIndex = _images.Count - 1;
+                case WslCatalogSection.Dockerfiles:
+                    DockerfileIndex = _dockerfiles.Count - 1;
+                    break;
+                case WslCatalogSection.Onboardings:
+                    OnboardingIndex = _onboardings.Count - 1;
+                    break;
+                case WslCatalogSection.DockerImages:
+                    ImageIndex = _images.Count - 1;
+                    break;
+                case WslCatalogSection.Recipes:
+                    throw new ArgumentOutOfRangeException(nameof(kind));
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind));
             }
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex) when (
+            ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            if (listName == "DockerImages")
+            if (kind == WslCatalogSection.DockerImages)
             {
                 ImageError = ex.ToMessage();
+            }
+            else if (kind == WslCatalogSection.Onboardings)
+            {
+                OnboardingError = ex.ToMessage();
             }
             else
             {

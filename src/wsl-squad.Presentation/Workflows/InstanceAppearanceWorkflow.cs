@@ -24,7 +24,7 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
                 target,
                 archives: false,
                 _interaction.PickInstance,
-                "No instance is available.");
+                Localizer.Instance["NoInstanceAvailable"]);
 
         if (error is not null)
         {
@@ -50,7 +50,7 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
             return WorkflowResults.Cancelled<SetAppearanceResponseDto>(instance);
         }
 
-        ExecutionStarted?.Invoke($"Applying '{instance}'s appearance...");
+        ExecutionStarted?.Invoke(Localizer.Instance.Format("ProgressApplyingAppearance", instance));
 
         try
         {

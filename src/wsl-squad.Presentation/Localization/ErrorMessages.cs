@@ -25,75 +25,88 @@ public static class ErrorMessages
 
         return exception.Code switch
         {
-            WslSquadErrorCode.InvalidFleetTarget => "Invalid fleet target.",
-            WslSquadErrorCode.InstanceAlreadyExists => $"An instance named '{target}' already exists.",
+            WslSquadErrorCode.InvalidFleetTarget => Localizer.Instance["ErrorInvalidFleetTarget"],
+            WslSquadErrorCode.InstanceAlreadyExists =>
+                Localizer.Instance.Format("ErrorInstanceAlreadyExists", target),
             WslSquadErrorCode.InstallFolderNotEmpty =>
-                $"Installation folder '{target}' already exists and is not empty.",
-            WslSquadErrorCode.DockerUnavailable =>
-                "Docker Desktop is not running and could not be started.",
-            WslSquadErrorCode.DockerOperationFailed => $"Docker failed: {detail}",
-            WslSquadErrorCode.DockerSettingsUnreadable =>
-                "Docker Desktop's settings file could not be read.",
+                Localizer.Instance.Format("ErrorInstallFolderNotEmpty", target),
+            WslSquadErrorCode.DockerUnavailable => Localizer.Instance["ErrorDockerUnavailable"],
+            WslSquadErrorCode.DockerOperationFailed =>
+                Localizer.Instance.Format("ErrorDockerOperationFailed", detail),
+            WslSquadErrorCode.DockerSettingsUnreadable => Localizer.Instance["ErrorDockerSettingsUnreadable"],
             WslSquadErrorCode.DockerSettingsWriteFailed =>
-                $"Docker Desktop's settings could not take '{target}': {detail}",
+                Localizer.Instance.Format("ErrorDockerSettingsWriteFailed", target, detail),
             WslSquadErrorCode.DockerRestartFailed =>
-                $"Docker Desktop would not restart to pick '{target}' up.",
+                Localizer.Instance.Format("ErrorDockerRestartFailed", target),
             WslSquadErrorCode.InvalidBuildSource =>
-                $"The recipe carries no Dockerfile: '{target}'.",
+                Localizer.Instance.Format("ErrorInvalidBuildSource", target),
             WslSquadErrorCode.InstanceWriteFailed =>
-                $"The instance file could not be written for '{target}': {detail}",
+                Localizer.Instance.Format("ErrorInstanceWriteFailed", target, detail),
             WslSquadErrorCode.RestartStopFailed =>
-                $"The stop did not complete - '{target}' may still be running, and was not started again. {detail}",
+                Localizer.Instance.Format("ErrorRestartStopFailed", target, detail),
             WslSquadErrorCode.RestartStartFailed =>
-                $"The start did not complete - '{target}' is stopped. {detail}",
+                Localizer.Instance.Format("ErrorRestartStartFailed", target, detail),
             WslSquadErrorCode.ArchiveFailed =>
-                $"The archive did not complete - nothing was destroyed. {detail}",
+                Localizer.Instance.Format("ErrorArchiveFailed", detail),
             WslSquadErrorCode.CompactFailed =>
-                $"The archive did not complete - nothing was compacted: {detail}",
+                Localizer.Instance.Format("ErrorCompactFailed", detail),
             WslSquadErrorCode.TerminalProfileMissing =>
-                $"Windows Terminal has no profile for '{target}' - the look cannot be applied.",
+                Localizer.Instance.Format("ErrorTerminalProfileMissing", target),
             WslSquadErrorCode.PackManagerUnavailable =>
-                $"No pack can be installed or removed on '{target}'.",
-            WslSquadErrorCode.InsufficientDiskSpace => $"Not enough room on {target}: {detail}.",
+                Localizer.Instance.Format("ErrorPackManagerUnavailable", target),
+            WslSquadErrorCode.InsufficientDiskSpace =>
+                Localizer.Instance.Format("ErrorInsufficientDiskSpace", target, detail),
             WslSquadErrorCode.InstanceRunning =>
-                $"'{target}' is running, and stopping it was not allowed: an archive reads a still disk.",
-            WslSquadErrorCode.ArchiveMissing => $"There is no archive named '{target}'.",
+                Localizer.Instance.Format("ErrorInstanceRunning", target),
+            WslSquadErrorCode.ArchiveMissing =>
+                Localizer.Instance.Format("ErrorArchiveMissing", target),
             WslSquadErrorCode.ArchiveFolderExists =>
-                $"'{target}' already exists - move it away first.",
+                Localizer.Instance.Format("ErrorArchiveFolderExists", target),
             WslSquadErrorCode.TargetFolderExists =>
-                $"A folder with that name already exists: {target}",
+                Localizer.Instance.Format("ErrorTargetFolderExists", target),
             WslSquadErrorCode.ArchiveTarMissing =>
-                $"No tar in the archive folder: {target}",
+                Localizer.Instance.Format("ErrorArchiveTarMissing", target),
             WslSquadErrorCode.WorkingFolderLost =>
-                $"The working folder '{target}' is gone, and no existing folder holds your instances.",
+                Localizer.Instance.Format("ErrorWorkingFolderLost", target),
             WslSquadErrorCode.PackNotFound =>
-                $"There is no pack named '{target}' in the catalogue.",
+                Localizer.Instance.Format("ErrorPackNotFound", target),
             WslSquadErrorCode.PackAlreadyExists =>
-                $"A pack named '{target}' already lives in the catalogue.",
+                Localizer.Instance.Format("ErrorPackAlreadyExists", target),
             WslSquadErrorCode.RecipeSlotNotFound =>
-                $"'{target}' is not a recipe slot - nothing was removed.",
+                Localizer.Instance.Format("ErrorRecipeSlotNotFound", target),
             WslSquadErrorCode.FileOperationFailed => detail,
             WslSquadErrorCode.ExternalToolFailed =>
-                string.IsNullOrEmpty(detail) ? $"'{target}' could not be started." : detail,
-            WslSquadErrorCode.WslImportFailed => $"'{target}' could not be imported. {detail}",
-            WslSquadErrorCode.WslExportFailed => $"'{target}' could not be exported. {detail}",
-            WslSquadErrorCode.WslUnregisterFailed => $"'{target}' could not be unregistered. {detail}",
-            WslSquadErrorCode.WslStartFailed => $"'{target}' could not be started.",
-            WslSquadErrorCode.WslStopFailed => $"'{target}' could not be stopped.",
-            WslSquadErrorCode.WslCompactFailed => $"The compact failed for '{target}'.",
+                string.IsNullOrEmpty(detail)
+                    ? Localizer.Instance.Format("ErrorExternalToolFailed", target)
+                    : detail,
+            WslSquadErrorCode.WslImportFailed =>
+                Localizer.Instance.Format("ErrorWslImportFailed", target, detail),
+            WslSquadErrorCode.WslExportFailed =>
+                Localizer.Instance.Format("ErrorWslExportFailed", target, detail),
+            WslSquadErrorCode.WslUnregisterFailed =>
+                Localizer.Instance.Format("ErrorWslUnregisterFailed", target, detail),
+            WslSquadErrorCode.WslStartFailed =>
+                Localizer.Instance.Format("ErrorWslStartFailed", target),
+            WslSquadErrorCode.WslStopFailed =>
+                Localizer.Instance.Format("ErrorWslStopFailed", target),
+            WslSquadErrorCode.WslCompactFailed =>
+                Localizer.Instance.Format("ErrorWslCompactFailed", target),
             WslSquadErrorCode.WslPackManagerCopyFailed =>
-                $"The pack manager could not be placed in '{target}'.",
+                Localizer.Instance.Format("ErrorWslPackManagerCopyFailed", target),
             WslSquadErrorCode.WslOnboardingCopyFailed =>
-                $"'{target}' could not be placed as /root/onboarding.sh.",
-            WslSquadErrorCode.WslOperationFailed => $"{detail}",
+                Localizer.Instance.Format("ErrorWslOnboardingCopyFailed", target),
+            WslSquadErrorCode.WslOperationFailed => detail,
             WslSquadErrorCode.EmbeddedResourceMissing =>
-                $"The embedded resource '{target}' is missing.",
+                Localizer.Instance.Format("ErrorEmbeddedResourceMissing", target),
             WslSquadErrorCode.PlatformUnsupported =>
-                string.IsNullOrEmpty(detail) ? "This operation is not supported on this platform." : detail,
+                string.IsNullOrEmpty(detail)
+                    ? Localizer.Instance["ErrorPlatformUnsupported"]
+                    : detail,
             WslSquadErrorCode.CorruptState =>
-                string.IsNullOrEmpty(detail) ? "The file is corrupt." : detail,
-            WslSquadErrorCode.NoUsableFont =>
-                "No usable font family found on this machine.",
+                string.IsNullOrEmpty(detail)
+                    ? Localizer.Instance["ErrorCorruptState"]
+                    : detail,
+            WslSquadErrorCode.NoUsableFont => Localizer.Instance["ErrorNoUsableFont"],
             _ => detail,
         };
     }

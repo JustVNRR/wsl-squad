@@ -24,5 +24,9 @@ public interface IConfigRepository
 
     void SaveRoot(string root);
 
+    string GetLanguage();
+
+    void SaveLanguage(string code);
+
     string EnsureWslConfig();
 }

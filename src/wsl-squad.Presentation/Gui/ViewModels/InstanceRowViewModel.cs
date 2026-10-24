@@ -2,6 +2,7 @@ using System.Windows.Input;
 
 using WslSquad.Core.Dtos;
 using WslSquad.Core.Services;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -19,18 +20,27 @@ public sealed record InstanceRowViewModel(
 
         List<InstanceCommandViewModel> commands =
         [
-            .. row.Commands.Select(item =>
-            {
-                (string glyph, string tooltip) = Describe(item.Kind);
-
-                return new InstanceCommandViewModel(
-                    row.Name ?? string.Empty,
-                    item.Kind,
-                    glyph,
-                    tooltip,
-                    command);
-            }),
+            .. row.Commands.Select(item => CommandFor(row, item.Kind, command, enabled: true)),
         ];
+
+        if (!row.IsArchive)
+        {
+            if (commands.TrueForAll(item => item.Kind != WslCommandKind.ManagePacks))
+            {
+                int restart = commands.FindIndex(item => item.Kind == WslCommandKind.Restart);
+                commands.Insert(
+                    restart >= 0 ? restart + 1 : commands.Count,
+                    CommandFor(row, WslCommandKind.ManagePacks, command, enabled: false));
+            }
+
+            if (commands.TrueForAll(item => item.Kind is not (WslCommandKind.RegisterDocker or WslCommandKind.UnregisterDocker)))
+            {
+                int remove = commands.FindIndex(item => item.Kind == WslCommandKind.Remove);
+                commands.Insert(
+                    remove >= 0 ? remove : commands.Count,
+                    CommandFor(row, WslCommandKind.RegisterDocker, command, enabled: false));
+            }
+        }
 
         return new InstanceRowViewModel(
             row.Name ?? string.Empty,
@@ -40,21 +50,38 @@ public sealed record InstanceRowViewModel(
             commands);
     }
 
+    private static InstanceCommandViewModel CommandFor(
+        WslIndexDto row,
+        WslCommandKind kind,
+        ICommand command,
+        bool enabled)
+    {
+        (string glyph, string tooltip) = Describe(kind);
+
+        return new InstanceCommandViewModel(
+            row.Name ?? string.Empty,
+            kind,
+            glyph,
+            tooltip,
+            command,
+            enabled);
+    }
+
     private static (string Glyph, string Tooltip) Describe(WslCommandKind kind)
     {
         return kind switch
         {
-            WslCommandKind.Shell => ("\uF120", "Shell"),
-            WslCommandKind.Restart => ("\uF01E", "Restart"),
-            WslCommandKind.ManagePacks => ("\uF304", "Edit"),
-            WslCommandKind.Appearance => ("\uF53F", "Appearance"),
-            WslCommandKind.Duplicate => ("\uF0C5", "Duplicate"),
-            WslCommandKind.Archive => ("\uF187", "Archive"),
-            WslCommandKind.Compact => ("\uF066", "Compact"),
-            WslCommandKind.RegisterDocker or WslCommandKind.UnregisterDocker => ("\uF1B2", "Docker Desktop"),
-            WslCommandKind.Remove => ("\uF1F8", "Remove"),
-            WslCommandKind.Restore => ("\uF2EA", "Restore"),
-            WslCommandKind.DeleteArchive => ("\uF1F8", "Delete"),
+            WslCommandKind.Shell => ("\uF120", Localizer.Instance["CommandShell"]),
+            WslCommandKind.Restart => ("\uF01E", Localizer.Instance["CommandRestart"]),
+            WslCommandKind.ManagePacks => ("\uF304", Localizer.Instance["CommandEdit"]),
+            WslCommandKind.Appearance => ("\uF53F", Localizer.Instance["CommandAppearance"]),
+            WslCommandKind.Duplicate => ("\uF0C5", Localizer.Instance["CommandDuplicate"]),
+            WslCommandKind.Archive => ("\uF187", Localizer.Instance["CommandArchive"]),
+            WslCommandKind.Compact => ("\uF066", Localizer.Instance["CommandCompact"]),
+            WslCommandKind.RegisterDocker or WslCommandKind.UnregisterDocker => ("\uF1B2", Localizer.Instance["CommandDockerDesktop"]),
+            WslCommandKind.Remove => ("\uF1F8", Localizer.Instance["CommandRemove"]),
+            WslCommandKind.Restore => ("\uF2EA", Localizer.Instance["CommandRestore"]),
+            WslCommandKind.DeleteArchive => ("\uF1F8", Localizer.Instance["CommandDelete"]),
             _ => ("\uF128", string.Empty),
         };
     }
@@ -65,7 +92,8 @@ public sealed record InstanceCommandViewModel(
     WslCommandKind Kind,
     string Glyph,
     string Tooltip,
-    ICommand Command)
+    ICommand Command,
+    bool Enabled)
 {
     public InstanceCommandParameter Parameter => new(InstanceName, Kind);
 }

@@ -36,7 +36,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         {
             ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed(string.Empty, $"Build : {exception.Message}");
+            return WorkflowResults.Failed(string.Empty, Localizer.Instance.Format("CliBuildFailed", exception.Message));
         }
 
         string name = string.Empty;
@@ -63,7 +63,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         while (true)
                         {
-                            string? answer = View.AskInstanceName("Name of the instance (CTRL+C to abort)");
+                            string? answer = View.AskInstanceName(Localizer.Instance["CliAskInstanceName"]);
 
                             if (string.IsNullOrWhiteSpace(answer))
                             {
@@ -136,11 +136,11 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                             return WorkflowResults.Failed(string.Empty, road.Type switch
                             {
-                                WslBuildType.Image => "Build : no Docker image",
-                                WslBuildType.Recipe => "Build : no recipe",
-                                WslBuildType.Dockerfile => "Build : no Dockerfile",
-                                WslBuildType.Registry => "Build : no registry image",
-                                _ => "Build : no source",
+                                WslBuildType.Image => Localizer.Instance["CliBuildNoImage"],
+                                WslBuildType.Recipe => Localizer.Instance["CliBuildNoRecipe"],
+                                WslBuildType.Dockerfile => Localizer.Instance["CliBuildNoDockerfile"],
+                                WslBuildType.Registry => Localizer.Instance["CliBuildNoRegistry"],
+                                _ => Localizer.Instance["CliBuildNoSource"],
                             });
                         }
 
@@ -156,7 +156,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         while (true)
                         {
                             string? reference = View.AskRegistryReference(
-                                "Docker image from a registry (e.g. alpine:latest)");
+                                Localizer.Instance["CliRegistryPrompt"]);
 
                             if (string.IsNullOrWhiteSpace(reference))
                             {
@@ -249,8 +249,8 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                     {
                         string proposal = NameRules.ProposeUserName();
                         string prompt = proposal.Length > 0
-                            ? $"User name for '{name}' [{proposal}] (CTRL+C to abort)"
-                            : $"User name for '{name}' (CTRL+C to abort)";
+                            ? Localizer.Instance.Format("CliUserNameProposal", name, proposal)
+                            : Localizer.Instance.Format("CliUserName", name);
                         View.ShowBeforeAccount();
                         bool ok = false;
 
@@ -342,9 +342,9 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
         if (!done || road is null)
         {
-            View.ShowCancelled("modified");
+            View.ShowCancelled(Localizer.Instance["CliModified"]);
 
-            return WorkflowResults.Cancelled("Build");
+            return WorkflowResults.Cancelled(Localizer.Instance["OperationBuild"]);
         }
 
         BuildDto dto = BuildDto.FromSource(
@@ -416,27 +416,27 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         {
             WslBuildType.Image =>
             [
-                "No Docker image under 'assets\\dockerimages'.",
-                "Upload one, or pick another road.",
-                "Nothing was modified.",
+                Localizer.Instance["CliAbortNoImage"],
+                Localizer.Instance["CliAbortUploadOrPick"],
+                Localizer.Instance["CliAbortNothingModified"],
             ],
             WslBuildType.Recipe =>
             [
-                "No recipe under 'assets\\recipes'.",
-                "Create one with the window's + button.",
-                "Nothing was modified.",
+                Localizer.Instance["CliAbortNoRecipe"],
+                Localizer.Instance["CliAbortCreateRecipe"],
+                Localizer.Instance["CliAbortNothingModified"],
             ],
             WslBuildType.Dockerfile or WslBuildType.Registry =>
             [
-                "No Dockerfile under 'assets\\dockerfiles'.",
-                "Upload one, or delete that folder to get the repository's own back.",
-                "Nothing was modified.",
+                Localizer.Instance["CliAbortNoDockerfile"],
+                Localizer.Instance["CliAbortUploadOrDeleteFolder"],
+                Localizer.Instance["CliAbortNothingModified"],
             ],
             _ =>
             [
-                "No Dockerfile under 'assets\\dockerfiles'.",
-                "Upload one, or delete that folder to get the repository's own back.",
-                "Nothing was modified.",
+                Localizer.Instance["CliAbortNoDockerfile"],
+                Localizer.Instance["CliAbortUploadOrDeleteFolder"],
+                Localizer.Instance["CliAbortNothingModified"],
             ],
         };
     }

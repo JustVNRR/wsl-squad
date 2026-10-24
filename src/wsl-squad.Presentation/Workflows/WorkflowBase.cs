@@ -67,7 +67,7 @@ public abstract class WorkflowBase
             {
                 return (null, WorkflowResults.Failed<T>(
                     target,
-                    archives ? "not an archive of this machine" : "not an instance of this machine"));
+                    archives ? Localizer.Instance["NotAnArchive"] : Localizer.Instance["NotAnInstance"]));
             }
 
             return (target, null);

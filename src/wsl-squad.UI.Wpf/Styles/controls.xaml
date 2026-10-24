@@ -15,10 +15,8 @@
     <SolidColorBrush x:Key="AppDividerBrush" Color="#3F3F46"/>
     <SolidColorBrush x:Key="AppSelectionBrush" Color="#14532D"/>
     <SolidColorBrush x:Key="AppSelectionInkBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="AppNewsBrush" Color="#3FAE5F"/>
     <SolidColorBrush x:Key="AppWarningBrush" Color="#D7BA7D"/>
     <SolidColorBrush x:Key="AppDangerBrush" Color="#E04040"/>
-    <SolidColorBrush x:Key="AppSoftDangerBrush" Color="#C05050"/>
     <SolidColorBrush x:Key="AppDeleteBrush" Color="#A1260D"/>
     <SolidColorBrush x:Key="AppDeleteBorderBrush" Color="#BB2D0F"/>
     <SolidColorBrush x:Key="AppDeleteInkBrush" Color="#FFFFFF"/>
@@ -182,7 +180,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
-                        <ToggleButton x:Name="Toggle" Focusable="False" ClickMode="Press"
+                        <ToggleButton Focusable="False" ClickMode="Press"
                                       IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">

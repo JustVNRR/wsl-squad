@@ -128,6 +128,6 @@ public sealed class BrowsePresenter : BasePresenter<IFleetView>
 
         return actions.Count == 0
             ? null
-            : View.PickAction($"Availables actions for '{row.Name}'", actions);
+            : View.PickAction(Localizer.Instance.Format("CliActionsFor", row.Name), actions);
     }
 }

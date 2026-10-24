@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
 
 using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -12,11 +13,10 @@ public sealed class ArchiveViewModel : BaseViewModel
     {
         _name = name;
         TakenVisible = replacesArchive;
-        Lead = $"Back up '{name}' as '{name}_archive'.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm);
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadArchive", _name).ToUpperInvariant();
 
     public bool TakenVisible { get; }
 

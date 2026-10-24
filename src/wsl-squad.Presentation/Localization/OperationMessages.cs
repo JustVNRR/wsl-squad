@@ -8,22 +8,22 @@ public static class OperationMessages
     {
         return notice.Kind switch
         {
-            BuildNoticeKind.LookFailed => $"the look failed: {notice.TechnicalDetail}",
-            BuildNoticeKind.ImageSaveFailed => $"the image could not be saved to '{notice.Subject}'.",
-            BuildNoticeKind.DockerReady => "Docker Desktop: ready - 'docker' works in this instance.",
-            BuildNoticeKind.DockerNotAnswering =>
-                "Docker Desktop: 'docker' does not answer in this instance yet." +
-                Environment.NewLine +
-                "  run 'docker version' in there; if it names the socket's permissions, restart Docker Desktop and open a new terminal.",
+            BuildNoticeKind.LookFailed =>
+                Localizer.Instance.Format("NoticeLookFailed", notice.TechnicalDetail),
+            BuildNoticeKind.ImageSaveFailed =>
+                Localizer.Instance.Format("NoticeImageSaveFailed", notice.Subject),
+            BuildNoticeKind.DockerReady => Localizer.Instance["NoticeDockerReady"],
+            BuildNoticeKind.DockerNotAnswering => Localizer.Instance["NoticeDockerNotAnswering"],
             BuildNoticeKind.FontInstallFailed =>
-                $"the font '{notice.Subject}' would not install: {notice.TechnicalDetail}",
-            BuildNoticeKind.NoIconGenerated => $"no icon ({notice.TechnicalDetail})",
+                Localizer.Instance.Format("NoticeFontInstallFailed", notice.Subject, notice.TechnicalDetail),
+            BuildNoticeKind.NoIconGenerated =>
+                Localizer.Instance.Format("NoticeNoIcon", notice.TechnicalDetail),
             BuildNoticeKind.GhostEntriesNotPruned =>
-                $"ghost entries NOT pruned in {notice.Subject} (unreadable JSON - a // comment breaks parsing; remove them by hand)",
+                Localizer.Instance.Format("NoticeGhostsNotPruned", notice.Subject),
             BuildNoticeKind.NoWslFragment =>
-                $"no WSL fragment for '{notice.Subject}' - the profile was not applied",
+                Localizer.Instance.Format("NoticeNoWslFragment", notice.Subject),
             BuildNoticeKind.ShellOpenFailed =>
-                $"the first shell did not open, so the onboarding did not run: {notice.TechnicalDetail}",
+                Localizer.Instance.Format("NoticeShellOpenFailed", notice.TechnicalDetail),
             _ => string.Empty,
         };
     }
@@ -32,11 +32,11 @@ public static class OperationMessages
     {
         return outcome switch
         {
-            DockerRestartOutcome.NotRequested => "unchanged",
-            DockerRestartOutcome.Restarted => "restarted",
-            DockerRestartOutcome.Started => "started",
-            DockerRestartOutcome.Pending => "restart pending",
-            _ => "unchanged",
+            DockerRestartOutcome.NotRequested => Localizer.Instance["DockerRestartNotRequested"],
+            DockerRestartOutcome.Restarted => Localizer.Instance["DockerRestartRestarted"],
+            DockerRestartOutcome.Started => Localizer.Instance["DockerRestartStarted"],
+            DockerRestartOutcome.Pending => Localizer.Instance["DockerRestartPending"],
+            _ => Localizer.Instance["DockerRestartNotRequested"],
         };
     }
 
@@ -47,14 +47,14 @@ public static class OperationMessages
         return error switch
         {
             RegistryValidationError.None => string.Empty,
-            RegistryValidationError.DockerUnavailable => "docker is not on the PATH.",
-            RegistryValidationError.NotFound => "no such image or tag on Docker Hub.",
+            RegistryValidationError.DockerUnavailable => Localizer.Instance["RegistryDockerUnavailable"],
+            RegistryValidationError.NotFound => Localizer.Instance["RegistryNotFound"],
             RegistryValidationError.Rejected =>
                 string.IsNullOrEmpty(technicalDetail)
-                    ? "the registry rejected the image."
+                    ? Localizer.Instance["RegistryRejected"]
                     : technicalDetail,
-            RegistryValidationError.Unreachable => "Docker Hub could not be reached.",
-            _ => "the registry could not validate the image.",
+            RegistryValidationError.Unreachable => Localizer.Instance["RegistryUnreachable"],
+            _ => Localizer.Instance["RegistryUnknown"],
         };
     }
 }

@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\wsl-squad.Presentation\wsl-squad.Presentation.csproj" />
     <Resource Include="..\..\Assets\fonts\FontAwesome\fa-solid-900.ttf" Link="Assets\Fonts\fa-solid-900.ttf" />
-    <Resource Include="Assets\app.ico" />
+    <Resource Include="..\..\Assets\app.ico" Link="Assets\app.ico" />
+    <Page Include="..\..\Assets\themes\*.xaml" Link="Themes\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -11,7 +12,7 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>WslSquad.UI.Wpf</RootNamespace>
     <AssemblyName>wsl-squad.gui</AssemblyName>
-    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationIcon>..\..\Assets\app.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

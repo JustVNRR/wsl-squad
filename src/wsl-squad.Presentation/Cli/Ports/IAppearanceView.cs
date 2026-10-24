@@ -4,6 +4,8 @@ namespace WslSquad.Presentation.Cli.Ports;
 
 public interface IAppearanceView : IPresenterViewBase
 {
+    void Clear();
+
     void ShowNoInstances();
 
     string? AskOffered(IReadOnlyList<WslIndexDto> instances);

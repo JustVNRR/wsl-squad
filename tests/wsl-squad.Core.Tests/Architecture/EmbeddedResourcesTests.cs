@@ -7,7 +7,7 @@ namespace WslSquad.Core.Tests.Architecture;
 public class EmbeddedResourcesTests
 {
     [Fact]
-    public void Packs_ingredients_and_recipes_are_embedded_at_the_root()
+    public void Bundled_catalog_resources_are_embedded_at_the_root()
     {
         string[] names =
         [
@@ -23,6 +23,7 @@ public class EmbeddedResourcesTests
         names.Should().Contain("packs/cleanup_orphans.sh");
         names.Should().Contain("recipes/ubuntu-24-04/Dockerfile");
         names.Should().Contain("recipes/ubuntu-24-04/onboarding.sh");
+        names.Should().Contain("languages/en.json");
         names.Should().NotContain(name => name.StartsWith("linux/", StringComparison.Ordinal));
     }
 }

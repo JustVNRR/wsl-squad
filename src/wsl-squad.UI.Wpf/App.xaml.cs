@@ -1,8 +1,10 @@
 using System.IO;
 using System.Windows;
 
+using WslSquad.Core.Repositories;
 using WslSquad.Core.Services;
 using WslSquad.Presentation.Gui.ViewModels;
+using WslSquad.Presentation.Localization;
 using WslSquad.UI.Wpf.Services;
 using WslSquad.UI.Wpf.Views;
 
@@ -17,12 +19,8 @@ public partial class App : Application
         if (!WslService.IsAvailable())
         {
             MessageBox.Show(
-                "WSL 2 is required but was not detected." + Environment.NewLine + Environment.NewLine +
-                "Install it from an elevated PowerShell:" + Environment.NewLine +
-                "    wsl --install" + Environment.NewLine + Environment.NewLine +
-                "Restart Windows if prompted, then start WSL Squad again." + Environment.NewLine + Environment.NewLine +
-                "https://learn.microsoft.com/windows/wsl/install",
-                "WSL Squad",
+                Localizer.Instance["StartupWslMissing"],
+                Localizer.Instance["AppName"],
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 
@@ -37,6 +35,8 @@ public partial class App : Application
         Directory.CreateDirectory(assets);
 
         CatalogBootstrap.Ensure(assets);
+        Localizer.Instance.LoadLanguages(Path.Combine(assets, "languages"));
+        Localizer.Instance.UsePreferences(new ConfigRepository(assets));
         FontFaceResolver.LoadCatalog(assets);
 
         WpfThemeService theme = new(assets);

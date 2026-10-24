@@ -20,12 +20,12 @@ public sealed class CliBuildView : CliViewBase, IBuildView
     public BuildRoad? AskRoad()
     {
         return Pick(
-            "Build from",
+            Localizer.Instance["CliBuildFrom"],
             [
-                new BuildRoad(WslBuildType.Dockerfile, "Dockerfile"),
-                new BuildRoad(WslBuildType.Image, "Docker image"),
-                new BuildRoad(WslBuildType.Registry, "Docker registry"),
-                new BuildRoad(WslBuildType.Recipe, "Recipe"),
+                new BuildRoad(WslBuildType.Dockerfile, Localizer.Instance["BuildRoadDockerfile"]),
+                new BuildRoad(WslBuildType.Image, Localizer.Instance["BuildRoadImage"]),
+                new BuildRoad(WslBuildType.Registry, Localizer.Instance["BuildRoadRegistry"]),
+                new BuildRoad(WslBuildType.Recipe, Localizer.Instance["BuildRoadRecipe"]),
             ],
             road => road.Label);
     }
@@ -37,7 +37,7 @@ public sealed class CliBuildView : CliViewBase, IBuildView
 
     public void ShowUnknownRegistry(string reference, string why)
     {
-        Write($"  Unknown registry image '{reference}' - {why}", ConsoleTone.Warning);
+        Write(Localizer.Instance.Format("CliUnknownRegistry", reference, why), ConsoleTone.Warning);
     }
 
     public void ShowAbort(IReadOnlyList<string> lines)
@@ -47,7 +47,7 @@ public sealed class CliBuildView : CliViewBase, IBuildView
         for (int index = 0; index < lines.Count; index++)
         {
             ConsoleTone tone = index == 0 ? ConsoleTone.Error : ConsoleTone.Hint;
-            string prefix = index == 0 ? "[ABORT] " : "        ";
+            string prefix = index == 0 ? Localizer.Instance["CliAbortPrefix"] : "        ";
             Write(prefix + lines[index], tone);
         }
     }
@@ -60,19 +60,19 @@ public sealed class CliBuildView : CliViewBase, IBuildView
     public void ShowNoOnboarding()
     {
         Write(string.Empty);
-        Write("  No onboarding shell under 'assets\\onboardings' - the instance will be built without one.", ConsoleTone.Muted);
+        Write(Localizer.Instance["CliNoOnboarding"], ConsoleTone.Muted);
     }
 
     public bool? AskRunOnboarding()
     {
         Write(string.Empty);
 
-        return AskConfirmation("Run the onboarding shell?", defaultNo: false);
+        return AskConfirmation(Localizer.Instance["CliRunOnboarding"], defaultNo: false);
     }
 
     public BuildSourceChoice? AskOnboarding(IReadOnlyList<BuildSourceChoice> rows)
     {
-        return Pick("Onboarding shell", rows, row => row.Name);
+        return Pick(Localizer.Instance["CliOnboardingShell"], rows, row => row.Name);
     }
 
     public void ShowBeforeAccount()
@@ -87,21 +87,21 @@ public sealed class CliBuildView : CliViewBase, IBuildView
 
     public void ShowUserHint()
     {
-        Write("  Lowercase letters, digits, '_' and '-' only, starting with a letter.", ConsoleTone.Hint);
+        Write("  " + Localizer.Instance["ErrorUserName"], ConsoleTone.Hint);
     }
 
     public bool? AskKeepImage()
     {
         Write(string.Empty);
 
-        return AskConfirmation("Keep Docker image?", defaultNo: false);
+        return AskConfirmation(Localizer.Instance["CliKeepImage"], defaultNo: false);
     }
 
     public bool? AskRegisterDocker(string name)
     {
         Write(string.Empty);
 
-        return AskConfirmation($"Add '{name}' to Docker Desktop? (it will be restarted)", defaultNo: false);
+        return AskConfirmation(Localizer.Instance.Format("CliAddDocker", name), defaultNo: false);
     }
 
     public void Show(BuildResponseDto response)
@@ -114,7 +114,7 @@ public sealed class CliBuildView : CliViewBase, IBuildView
 
         Write(string.Empty);
         Write(
-            $"==> Built '{response.InstanceName}' ({response.Status}).",
+            Localizer.Instance.Format("CliBuilt", response.InstanceName, response.Status),
             response.Status == WslRecipeStatus.Warning ? ConsoleTone.Warning : ConsoleTone.Success);
         Write(string.Empty);
     }

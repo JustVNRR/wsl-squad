@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using FluentAssertions;
 
 using WslSquad.Core.Repositories;
@@ -19,6 +21,33 @@ public class ConfigRepositoryTests
         FontGlyphReader.HasGlyph(temp.Combine("fonts", "meslo", "Meslo.ttf"), 'A').Should().BeTrue();
         FontGlyphReader.HasIconGlyph(temp.Combine("fonts", "meslo", "Meslo.ttf")).Should().BeTrue();
         fonts.Should().Contain("MesloLGS NF");
+    }
+
+    [Fact]
+    public void The_language_preference_round_trips_and_keeps_other_settings()
+    {
+        using TemporaryDirectory temp = new();
+        ConfigRepository repository = new(temp.Path);
+
+        repository.GetLanguage().Should().BeEmpty();
+
+        temp.Write("config.json", """
+            {
+              "schemaVersion": 1,
+              "language": "fr",
+              "fleetRoot": "D:\\WS"
+            }
+            """);
+
+        repository.GetLanguage().Should().Be("fr");
+
+        repository.SaveLanguage("de");
+
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllText(temp.Combine("config.json")));
+        document.RootElement.GetProperty("schemaVersion").GetInt32().Should().Be(1);
+        document.RootElement.GetProperty("fleetRoot").GetString().Should().Be("D:\\WS");
+        document.RootElement.GetProperty("language").GetString().Should().Be("de");
+        repository.GetLanguage().Should().Be("de");
     }
 
     private static void ExtractFont(string resource, string target)

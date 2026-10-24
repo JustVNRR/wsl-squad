@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using WslSquad.Presentation.Localization;
+
 namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class DeleteArchiveViewModel : BaseViewModel
@@ -13,12 +15,11 @@ public sealed partial class DeleteArchiveViewModel : BaseViewModel
     public DeleteArchiveViewModel(string archiveName)
     {
         _archiveName = archiveName;
-        Lead = $"The archive '{archiveName}' will be deleted and will not be restorable again.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
         Typed = string.Empty;
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadDeleteArchive", _archiveName).ToUpperInvariant();
 
     public string? Result { get; private set; }
 

@@ -2,7 +2,8 @@
                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:views="clr-namespace:WslSquad.UI.Wpf.Views"
-                    Title="Restore archive"
+                    xmlns:loc="clr-namespace:WslSquad.Presentation.Localization;assembly=wsl-squad.Presentation"
+                    Title="{Binding Source={x:Static loc:Localizer.Instance}, Path=[RestoreArchiveTitle]}"
                     SizeToContent="WidthAndHeight"
                     WindowStartupLocation="CenterScreen"
                     ResizeMode="NoResize"
@@ -10,14 +11,14 @@
     <StackPanel Margin="18">
         <TextBlock Text="{Binding Lead}" TextWrapping="Wrap" FontWeight="SemiBold"/>
         <Border BorderBrush="{DynamicResource AppDividerBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
-        <TextBlock Margin="0,14,0,10" Text="Name of the restored instance:"/>
-        <TextBox x:Name="TxtName" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" TabIndex="0" Margin="0,6,0,0" Background="{DynamicResource AppInputBackgroundBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
+        <TextBlock Margin="0,14,0,10" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelNameOfRestored]}"/>
+        <TextBox x:Name="TxtName" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" TabIndex="0" Margin="0,6,0,0"/>
         <TextBlock Text="{Binding NameError}" Visibility="{Binding NameError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" TabIndex="1" Margin="0,0,8,0" IsCancel="True"
-                    Background="{DynamicResource AppFaceBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}"/>
-            <Button Content="RESTORE" TabIndex="2" IsDefault="True" Command="{Binding ConfirmCommand}"
-                    Background="{DynamicResource AppForegroundBrush}" Foreground="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource AppForegroundBrush}"/>
+            <Button Content="{Binding Source={x:Static loc:Localizer.Instance}, Path=[ActionCancel]}" TabIndex="1" Margin="0,0,8,0" IsCancel="True"
+                    Style="{DynamicResource BtnCancel}"/>
+            <Button Content="{Binding Source={x:Static loc:Localizer.Instance}, Path=[ActionRestore]}" TabIndex="2" IsDefault="True" Command="{Binding ConfirmCommand}"
+                    Style="{DynamicResource BtnApply}"/>
         </StackPanel>
     </StackPanel>
 </views:ChromeWindow>

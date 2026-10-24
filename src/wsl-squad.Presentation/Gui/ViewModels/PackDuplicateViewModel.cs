@@ -2,12 +2,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using WslSquad.Core.Validation;
+using WslSquad.Presentation.Localization;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed partial class PackDuplicateViewModel : BaseViewModel
 {
-    private readonly IReadOnlyList<string> _taken;
+    private string Source { get; }
+    private IReadOnlyList<string> Taken { get; }
 
     [ObservableProperty]
     public partial string Name { get; set; }
@@ -20,15 +22,15 @@ public sealed partial class PackDuplicateViewModel : BaseViewModel
 
     public PackDuplicateViewModel(string source, string blurb, IReadOnlyList<string> taken)
     {
-        _taken = taken;
+        Source = source;
+        Taken = taken;
         NameError = string.Empty;
         Name = $"{source}-copy";
         Description = blurb;
-        Lead = $"Duplicate the pack '{source}'".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm);
     }
 
-    public string Lead { get; }
+    public string Lead => Localizer.Instance.Format("LeadPackDuplicate", Source).ToUpperInvariant();
 
     public (string Name, string Description)? Result { get; private set; }
 
@@ -45,9 +47,9 @@ public sealed partial class PackDuplicateViewModel : BaseViewModel
         string problem = chosen switch
         {
             _ when !NameRules.IsValid(chosen) =>
-                "Letters, digits, '.', '_' and '-' only, starting with a letter or a digit.",
-            _ when _taken.Contains(chosen, StringComparer.OrdinalIgnoreCase) =>
-                $"A pack named '{chosen}' already exists.",
+                Localizer.Instance["ErrorRecipeName"],
+            _ when Taken.Contains(chosen, StringComparer.OrdinalIgnoreCase) =>
+                Localizer.Instance.Format("ErrorPackDuplicateExists", chosen),
             _ => string.Empty,
         };
 
