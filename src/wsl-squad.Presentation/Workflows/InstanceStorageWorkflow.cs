@@ -1,5 +1,6 @@
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
+using wsl_squad.Presentation.Localization;
 
 namespace wsl_squad.Presentation.Workflows;
 

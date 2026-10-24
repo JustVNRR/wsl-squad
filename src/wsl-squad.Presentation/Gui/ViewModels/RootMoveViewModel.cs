@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using wsl_squad.Core.Services;
+using wsl_squad.Presentation.Localization;
 
 namespace wsl_squad.Presentation.Gui.ViewModels;
 

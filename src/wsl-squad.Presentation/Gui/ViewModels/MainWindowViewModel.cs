@@ -8,6 +8,7 @@ using wsl_squad.Core.Services;
 using wsl_squad.Presentation.Gui.Adapters;
 using wsl_squad.Presentation.Gui.Ports;
 using wsl_squad.Presentation.Workflows;
+using wsl_squad.Presentation.Localization;
 
 namespace wsl_squad.Presentation.Gui.ViewModels;
 

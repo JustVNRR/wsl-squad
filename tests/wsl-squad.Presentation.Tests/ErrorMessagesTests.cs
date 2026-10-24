@@ -1,6 +1,7 @@
 using FluentAssertions;
 
 using wsl_squad.Core.Exceptions;
+using wsl_squad.Presentation.Localization;
 
 namespace wsl_squad.Presentation.Tests;
 

@@ -1,7 +1,7 @@
 using wsl_squad.Core.Services;
 using wsl_squad.Core.Validation;
 
-namespace wsl_squad.Presentation;
+namespace wsl_squad.Presentation.Localization;
 
 public static class ValidationMessages
 {

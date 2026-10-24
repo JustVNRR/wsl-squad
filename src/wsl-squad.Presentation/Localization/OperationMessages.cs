@@ -1,6 +1,6 @@
 using wsl_squad.Core.Dtos;
 
-namespace wsl_squad.Presentation;
+namespace wsl_squad.Presentation.Localization;
 
 public static class OperationMessages
 {

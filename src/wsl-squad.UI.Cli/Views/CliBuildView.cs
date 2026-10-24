@@ -1,7 +1,7 @@
 using wsl_squad.Core.Dtos;
-using wsl_squad.Presentation;
 using wsl_squad.Presentation.Cli.Ports;
 using wsl_squad.UI.Cli.Interaction;
+using wsl_squad.Presentation.Localization;
 
 namespace wsl_squad.UI.Cli.Views;
 
