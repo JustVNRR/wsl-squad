@@ -13,7 +13,5 @@ public interface IInstanceMapper
 
     GetAppearanceResponseDto ToAppearanceResponse(WslTheme theme);
 
-    WslTheme FromSetAppearanceDto(SetAppearanceDto dto);
-
     IconDrawing ToDrawing(WslIconDto icon);
 }

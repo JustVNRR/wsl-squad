@@ -27,7 +27,6 @@ public enum WslSquadErrorCode
     WorkingFolderLost,
     PackNotFound,
     PackAlreadyExists,
-    ThemeNotFound,
     RecipeSlotNotFound,
     FileOperationFailed,
     ExternalToolFailed,

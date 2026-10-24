@@ -70,8 +70,6 @@ public static class ErrorMessages
                 $"There is no pack named '{target}' in the catalogue.",
             WslSquadErrorCode.PackAlreadyExists =>
                 $"A pack named '{target}' already lives in the catalogue.",
-            WslSquadErrorCode.ThemeNotFound =>
-                $"No theme named '{target}' lives in the themes folder.",
             WslSquadErrorCode.RecipeSlotNotFound =>
                 $"'{target}' is not a recipe slot - nothing was removed.",
             WslSquadErrorCode.FileOperationFailed => detail,

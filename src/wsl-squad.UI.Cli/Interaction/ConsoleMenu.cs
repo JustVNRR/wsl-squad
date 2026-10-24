@@ -79,13 +79,6 @@ public sealed class ConsoleMenu
         return Add(new ConsoleMenuItem(key, description));
     }
 
-    public ConsoleMenuItem? Dispatch(string key)
-    {
-        string wanted = key.ToLowerInvariant();
-
-        return _items.Find(item => item.Key == wanted);
-    }
-
     public IReadOnlyList<ConsoleMenuItem>? Prompt()
     {
         if (_items.Count == 0)

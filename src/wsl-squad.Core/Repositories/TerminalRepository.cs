@@ -283,7 +283,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
 
     public WslTheme GetAppearance(string instanceName)
     {
-        WslTheme theme = WslTheme.Default(instanceName);
+        WslTheme theme = WslTheme.Default();
         JsonObject? fragment = ReadTerminalJson(GetFragmentPath(instanceName));
         JsonObject? parsed = (fragment?["profiles"] as JsonArray) is { Count: > 0 } profiles
             ? profiles[0] as JsonObject

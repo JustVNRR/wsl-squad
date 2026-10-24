@@ -8,8 +8,6 @@ public sealed class WslTheme
 
     public string? FontName { get; set; }
 
-    public string? TabTitle { get; set; }
-
     public IconDrawing? Icon { get; private set; }
 
     public void SetIcon(IconDrawing? drawing)
@@ -32,13 +30,12 @@ public sealed class WslTheme
         Icon = drawing;
     }
 
-    public static WslTheme Default(string? tabTitle)
+    public static WslTheme Default()
     {
         return new WslTheme
         {
             ColorScheme = "One Half Dark",
             FontName = "MesloLGS NF",
-            TabTitle = tabTitle,
         };
     }
 

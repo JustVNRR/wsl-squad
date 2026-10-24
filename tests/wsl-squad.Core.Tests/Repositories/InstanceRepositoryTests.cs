@@ -20,7 +20,7 @@ public class InstanceRepositoryTests
             Name = "alpha",
             DefaultUser = "alice",
             Family = "debian",
-            Theme = WslTheme.Default("alpha"),
+            Theme = WslTheme.Default(),
         };
         instance.Theme!.SetIcon(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
 

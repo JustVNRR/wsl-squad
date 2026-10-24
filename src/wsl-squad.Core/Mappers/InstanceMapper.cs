@@ -56,35 +56,6 @@ public sealed class InstanceMapper : IInstanceMapper
         };
     }
 
-    public WslTheme FromSetAppearanceDto(SetAppearanceDto dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        WslTheme theme = new();
-
-        if (!string.IsNullOrEmpty(dto.Font))
-        {
-            theme.FontName = dto.Font;
-        }
-
-        if (!string.IsNullOrEmpty(dto.ColourScheme))
-        {
-            theme.ColorScheme = dto.ColourScheme;
-        }
-
-        if (dto.Icon is not null)
-        {
-            theme.SetIcon(ToDrawing(dto.Icon));
-        }
-
-        if (!string.IsNullOrEmpty(dto.IconImage))
-        {
-            theme.IconPath = dto.IconImage;
-        }
-
-        return theme;
-    }
-
     public IconDrawing ToDrawing(WslIconDto icon)
     {
         ArgumentNullException.ThrowIfNull(icon);

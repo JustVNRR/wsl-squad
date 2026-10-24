@@ -346,7 +346,7 @@ public sealed class InstanceService : IInstanceService
             DefaultUser = user ?? "root",
             Family = _wslRepository.GetFamily(name) ?? string.Empty,
         };
-        WslTheme theme = WslTheme.Default(name);
+        WslTheme theme = WslTheme.Default();
 
         if (!string.IsNullOrEmpty(dto.Font))
         {
@@ -855,7 +855,7 @@ public sealed class InstanceService : IInstanceService
         }
 
         WslInstance stored = _instanceRepository.GetInstance(name);
-        WslTheme theme = stored.Theme ?? WslTheme.Default(name);
+        WslTheme theme = stored.Theme ?? WslTheme.Default();
 
         try
         {
@@ -953,7 +953,7 @@ public sealed class InstanceService : IInstanceService
         _instanceRepository.WriteMarker(name, "restore");
 
         WslInstance stored = _archiveRepository.GetInstance(archiveName);
-        WslTheme theme = stored.Theme ?? WslTheme.Default(name);
+        WslTheme theme = stored.Theme ?? WslTheme.Default();
 
         if (_archiveRepository.HasIcon(archiveName))
         {
@@ -1117,7 +1117,7 @@ public sealed class InstanceService : IInstanceService
     private List<BuildNoticeDto> ApplyLook(string name, WslInstance instance)
     {
         List<BuildNoticeDto> warnings = [];
-        WslTheme theme = instance.Theme ?? WslTheme.Default(name);
+        WslTheme theme = instance.Theme ?? WslTheme.Default();
 
         if (!_terminalRepository.IsFontInstalled(theme.FontName ?? string.Empty))
         {

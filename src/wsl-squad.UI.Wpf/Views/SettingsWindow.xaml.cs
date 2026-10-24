@@ -99,7 +99,6 @@ public partial class SettingsWindow : ChromeWindow
         if (_viewModel.HasTheme(name))
         {
             ConfirmViewModel confirm = new(
-                "Replace theme",
                 $"Replace the theme '{name}' with the chosen file?",
                 null);
 
@@ -137,7 +136,7 @@ public partial class SettingsWindow : ChromeWindow
             return;
         }
 
-        ConfirmViewModel confirm = new("Delete theme", $"Remove '{name}'?", null);
+        ConfirmViewModel confirm = new($"Remove '{name}'?", null);
 
         if (DialogHost.Show(new ConfirmWindow(confirm)) == true)
         {

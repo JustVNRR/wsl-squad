@@ -2,8 +2,6 @@ namespace WslSquad.Core.Repositories;
 
 public interface IConfigRepository
 {
-    IReadOnlyList<string> GetThemeNames();
-
     IReadOnlyList<string> GetFontNames();
 
     IReadOnlyList<string> GetPromptFontNames();
@@ -21,14 +19,6 @@ public interface IConfigRepository
     void RemoveRecipe(string path);
 
     void ExportRecipe(string path, string target);
-
-    string CopyFont(string source);
-
-    string CopyTheme(string source);
-
-    void DeleteTheme(string name);
-
-    void OpenTheme(string name);
 
     string GetSavedRoot();
 

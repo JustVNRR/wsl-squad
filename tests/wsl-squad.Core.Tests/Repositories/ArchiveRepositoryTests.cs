@@ -35,7 +35,7 @@ public class ArchiveRepositoryTests
             Name = "alpha_archive",
             IsArchive = true,
             DefaultUser = "alice",
-            Theme = WslTheme.Default("alpha"),
+            Theme = WslTheme.Default(),
         };
 
         repository.SaveInstance(archive, "yes");

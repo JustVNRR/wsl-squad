@@ -32,16 +32,6 @@ public class ConsoleMenuTests
     }
 
     [Fact]
-    public void Dispatch_finds_a_key_case_insensitively()
-    {
-        ConsoleMenu menu = new("Menu", new ConsoleHost(new ConsoleTheme()));
-        _ = menu.Add("build", "build an instance");
-
-        menu.Dispatch("BUILD")!.Key.Should().Be("build");
-        menu.Dispatch("nope").Should().BeNull();
-    }
-
-    [Fact]
     public void Menu_items_expose_their_value()
     {
         object value = new();

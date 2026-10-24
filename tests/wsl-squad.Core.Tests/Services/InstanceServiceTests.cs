@@ -225,7 +225,7 @@ public class InstanceServiceTests
     public void Refuses_to_apply_a_look_without_a_terminal_profile()
     {
         _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance { Name = "alpha" });
-        _terminal.Setup(terminal => terminal.GetAppearance("alpha")).Returns(WslTheme.Default("alpha"));
+        _terminal.Setup(terminal => terminal.GetAppearance("alpha")).Returns(WslTheme.Default());
         _terminal.Setup(terminal => terminal.GetProfileGuid("alpha")).Returns(string.Empty);
 
         Action act = () => _service.SetAppearance(new SetAppearanceDto

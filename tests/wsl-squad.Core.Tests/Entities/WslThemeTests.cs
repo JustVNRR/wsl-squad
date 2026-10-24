@@ -9,11 +9,10 @@ public class WslThemeTests
     [Fact]
     public void Default_uses_the_reference_look()
     {
-        WslTheme theme = WslTheme.Default("alpha");
+        WslTheme theme = WslTheme.Default();
 
         theme.FontName.Should().Be("MesloLGS NF");
         theme.ColorScheme.Should().Be("One Half Dark");
-        theme.TabTitle.Should().Be("alpha");
     }
 
     [Fact]

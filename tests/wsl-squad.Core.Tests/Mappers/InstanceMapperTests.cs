@@ -41,7 +41,7 @@ public class InstanceMapperTests
     [Fact]
     public void Maps_an_appearance_and_its_icon()
     {
-        WslTheme theme = WslTheme.Default("alpha");
+        WslTheme theme = WslTheme.Default();
         theme.SetIcon(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
 
         GetAppearanceResponseDto dto = _mapper.ToAppearanceResponse(theme);
@@ -51,19 +51,4 @@ public class InstanceMapperTests
         dto.Icon!.Text.Should().Be("AL");
     }
 
-    [Fact]
-    public void Maps_an_appearance_request_to_a_theme()
-    {
-        WslTheme theme = _mapper.FromSetAppearanceDto(new SetAppearanceDto
-        {
-            Font = "Consolas",
-            ColourScheme = "One Half Dark",
-            Icon = new WslIconDto { Text = "AL", Top = "#000000", Bottom = "#111111", TextColor = "#FFFFFF" },
-            IconImage = "/tmp/icon.png",
-        });
-
-        theme.FontName.Should().Be("Consolas");
-        theme.IconPath.Should().Be("/tmp/icon.png");
-        theme.Icon!.Text.Should().Be("AL");
-    }
 }

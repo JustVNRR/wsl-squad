@@ -11,7 +11,7 @@ public sealed class WpfDialogs : IDialogService
 {
     public bool Confirm(string title, string question, string? danger = null)
     {
-        ConfirmViewModel viewModel = new(title, question, danger);
+        ConfirmViewModel viewModel = new(question, danger);
 
         return DialogHost.Show(new ConfirmWindow(viewModel)) == true;
     }

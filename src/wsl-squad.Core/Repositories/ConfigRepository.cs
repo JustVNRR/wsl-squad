@@ -1,5 +1,4 @@
 using WslSquad.Core.Exceptions;
-using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace WslSquad.Core.Repositories;
@@ -22,15 +21,6 @@ public sealed class ConfigRepository : IConfigRepository
     {
         _assetsDir = assetsDir;
         _distroTree = distroTree;
-    }
-
-    public IReadOnlyList<string> GetThemeNames()
-    {
-        string root = Path.Combine(_assetsDir, "themes");
-
-        return Directory.Exists(root)
-            ? [.. Directory.EnumerateFiles(root, "*.xaml").Select(Path.GetFileNameWithoutExtension).Order(StringComparer.Ordinal)!]
-            : [];
     }
 
     public IReadOnlyList<string> GetFontNames()
@@ -196,55 +186,6 @@ public sealed class ConfigRepository : IConfigRepository
         File.Copy(path, target, overwrite: true);
     }
 
-    public string CopyFont(string source)
-    {
-        string fingerprint = ShortHash(source);
-        string slot = Path.Combine(
-            _assetsDir,
-            "fonts",
-            $"{Path.GetFileNameWithoutExtension(source)}-{fingerprint}");
-
-        _ = Directory.CreateDirectory(slot);
-        File.Copy(source, Path.Combine(slot, Path.GetFileName(source)), overwrite: true);
-
-        return slot;
-    }
-
-    public string CopyTheme(string source)
-    {
-        string name = Path.GetFileNameWithoutExtension(source);
-        string target = Path.Combine(_assetsDir, "themes", $"{name}.xaml");
-
-        _ = Directory.CreateDirectory(Path.GetDirectoryName(target) ?? string.Empty);
-        File.Copy(source, target, overwrite: true);
-
-        return target;
-    }
-
-    public void DeleteTheme(string name)
-    {
-        string target = Path.Combine(_assetsDir, "themes", $"{Path.GetFileNameWithoutExtension(name)}.xaml");
-
-        if (!File.Exists(target))
-        {
-            throw new WslSquadException(WslSquadErrorCode.ThemeNotFound, name);
-        }
-
-        File.Delete(target);
-    }
-
-    public void OpenTheme(string name)
-    {
-        string target = Path.Combine(_assetsDir, "themes", $"{Path.GetFileNameWithoutExtension(name)}.xaml");
-
-        if (!File.Exists(target))
-        {
-            throw new WslSquadException(WslSquadErrorCode.ThemeNotFound, name);
-        }
-
-        OpenWithShell(target);
-    }
-
     public string GetSavedRoot()
     {
         string file = RootFile();
@@ -401,11 +342,6 @@ public sealed class ConfigRepository : IConfigRepository
         byte[] hash = SHA256.HashData(stream);
 
         return Convert.ToHexStringLower(hash)[..8];
-    }
-
-    private static void OpenWithShell(string path)
-    {
-        _ = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
     }
 
     private static string RootFile()

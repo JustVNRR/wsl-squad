@@ -8,16 +8,6 @@ namespace WslSquad.Core.Tests.Repositories;
 public class ConfigRepositoryTests
 {
     [Fact]
-    public void Lists_themes()
-    {
-        using TemporaryDirectory temp = new();
-        _ = temp.Write("themes/phosphor.xaml", "<ResourceDictionary/>");
-        ConfigRepository repository = new(temp.Path);
-
-        repository.GetThemeNames().Should().Equal("phosphor");
-    }
-
-    [Fact]
     public void Prompt_fonts_keep_only_bundled_fonts_with_prompt_icons()
     {
         using TemporaryDirectory temp = new();
@@ -110,18 +100,4 @@ public class ConfigRepositoryTests
         act.Should().Throw<InvalidOperationException>();
     }
 
-    [Fact]
-    public void Copies_and_deletes_a_theme()
-    {
-        using TemporaryDirectory temp = new();
-        string source = temp.Write("amber.xaml", "<ResourceDictionary/>");
-        ConfigRepository repository = new(temp.Path);
-
-        string target = repository.CopyTheme(source);
-        File.Exists(target).Should().BeTrue();
-        repository.GetThemeNames().Should().Contain("amber");
-
-        repository.DeleteTheme("amber");
-        File.Exists(target).Should().BeFalse();
-    }
 }

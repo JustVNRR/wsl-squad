@@ -8,18 +8,17 @@ namespace WslSquad.Presentation.Tests.ViewModels;
 public class SimpleDialogViewModelTests
 {
     [Fact]
-    public void Confirm_returns_true_and_requests_close()
+    public void Confirm_requests_close()
     {
-        ConfirmViewModel viewModel = new("Remove", "Delete 'alpha'?", "Danger");
+        ConfirmViewModel viewModel = new("Delete 'alpha'?", "Danger");
         bool closed = false;
         viewModel.CloseRequested += (_, _) => closed = true;
 
         viewModel.ConfirmCommand.Execute(null);
 
-        viewModel.Title.Should().Be("Remove");
-        viewModel.Question.Should().Be("Delete 'alpha'?");
+        viewModel.Lead.Should().Be("DELETE 'ALPHA'?");
+        viewModel.Body.Should().BeEmpty();
         viewModel.Danger.Should().Be("Danger");
-        viewModel.Result.Should().BeTrue();
         closed.Should().BeTrue();
     }
 
