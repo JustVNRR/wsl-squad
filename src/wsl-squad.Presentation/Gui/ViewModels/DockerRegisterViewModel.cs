@@ -6,10 +6,11 @@ namespace WslSquad.Presentation.Gui.ViewModels;
 public sealed partial class DockerRegisterViewModel : BaseViewModel
 {
     [ObservableProperty]
-    private bool _restart = true;
+    public partial bool Restart { get; set; }
 
     public DockerRegisterViewModel(string name, string state)
     {
+        Restart = true;
         Lead = state == "yes"
             ? $"Unregister '{name}' from Docker Desktop?".ToUpperInvariant()
             : $"Register '{name}' with Docker Desktop?".ToUpperInvariant();

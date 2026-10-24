@@ -123,6 +123,24 @@ public class BuildViewModelTests
     }
 
     [Fact]
+    public void Dockerfile_road_needs_a_dockerfile()
+    {
+        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
+        {
+            Dockerfiles = [],
+            Onboardings = [],
+            Recipes = [],
+        });
+        BuildViewModel viewModel = Create();
+        viewModel.Name = "alpha";
+
+        viewModel.CreateCommand.Execute(null);
+
+        viewModel.DockerfileError.Should().Contain("Upload a Dockerfile");
+        viewModel.Result.Should().BeNull();
+    }
+
+    [Fact]
     public void Image_road_needs_an_uploaded_image()
     {
         BuildViewModel viewModel = Create();
@@ -248,7 +266,7 @@ public class BuildViewModelTests
         });
         _instance.Setup(service => service.GetAllSavedImages()).Returns(
         [
-            new WslDockerImageDto
+            new WslBuildSourceDto
             {
                 Name = "base.tar",
                 Path = "/images/base.tar",

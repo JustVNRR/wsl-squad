@@ -16,22 +16,22 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
     private readonly GetAppearanceResponseDto _appearance;
 
     [ObservableProperty]
-    private string _iconText;
+    public partial string IconText { get; set; }
 
     [ObservableProperty]
-    private string _iconError = string.Empty;
+    public partial string IconError { get; set; }
 
     [ObservableProperty]
-    private int _pairIndex;
+    public partial int PairIndex { get; set; }
 
     [ObservableProperty]
-    private int _fontIndex;
+    public partial int FontIndex { get; set; }
 
     [ObservableProperty]
-    private int _schemeIndex;
+    public partial int SchemeIndex { get; set; }
 
     [ObservableProperty]
-    private string _imagePath = string.Empty;
+    public partial string ImagePath { get; set; }
 
     public SetAppearanceViewModel(
         string name,
@@ -43,8 +43,10 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
         InstanceName = name;
         _appearance = appearance;
         Lead = $"{name}'s appearance.".ToUpperInvariant();
-
-        _iconText = appearance.Icon?.Text ?? string.Empty;
+        IconError = string.Empty;
+        ImagePath = string.Empty;
+        ApplyCommand = new RelayCommand(Apply, () => IconError.Length == 0);
+        IconText = appearance.Icon?.Text ?? string.Empty;
 
         List<LookPairRow> pairRows = [];
         foreach (WslIconPairDto pair in pairs)
@@ -57,8 +59,8 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
 
         Pairs = pairRows;
         PairLabels = [.. pairRows.Select(row => row.Label)];
-        _pairIndex = pairRows.FindIndex(row => row.Label.EndsWith("(current)", StringComparison.Ordinal));
-        _pairIndex = Math.Max(0, _pairIndex);
+        PairIndex = pairRows.FindIndex(row => row.Label.EndsWith("(current)", StringComparison.Ordinal));
+        PairIndex = Math.Max(0, PairIndex);
 
         List<LookFontRow> fontRows = [];
         List<string> fontNames = [.. fonts];
@@ -78,7 +80,7 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
 
         Fonts = fontRows;
         FontLabels = [.. fontRows.Select(row => row.Label)];
-        _fontIndex = Math.Max(0, fontRows.FindIndex(row =>
+        FontIndex = Math.Max(0, fontRows.FindIndex(row =>
             string.Equals(row.Name, appearance.Font, StringComparison.Ordinal)));
 
         List<LookSchemeRow> schemeRows = [];
@@ -93,15 +95,14 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
 
         Schemes = schemeRows;
         SchemeLabels = [.. schemeRows.Select(row => row.Label)];
-        _schemeIndex = Math.Max(0, schemeRows.FindIndex(row =>
+        SchemeIndex = Math.Max(0, schemeRows.FindIndex(row =>
             string.Equals(row.Scheme.Name, appearance.ColourScheme, StringComparison.Ordinal)));
 
         if (!string.IsNullOrEmpty(appearance.IconPath) && File.Exists(appearance.IconPath))
         {
-            _imagePath = appearance.IconPath;
+            ImagePath = appearance.IconPath;
         }
 
-        ApplyCommand = new RelayCommand(Apply, () => IconError.Length == 0);
         ValidateIcon();
     }
 

@@ -181,6 +181,9 @@ public partial class BuildWindow : ChromeWindow
             case nameof(BuildViewModel.UserError):
                 ShowError(GuiUserError, _viewModel.UserError);
                 break;
+            case nameof(BuildViewModel.DockerfileError):
+                ShowError(GuiDockerfileError, _viewModel.DockerfileError);
+                break;
             case nameof(BuildViewModel.ImageError):
                 ShowError(GuiImageError, _viewModel.ImageError);
                 break;

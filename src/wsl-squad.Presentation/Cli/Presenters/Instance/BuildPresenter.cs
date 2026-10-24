@@ -22,7 +22,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
     public IWorkflowResult Run()
     {
         GetBuildSourcesResponseDto sources;
-        IReadOnlyList<WslDockerImageDto> images;
+        IReadOnlyList<WslBuildSourceDto> images;
         IReadOnlyList<string> takenNames;
 
         try

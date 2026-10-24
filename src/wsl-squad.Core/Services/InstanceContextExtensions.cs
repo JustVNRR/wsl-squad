@@ -9,7 +9,7 @@ public static class InstanceContextExtensions
         ArgumentNullException.ThrowIfNull(service);
 
         GetBuildSourcesResponseDto sources = service.GetBuildSources();
-        IReadOnlyList<WslDockerImageDto> images = service.GetAllSavedImages();
+        IReadOnlyList<WslBuildSourceDto> images = service.GetAllSavedImages();
         List<string> taken = [.. (service.GetAll() ?? [])
             .Where(row => !row.IsArchive && !string.IsNullOrEmpty(row.Name))
             .Select(row => row.Name!)];

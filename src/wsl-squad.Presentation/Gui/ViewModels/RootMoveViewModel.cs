@@ -11,17 +11,17 @@ public sealed partial class RootMoveViewModel : BaseViewModel
     private readonly string _current;
 
     [ObservableProperty]
-    private string _warning;
+    public partial string Warning { get; set; }
 
     [ObservableProperty]
-    private string _newRoot;
+    public partial string NewRoot { get; set; }
 
     public RootMoveViewModel(string current)
     {
         _current = current.TrimEnd('\\');
         Lead = $"Move the fleet from '{current}'".ToUpperInvariant();
-        _warning = "Every instance will be archived and unregistered before migration.";
-        _newRoot = current;
+        Warning = "Every instance will be archived and unregistered before migration.";
+        NewRoot = current;
         ConfirmCommand = new RelayCommand(Confirm);
     }
 

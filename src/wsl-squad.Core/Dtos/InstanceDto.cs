@@ -56,6 +56,23 @@ public sealed record WslBuildSourceDto
     public string? Path { get; init; }
 
     public bool Uploaded { get; init; }
+
+    public string SuggestedExportFileName
+    {
+        get
+        {
+            string path = Path ?? string.Empty;
+            string baseName = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path) ?? string.Empty);
+            int fingerprint = baseName.LastIndexOf('-');
+
+            if (fingerprint >= 0 && baseName.Length - fingerprint - 1 == 8)
+            {
+                baseName = baseName[..fingerprint];
+            }
+
+            return baseName + System.IO.Path.GetExtension(path);
+        }
+    }
 }
 
 public sealed record GetBuildSourcesResponseDto
@@ -287,7 +304,7 @@ public sealed record BuildContextDto
 {
     public GetBuildSourcesResponseDto Sources { get; init; } = new();
 
-    public IReadOnlyList<WslDockerImageDto> Images { get; init; } = [];
+    public IReadOnlyList<WslBuildSourceDto> Images { get; init; } = [];
 
     public IReadOnlyList<string> TakenNames { get; init; } = [];
 }

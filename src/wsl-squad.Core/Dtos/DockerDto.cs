@@ -1,14 +1,5 @@
 namespace WslSquad.Core.Dtos;
 
-public sealed record WslDockerImageDto
-{
-    public string? Name { get; init; }
-
-    public string? Path { get; init; }
-
-    public bool Uploaded { get; init; }
-}
-
 public enum RegistryValidationError
 {
     None,

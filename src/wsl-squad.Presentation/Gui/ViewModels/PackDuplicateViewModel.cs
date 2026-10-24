@@ -10,19 +10,20 @@ public sealed partial class PackDuplicateViewModel : BaseViewModel
     private readonly IReadOnlyList<string> _taken;
 
     [ObservableProperty]
-    private string _name;
+    public partial string Name { get; set; }
 
     [ObservableProperty]
-    private string _description;
+    public partial string Description { get; set; }
 
     [ObservableProperty]
-    private string _nameError = string.Empty;
+    public partial string NameError { get; set; }
 
     public PackDuplicateViewModel(string source, string blurb, IReadOnlyList<string> taken)
     {
         _taken = taken;
-        _name = $"{source}-copy";
-        _description = blurb;
+        NameError = string.Empty;
+        Name = $"{source}-copy";
+        Description = blurb;
         Lead = $"Duplicate the pack '{source}'".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm);
     }

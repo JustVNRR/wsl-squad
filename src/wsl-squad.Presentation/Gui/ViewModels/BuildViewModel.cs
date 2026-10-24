@@ -20,94 +20,87 @@ public sealed partial class BuildViewModel : BaseViewModel
     private readonly List<WslBuildSourceDto> _dockerfiles;
     private readonly List<WslBuildSourceDto> _onboardings;
     private readonly List<WslBuildSourceDto> _recipes;
-    private readonly List<WslDockerImageDto> _images;
+    private readonly List<WslBuildSourceDto> _images;
     private readonly IReadOnlyList<string> _takenNames;
     private bool _nameOk;
     private bool _userOk;
 
     [ObservableProperty]
-    private string _name = string.Empty;
+    public partial string Name { get; set; }
 
     [ObservableProperty]
-    private string _nameError = string.Empty;
+    public partial string NameError { get; set; }
 
     [ObservableProperty]
-    private string _user;
+    public partial string User { get; set; }
 
     [ObservableProperty]
-    private string _userError = string.Empty;
+    public partial string UserError { get; set; }
 
     [ObservableProperty]
-    private int _roadIndex;
+    [NotifyPropertyChangedFor(nameof(ShowDockerfile))]
+    [NotifyPropertyChangedFor(nameof(ShowImage))]
+    [NotifyPropertyChangedFor(nameof(ShowRegistry))]
+    [NotifyPropertyChangedFor(nameof(ShowRecipe))]
+    [NotifyPropertyChangedFor(nameof(ShowGeneralOptions))]
+    public partial int RoadIndex { get; set; }
 
     [ObservableProperty]
-    private int _dockerfileIndex = -1;
+    public partial int DockerfileIndex { get; set; }
 
     [ObservableProperty]
-    private int _onboardingIndex = -1;
+    public partial int OnboardingIndex { get; set; }
 
     [ObservableProperty]
-    private int _imageIndex = -1;
+    public partial int ImageIndex { get; set; }
 
     [ObservableProperty]
-    private int _recipeIndex = -1;
+    public partial int RecipeIndex { get; set; }
 
     [ObservableProperty]
-    private string _registryRef = string.Empty;
+    public partial string RegistryRef { get; set; }
 
     [ObservableProperty]
-    private string _imageError = string.Empty;
+    public partial string ImageError { get; set; }
 
     [ObservableProperty]
-    private string _registryError = string.Empty;
+    public partial string RegistryError { get; set; }
 
     [ObservableProperty]
-    private string _recipeError = string.Empty;
+    public partial string RecipeError { get; set; }
 
     [ObservableProperty]
-    private bool _saveImage;
+    public partial string DockerfileError { get; set; }
 
     [ObservableProperty]
-    private bool _registerDocker = true;
+    public partial bool SaveImage { get; set; }
 
     [ObservableProperty]
-    private bool _runOnboarding = true;
+    public partial bool RegisterDocker { get; set; }
 
     [ObservableProperty]
-    private bool _showDockerfile = true;
+    public partial bool RunOnboarding { get; set; }
 
     [ObservableProperty]
-    private bool _showImage;
+    public partial bool CanTrashDockerfile { get; set; }
 
     [ObservableProperty]
-    private bool _showRegistry;
+    public partial bool CanTrashOnboarding { get; set; }
 
     [ObservableProperty]
-    private bool _showRecipe;
+    public partial bool CanTrashImage { get; set; }
 
     [ObservableProperty]
-    private bool _showGeneralOptions = true;
+    public partial bool CanTrashRecipe { get; set; }
 
     [ObservableProperty]
-    private bool _canTrashDockerfile;
+    public partial bool CanDownloadDockerfile { get; set; }
 
     [ObservableProperty]
-    private bool _canTrashOnboarding;
+    public partial bool CanDownloadOnboarding { get; set; }
 
     [ObservableProperty]
-    private bool _canTrashImage;
-
-    [ObservableProperty]
-    private bool _canTrashRecipe;
-
-    [ObservableProperty]
-    private bool _canDownloadDockerfile;
-
-    [ObservableProperty]
-    private bool _canDownloadOnboarding;
-
-    [ObservableProperty]
-    private bool _canDownloadImage;
+    public partial bool CanDownloadImage { get; set; }
 
     public BuildViewModel(IInstanceService instance, IDialogService dialogs)
     {
@@ -117,6 +110,15 @@ public sealed partial class BuildViewModel : BaseViewModel
         _onboardings = [];
         _recipes = [];
         _images = [];
+        NameError = string.Empty;
+        UserError = string.Empty;
+        RegistryRef = string.Empty;
+        ImageError = string.Empty;
+        RegistryError = string.Empty;
+        RecipeError = string.Empty;
+        DockerfileError = string.Empty;
+        RegisterDocker = true;
+        CreateCommand = new RelayCommand(Create, () => _nameOk && _userOk);
 
         try
         {
@@ -133,14 +135,14 @@ public sealed partial class BuildViewModel : BaseViewModel
             _takenNames = [];
         }
 
-        _dockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
-        _onboardingIndex = _onboardings.Count > 0 ? 0 : -1;
-        _imageIndex = _images.Count > 0 ? 0 : -1;
-        _recipeIndex = _recipes.Count > 0 ? 0 : -1;
+        User = NameRules.ProposeUserName();
+        RunOnboarding = true;
+        Name = string.Empty;
 
-        _user = NameRules.ProposeUserName();
-
-        CreateCommand = new RelayCommand(Create, () => _nameOk && _userOk);
+        DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
+        OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
+        ImageIndex = _images.Count > 0 ? 0 : -1;
+        RecipeIndex = _recipes.Count > 0 ? 0 : -1;
 
         ValidateName();
         ValidateUser();
@@ -150,6 +152,16 @@ public sealed partial class BuildViewModel : BaseViewModel
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound as an instance property by WPF.")]
     [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
     public string Lead => "NEW WSL DISTRIBUTION";
+
+    public bool ShowDockerfile => RoadIndex == 0;
+
+    public bool ShowImage => RoadIndex == 1;
+
+    public bool ShowRegistry => RoadIndex == 2;
+
+    public bool ShowRecipe => RoadIndex == 3;
+
+    public bool ShowGeneralOptions => RoadIndex != 3;
 
     public ObservableCollection<string> DockerfileNames { get; } = [];
 
@@ -180,7 +192,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     partial void OnRoadIndexChanged(int value)
     {
-        RoadMoved();
+        RunOnboarding = value == 0;
     }
 
     partial void OnDockerfileIndexChanged(int value)
@@ -234,14 +246,14 @@ public sealed partial class BuildViewModel : BaseViewModel
             _ => string.Empty,
         };
 
-        object? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(listName);
 
-        if (title.Length == 0 || row is null || !IsUploaded(row))
+        if (title.Length == 0 || row is null || !row.Uploaded)
         {
             return;
         }
 
-        if (_dialogs.Confirm(title, $"Remove '{NameOf(row)}'?"))
+        if (_dialogs.Confirm(title, $"Remove '{row.Name ?? string.Empty}'?"))
         {
             RemoveRecipe(listName);
         }
@@ -272,7 +284,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public void EditSource(string listName)
     {
-        object? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(listName);
 
         if (row is null)
         {
@@ -281,7 +293,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
         try
         {
-            _instance.OpenInEditor(PathOf(row));
+            _instance.OpenInEditor(row.Path ?? string.Empty);
         }
         catch (InvalidOperationException ex)
         {
@@ -291,23 +303,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public string DownloadName(string listName)
     {
-        object? row = SelectedRow(listName);
-
-        if (row is null)
-        {
-            return string.Empty;
-        }
-
-        string path = PathOf(row);
-        string baseName = Path.GetFileName(Path.GetDirectoryName(path) ?? string.Empty);
-        int fingerprint = baseName.LastIndexOf('-');
-
-        if (fingerprint >= 0 && baseName.Length - fingerprint - 1 == 8)
-        {
-            baseName = baseName[..fingerprint];
-        }
-
-        return baseName + Path.GetExtension(path);
+        return SelectedRow(listName)?.SuggestedExportFileName ?? string.Empty;
     }
 
     public void ExportRecipeTo(string listName, string? target)
@@ -317,7 +313,7 @@ public sealed partial class BuildViewModel : BaseViewModel
             return;
         }
 
-        object? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(listName);
 
         if (row is null)
         {
@@ -328,7 +324,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         {
             _instance.ExportRecipe(new ExportRecipeDto
             {
-                Path = PathOf(row),
+                Path = row.Path ?? string.Empty,
                 Target = target,
             });
         }
@@ -350,6 +346,7 @@ public sealed partial class BuildViewModel : BaseViewModel
             _userOk = true;
         }
 
+        DockerfileError = RoadIndex == 0 && DockerfileIndex < 0 ? "Upload a Dockerfile first." : string.Empty;
         ImageError = RoadIndex == 1 && ImageIndex < 0 ? "Upload a Docker image first." : string.Empty;
         RecipeError = RoadIndex == 3 && RecipeIndex < 0 ? "Create a recipe first with the + button." : string.Empty;
         RegistryError = string.Empty;
@@ -381,7 +378,10 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
 
         if (!_nameOk || !_userOk ||
-            ImageError.Length > 0 || RegistryError.Length > 0 || RecipeError.Length > 0)
+            DockerfileError.Length > 0 ||
+            ImageError.Length > 0 ||
+            RegistryError.Length > 0 ||
+            RecipeError.Length > 0)
         {
             return;
         }
@@ -453,17 +453,6 @@ public sealed partial class BuildViewModel : BaseViewModel
         CreateCommand.NotifyCanExecuteChanged();
     }
 
-    private void RoadMoved()
-    {
-        RunOnboarding = RoadIndex == 0;
-        ShowDockerfile = RoadIndex == 0;
-        ShowImage = RoadIndex == 1;
-        ShowRegistry = RoadIndex == 2;
-        ShowRecipe = RoadIndex == 3;
-        ShowGeneralOptions = RoadIndex != 3;
-        ValidateUser();
-    }
-
     private void SyncLists()
     {
         Fill(DockerfileNames, _dockerfiles.Select(row => row.Name));
@@ -486,32 +475,32 @@ public sealed partial class BuildViewModel : BaseViewModel
         CanTrashDockerfile = Uploaded(_dockerfiles, DockerfileIndex);
         CanTrashOnboarding = Uploaded(_onboardings, OnboardingIndex);
         CanTrashRecipe = Uploaded(_recipes, RecipeIndex);
-        CanTrashImage = ImageIndex >= 0 && ImageIndex < _images.Count && _images[ImageIndex].Uploaded;
+        CanTrashImage = Uploaded(_images, ImageIndex);
     }
 
-    private object? SelectedRow(string listName)
+    private WslBuildSourceDto? SelectedRow(string listName)
     {
         return listName switch
         {
             "Dockerfiles" => Selected(_dockerfiles, DockerfileIndex),
             "Onboardings" => Selected(_onboardings, OnboardingIndex),
             "Recipes" => Selected(_recipes, RecipeIndex),
-            _ => ImageIndex >= 0 && ImageIndex < _images.Count ? _images[ImageIndex] : null,
+            _ => Selected(_images, ImageIndex),
         };
     }
 
     private void RemoveRecipe(string listName)
     {
-        object? row = SelectedRow(listName);
+        WslBuildSourceDto? row = SelectedRow(listName);
 
-        if (row is null || !IsUploaded(row))
+        if (row is null || !row.Uploaded)
         {
             return;
         }
 
         try
         {
-            _instance.DeleteRecipe(PathOf(row));
+            _instance.DeleteRecipe(row.Path ?? string.Empty);
         }
         catch (InvalidOperationException)
         {
@@ -520,22 +509,22 @@ public sealed partial class BuildViewModel : BaseViewModel
 
         if (listName == "Dockerfiles")
         {
-            _ = _dockerfiles.RemoveAll(item => item.Path == PathOf(row));
+            _ = _dockerfiles.RemoveAll(item => item.Path == row.Path);
             DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
         }
         else if (listName == "Onboardings")
         {
-            _ = _onboardings.RemoveAll(item => item.Path == PathOf(row));
+            _ = _onboardings.RemoveAll(item => item.Path == row.Path);
             OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
         }
         else if (listName == "Recipes")
         {
-            _ = _recipes.RemoveAll(item => item.Path == PathOf(row));
+            _ = _recipes.RemoveAll(item => item.Path == row.Path);
             RecipeIndex = _recipes.Count > 0 ? 0 : -1;
         }
         else
         {
-            _ = _images.RemoveAll(item => item.Path == PathOf(row));
+            _ = _images.RemoveAll(item => item.Path == row.Path);
             ImageIndex = _images.Count > 0 ? 0 : -1;
         }
 
@@ -570,12 +559,7 @@ public sealed partial class BuildViewModel : BaseViewModel
             }
             else
             {
-                _images.Add(new WslDockerImageDto
-                {
-                    Name = row.Name,
-                    Path = row.Path,
-                    Uploaded = row.Uploaded,
-                });
+                _images.Add(row);
                 ImageIndex = _images.Count - 1;
             }
 
@@ -604,8 +588,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
     }
 
-    private static T? Selected<T>(List<T> rows, int index)
-        where T : class
+    private static WslBuildSourceDto? Selected(List<WslBuildSourceDto> rows, int index)
     {
         return index >= 0 && index < rows.Count ? rows[index] : null;
     }
@@ -614,35 +597,4 @@ public sealed partial class BuildViewModel : BaseViewModel
     {
         return index >= 0 && index < rows.Count && rows[index].Uploaded;
     }
-
-    private static bool IsUploaded(object row)
-    {
-        return row switch
-        {
-            WslBuildSourceDto source => source.Uploaded,
-            WslDockerImageDto image => image.Uploaded,
-            _ => false,
-        };
-    }
-
-    private static string NameOf(object row)
-    {
-        return row switch
-        {
-            WslBuildSourceDto source => source.Name ?? string.Empty,
-            WslDockerImageDto image => image.Name ?? string.Empty,
-            _ => string.Empty,
-        };
-    }
-
-    private static string PathOf(object row)
-    {
-        return row switch
-        {
-            WslBuildSourceDto source => source.Path ?? string.Empty,
-            WslDockerImageDto image => image.Path ?? string.Empty,
-            _ => string.Empty,
-        };
-    }
-
 }

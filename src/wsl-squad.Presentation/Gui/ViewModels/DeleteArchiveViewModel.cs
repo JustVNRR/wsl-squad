@@ -8,13 +8,14 @@ public sealed partial class DeleteArchiveViewModel : BaseViewModel
     private readonly string _archiveName;
 
     [ObservableProperty]
-    private string _typed = string.Empty;
+    public partial string Typed { get; set; }
 
     public DeleteArchiveViewModel(string archiveName)
     {
         _archiveName = archiveName;
         Lead = $"The archive '{archiveName}' will be deleted and will not be restorable again.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
+        Typed = string.Empty;
     }
 
     public string Lead { get; }

@@ -26,17 +26,17 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private bool InFlight { get; set; }
 
     [ObservableProperty]
-    private string _root = string.Empty;
+    public partial string Root { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Free))]
-    private bool _busy;
+    public partial bool Busy { get; set; }
 
     [ObservableProperty]
-    private string _colourSet;
+    public partial string ColourSet { get; set; }
 
     [ObservableProperty]
-    private string _variant;
+    public partial string Variant { get; set; }
 
     public MainWindowViewModel(
         IInstanceService instance,
@@ -61,10 +61,11 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             message => SetBusy(true, message));
         _fleetWorkflow = new FleetWorkflow(fleet, executionStarted: message => SetBusy(true, message));
         _logger = logger;
+        Root = string.Empty;
 
         UiThemeSettings theme = ui.GetTheme();
-        _colourSet = theme.ColourSet;
-        _variant = string.IsNullOrEmpty(theme.ColourVariant) ? "Dark" : theme.ColourVariant;
+        ColourSet = theme.ColourSet;
+        Variant = string.IsNullOrEmpty(theme.ColourVariant) ? "Dark" : theme.ColourVariant;
     }
 
     public event EventHandler? LookChanged;

@@ -10,7 +10,7 @@ public sealed partial class CompactViewModel : BaseViewModel
     private readonly string _name;
 
     [ObservableProperty]
-    private bool _archiveFirst;
+    public partial bool ArchiveFirst { get; set; }
 
     public CompactViewModel(string name, bool replacesArchive)
     {

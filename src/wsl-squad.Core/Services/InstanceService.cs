@@ -789,13 +789,13 @@ public sealed class InstanceService : IInstanceService
         _wslRepository.OpenPackManager(instanceName, hasProfile);
     }
 
-    public IReadOnlyList<WslDockerImageDto> GetAllSavedImages()
+    public IReadOnlyList<WslBuildSourceDto> GetAllSavedImages()
     {
-        List<WslDockerImageDto> rows = [];
+        List<WslBuildSourceDto> rows = [];
 
         foreach (SavedImageRow image in _dockerRepository.GetAllSavedImages())
         {
-            rows.Add(new WslDockerImageDto
+            rows.Add(new WslBuildSourceDto
             {
                 Name = $"{image.Name} ({image.Modified:dd'/'MM HH:mm})",
                 Path = image.Path,

@@ -48,7 +48,7 @@ public interface IInstanceService
 
     void OpenPackManager(string instanceName);
 
-    IReadOnlyList<WslDockerImageDto> GetAllSavedImages();
+    IReadOnlyList<WslBuildSourceDto> GetAllSavedImages();
 
     IsRegistryImageValidResponseDto IsRegistryImageValid(string imageRef);
 

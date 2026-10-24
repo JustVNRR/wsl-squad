@@ -27,40 +27,40 @@ public sealed partial class SettingsViewModel : BaseViewModel
     private string? _newRoot;
 
     [ObservableProperty]
-    private int _fontIndex;
+    public partial int FontIndex { get; set; }
 
     [ObservableProperty]
-    private int _sizeIndex;
+    public partial int SizeIndex { get; set; }
 
     [ObservableProperty]
-    private int _colourIndex;
+    public partial int ColourIndex { get; set; }
 
     [ObservableProperty]
-    private int _packIndex = -1;
+    public partial int PackIndex { get; set; }
 
     [ObservableProperty]
-    private string _root;
+    public partial string Root { get; set; }
 
     [ObservableProperty]
-    private string _variant;
+    public partial string Variant { get; set; }
 
     [ObservableProperty]
-    private string _themeError = string.Empty;
+    public partial string ThemeError { get; set; }
 
     [ObservableProperty]
-    private string _catalogueError = string.Empty;
+    public partial string CatalogueError { get; set; }
 
     [ObservableProperty]
-    private string _configError = string.Empty;
+    public partial string ConfigError { get; set; }
 
     [ObservableProperty]
-    private bool _canTheme;
+    public partial bool CanTheme { get; set; }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(OpenPackCommand))]
     [NotifyCanExecuteChangedFor(nameof(DuplicatePackCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeletePackCommand))]
-    private bool _canPack;
+    public partial bool CanPack { get; set; }
 
     public SettingsViewModel(
         IUiThemeService ui,
@@ -72,17 +72,20 @@ public sealed partial class SettingsViewModel : BaseViewModel
         _catalogue = catalogue;
         _fleetWorkflow = new FleetWorkflow(fleet);
         _dialogs = dialogs;
+        ThemeError = string.Empty;
+        CatalogueError = string.Empty;
+        ConfigError = string.Empty;
 
         UiThemeSettings theme = ui.GetTheme();
-        _variant = string.IsNullOrEmpty(theme.ColourVariant) ? "Dark" : theme.ColourVariant;
+        string variant = string.IsNullOrEmpty(theme.ColourVariant) ? "Dark" : theme.ColourVariant;
 
         try
         {
-            _root = fleet.GetRoot();
+            Root = fleet.GetRoot();
         }
         catch (InvalidOperationException)
         {
-            _root = string.Empty;
+            Root = string.Empty;
         }
 
         WslConfigPath = Path.Combine(
@@ -98,7 +101,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
 
         Fonts = [.. fonts.Select(name => new SettingsRow(name, name))];
-        _fontIndex = Math.Max(0, Fonts.FindIndex(row => string.Equals(row.Name, theme.FontFamily, StringComparison.Ordinal)));
+        int fontIndex = Math.Max(0, Fonts.FindIndex(row => string.Equals(row.Name, theme.FontFamily, StringComparison.Ordinal)));
 
         List<int> sizes = [11, 13, 15, 17, 19];
 
@@ -110,7 +113,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         Sizes = [.. sizes.Select(size => new SettingsRow(
             size.ToString(System.Globalization.CultureInfo.InvariantCulture),
             size.ToString(System.Globalization.CultureInfo.InvariantCulture)))];
-        _sizeIndex = Math.Max(0, Sizes.FindIndex(row =>
+        int sizeIndex = Math.Max(0, Sizes.FindIndex(row =>
             int.TryParse(row.Name, out int size) && size == theme.FontSize));
 
         List<string> sets = [];
@@ -122,7 +125,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         sets.AddRange(themes);
 
         Colours = [.. sets.Select(name => new SettingsRow(name, name.Length == 0 ? "Default" : name))];
-        _colourIndex = Math.Max(0, Colours.FindIndex(row =>
+        int colourIndex = Math.Max(0, Colours.FindIndex(row =>
             string.Equals(row.Name, theme.ColourSet, StringComparison.Ordinal)));
 
         IReadOnlyList<WslPackDto> packs;
@@ -137,9 +140,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
 
         Packs = PackRowsOf(packs);
-        _packIndex = Packs.Count > 0 ? 0 : -1;
-        _canPack = _packIndex >= 0;
-        _canTheme = HasRealTheme();
+        int packIndex = Packs.Count > 0 ? 0 : -1;
 
         CloseCommand = new RelayCommand(Close);
         WslConfigCommand = new RelayCommand(WslConfig);
@@ -149,6 +150,14 @@ public sealed partial class SettingsViewModel : BaseViewModel
         UploadThemeCommand = new RelayCommand<string>(UploadTheme);
         DeleteThemeCommand = new RelayCommand<string>(DeleteTheme);
         OpenThemeCommand = new RelayCommand<string>(OpenTheme);
+
+        Variant = variant;
+        FontIndex = fontIndex;
+        SizeIndex = sizeIndex;
+        ColourIndex = colourIndex;
+        PackIndex = packIndex;
+        CanPack = PackIndex >= 0;
+        CanTheme = HasRealTheme();
     }
 
     public string WslConfigPath { get; }

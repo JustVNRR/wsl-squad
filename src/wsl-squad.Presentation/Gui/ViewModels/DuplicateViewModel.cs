@@ -14,19 +14,19 @@ public sealed partial class DuplicateViewModel : BaseViewModel
     private bool _nameOk;
 
     [ObservableProperty]
-    private string _name;
+    public partial string Name { get; set; }
 
     [ObservableProperty]
-    private string _nameError = string.Empty;
+    public partial string NameError { get; set; }
 
     public DuplicateViewModel(string source, IReadOnlyList<string> taken)
     {
         _source = source;
         _taken = taken;
-        _name = $"{source}-copy";
+        NameError = string.Empty;
         Lead = $"Duplicate '{source}'.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, () => _nameOk);
-        ValidateName();
+        Name = $"{source}-copy";
     }
 
     public string Lead { get; }

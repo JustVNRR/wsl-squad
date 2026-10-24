@@ -13,19 +13,19 @@ public sealed partial class RestoreViewModel : BaseViewModel
     private readonly IReadOnlyList<string> _taken;
 
     [ObservableProperty]
-    private string _name;
+    public partial string Name { get; set; }
 
     [ObservableProperty]
-    private string _nameError = string.Empty;
+    public partial string NameError { get; set; }
 
     public RestoreViewModel(string archiveName, IReadOnlyList<string> taken)
     {
         _archiveName = archiveName;
         _taken = taken;
-        _name = archiveName;
+        NameError = string.Empty;
         Lead = $"The archive '{archiveName}' comes back as a new instance.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
-        ValidateName();
+        Name = archiveName;
     }
 
     public string Lead { get; }

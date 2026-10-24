@@ -10,16 +10,17 @@ public sealed partial class RemoveViewModel : BaseViewModel
     private readonly string _name;
 
     [ObservableProperty]
-    private string _typed = string.Empty;
+    public partial string Typed { get; set; }
 
     [ObservableProperty]
-    private bool _archiveFirst;
+    public partial bool ArchiveFirst { get; set; }
 
     public RemoveViewModel(string name)
     {
         _name = name;
         Lead = $"The WSL distribution '{name}' and ALL its data will be deleted.".ToUpperInvariant();
         ConfirmCommand = new RelayCommand(Confirm, CanConfirm);
+        Typed = string.Empty;
     }
 
     public string Lead { get; }

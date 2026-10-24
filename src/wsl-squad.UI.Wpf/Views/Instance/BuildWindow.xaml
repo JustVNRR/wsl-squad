@@ -45,6 +45,7 @@
                         <Button Grid.Column="3" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Edit the selected Dockerfile in the code editor" Click="OnEditDockerfile"/>
                         <Button Grid.Column="4" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashDockerfile}" ToolTip="Delete the selected uploaded file" Click="OnDeleteSource" Tag="Dockerfiles"/>
                     </Grid>
+                    <TextBlock x:Name="GuiDockerfileError" Text="{Binding DockerfileError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
                     <CheckBox Content="Save image locally" IsChecked="{Binding SaveImage, Mode=TwoWay}" Margin="0,10,0,0" Foreground="{DynamicResource AppForegroundBrush}"/>
                 </StackPanel>
                 <StackPanel Visibility="{Binding ShowImage, Converter={StaticResource BooleanToVisibilityConverter}}">

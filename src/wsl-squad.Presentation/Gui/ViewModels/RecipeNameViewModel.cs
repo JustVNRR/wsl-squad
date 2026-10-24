@@ -9,13 +9,15 @@ namespace WslSquad.Presentation.Gui.ViewModels;
 public sealed partial class RecipeNameViewModel : BaseViewModel
 {
     [ObservableProperty]
-    private string _name = string.Empty;
+    public partial string Name { get; set; }
 
     [ObservableProperty]
-    private string _nameError = string.Empty;
+    public partial string NameError { get; set; }
 
     public RecipeNameViewModel()
     {
+        NameError = string.Empty;
+        Name = string.Empty;
         ConfirmCommand = new RelayCommand(Confirm);
     }
 
