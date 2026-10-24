@@ -8,12 +8,12 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $ArtifactsRoot = Join-Path $RepoRoot "artifacts"
 $PublishRoot = Join-Path $ArtifactsRoot "publish"
-$OutputRoot = Join-Path $PublishRoot "self-contained"
-$GuiDir = Join-Path $OutputRoot "gui"
-$CliDir = Join-Path $GuiDir "cli"
+$ModeRoot = Join-Path $PublishRoot "self-contained"
+$GuiDir = Join-Path $ModeRoot "gui"
+$CliDir = Join-Path $ModeRoot "cli"
 
-if (Test-Path $OutputRoot) {
-    Remove-Item $OutputRoot -Recurse -Force
+if (Test-Path $ModeRoot) {
+    Remove-Item $ModeRoot -Recurse -Force
 }
 
 $common = @(
@@ -46,14 +46,9 @@ function Publish-Project {
 }
 
 Publish-Project "GUI" "src/wsl-squad.UI.Wpf/wsl-squad.UI.Wpf.csproj" $GuiDir
-
-if (Test-Path $CliDir) {
-    Remove-Item $CliDir -Recurse -Force
-}
-
 Publish-Project "CLI" "src/wsl-squad.UI.Cli/wsl-squad.UI.Cli.csproj" $CliDir
 
 Write-Host ""
-Write-Host "Published to $OutputRoot"
+Write-Host "Published to $ModeRoot"
 Write-Host "  GUI    : $(Join-Path $GuiDir 'wsl-squad.gui.exe')"
 Write-Host "  CLI    : $(Join-Path $CliDir 'wsl-squad.cli.exe')"

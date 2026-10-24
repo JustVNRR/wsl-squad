@@ -51,7 +51,6 @@ public partial class App : Application
             theme,
             factory.CreatePackCatalogService(assets, assets),
             new WpfDialogs(),
-            new WpfBuildLauncher(),
             factory.CreateLoggerService());
 
         MainWindow window = new() { DataContext = viewModel };

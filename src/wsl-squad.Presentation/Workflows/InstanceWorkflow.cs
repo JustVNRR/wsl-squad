@@ -22,6 +22,11 @@ public sealed class InstanceWorkflow
         _appearance = new InstanceAppearanceWorkflow(service, appearanceInteraction, executionStarted);
     }
 
+    public Task<WorkflowResult<BuildResponseDto>> BuildAsync(BuildDto request)
+    {
+        return _lifecycle.BuildAsync(request);
+    }
+
     public Task<WorkflowResult<OpenResponseDto>> OpenAsync(string? target)
     {
         return _lifecycle.OpenAsync(target);

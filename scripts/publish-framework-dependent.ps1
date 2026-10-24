@@ -8,11 +8,12 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $ArtifactsRoot = Join-Path $RepoRoot "artifacts"
 $PublishRoot = Join-Path $ArtifactsRoot "publish"
-$AppDir = Join-Path $PublishRoot "framework-dependent"
-$CliDir = Join-Path $AppDir "cli"
+$ModeRoot = Join-Path $PublishRoot "framework-dependent"
+$GuiDir = Join-Path $ModeRoot "gui"
+$CliDir = Join-Path $ModeRoot "cli"
 
-if (Test-Path $AppDir) {
-    Remove-Item $AppDir -Recurse -Force
+if (Test-Path $ModeRoot) {
+    Remove-Item $ModeRoot -Recurse -Force
 }
 
 $common = @(
@@ -43,16 +44,11 @@ function Publish-Project {
     }
 }
 
-Publish-Project "GUI" "src/wsl-squad.UI.Wpf/wsl-squad.UI.Wpf.csproj" $AppDir
-
-if (Test-Path $CliDir) {
-    Remove-Item $CliDir -Recurse -Force
-}
-
+Publish-Project "GUI" "src/wsl-squad.UI.Wpf/wsl-squad.UI.Wpf.csproj" $GuiDir
 Publish-Project "CLI" "src/wsl-squad.UI.Cli/wsl-squad.UI.Cli.csproj" $CliDir
 
 Write-Host ""
-Write-Host "Published to $AppDir"
-Write-Host "  GUI    : $(Join-Path $AppDir 'wsl-squad.gui.exe')"
+Write-Host "Published to $ModeRoot"
+Write-Host "  GUI    : $(Join-Path $GuiDir 'wsl-squad.gui.exe')"
 Write-Host "  CLI    : $(Join-Path $CliDir 'wsl-squad.cli.exe')"
 Write-Host "Requires the .NET 10 Desktop Runtime."

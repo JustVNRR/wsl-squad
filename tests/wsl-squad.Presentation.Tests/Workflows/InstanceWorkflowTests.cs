@@ -13,6 +13,59 @@ namespace WslSquad.Presentation.Tests.Workflows;
 public class InstanceWorkflowTests
 {
     [Fact]
+    public async Task Build_returns_the_service_response()
+    {
+        BuildDto request = new() { Name = "beta" };
+        BuildResponseDto response = new() { InstanceName = "beta" };
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.Build(request)).Returns(response);
+        service.Setup(s => s.Open("beta")).Returns(new OpenResponseDto { InstanceName = "beta" });
+        List<string> messages = [];
+        InstanceLifecycleWorkflow workflow = new(service.Object, Mock.Of<IInstanceInteraction>(), messages.Add);
+
+        WorkflowResult<BuildResponseDto> result = await workflow.BuildAsync(request);
+
+        result.Status.Should().Be(WorkflowStatus.Success);
+        result.Subject.Should().Be("beta");
+        result.Response.Should().BeSameAs(response);
+        messages.Should().Contain("Building 'beta'...");
+        service.Verify(s => s.Open("beta"), Times.Once);
+    }
+
+    [Fact]
+    public async Task Build_reports_a_shell_that_does_not_open()
+    {
+        BuildDto request = new() { Name = "beta" };
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.Build(request)).Returns(new BuildResponseDto { InstanceName = "beta" });
+        service.Setup(s => s.Open("beta")).Throws(new InvalidOperationException("no terminal"));
+        InstanceLifecycleWorkflow workflow = new(service.Object, Mock.Of<IInstanceInteraction>());
+
+        WorkflowResult<BuildResponseDto> result = await workflow.BuildAsync(request);
+
+        result.Status.Should().Be(WorkflowStatus.Success);
+        result.Response!.Status.Should().Be(WslRecipeStatus.Warning);
+        result.Response.Notices.Should().Contain(notice =>
+            notice.Kind == BuildNoticeKind.ShellOpenFailed &&
+            notice.TechnicalDetail == "no terminal");
+    }
+
+    [Fact]
+    public async Task Build_reports_a_service_failure()
+    {
+        BuildDto request = new() { Name = "beta" };
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.Build(request)).Throws(new InvalidOperationException("docker failed"));
+        InstanceLifecycleWorkflow workflow = new(service.Object, Mock.Of<IInstanceInteraction>());
+
+        WorkflowResult<BuildResponseDto> result = await workflow.BuildAsync(request);
+
+        result.Status.Should().Be(WorkflowStatus.Failed);
+        result.Subject.Should().Be("beta");
+        result.Message.Should().Be("docker failed");
+    }
+
+    [Fact]
     public async Task Archive_reports_a_missing_instance_as_a_no_target_failure()
     {
         Mock<IInstanceService> service = new();

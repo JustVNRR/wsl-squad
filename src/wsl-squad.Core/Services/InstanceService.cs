@@ -294,6 +294,7 @@ public sealed class InstanceService : IInstanceService
 
         string tag = $"wsl-squad:{name}";
         string imageRef = dto.BuildPath ?? string.Empty;
+        using AttachedConsoleScope console = new(dto.Interactive);
 
         if (dto.BuildType is WslBuildType.Dockerfile or WslBuildType.Recipe)
         {

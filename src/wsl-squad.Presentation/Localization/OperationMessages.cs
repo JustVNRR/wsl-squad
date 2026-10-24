@@ -22,6 +22,8 @@ public static class OperationMessages
                 $"ghost entries NOT pruned in {notice.Subject} (unreadable JSON - a // comment breaks parsing; remove them by hand)",
             BuildNoticeKind.NoWslFragment =>
                 $"no WSL fragment for '{notice.Subject}' - the profile was not applied",
+            BuildNoticeKind.ShellOpenFailed =>
+                $"the first shell did not open, so the onboarding did not run: {notice.TechnicalDetail}",
             _ => string.Empty,
         };
     }

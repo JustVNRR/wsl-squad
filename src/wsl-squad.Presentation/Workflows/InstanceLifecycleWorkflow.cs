@@ -14,6 +14,51 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         _interaction = interaction;
     }
 
+    public async Task<WorkflowResult<BuildResponseDto>> BuildAsync(BuildDto request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        string name = request.Name ?? string.Empty;
+        ExecutionStarted?.Invoke($"Building '{name}'...");
+
+        try
+        {
+            BuildResponseDto response = await Task.Run(() => Service.Build(request));
+
+            try
+            {
+                await Task.Run(() => Service.Open(name));
+            }
+            catch (Exception exception) when (
+                exception is InvalidOperationException
+                    or IOException
+                    or UnauthorizedAccessException
+                    or System.ComponentModel.Win32Exception)
+            {
+                List<BuildNoticeDto> notices =
+                [
+                    .. response.Notices,
+                    new BuildNoticeDto(BuildNoticeKind.ShellOpenFailed, name, exception.Message),
+                ];
+                response = response with
+                {
+                    Status = WslRecipeStatus.Warning,
+                    Notices = notices,
+                };
+            }
+
+            return WorkflowResults.Success(name, response);
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException
+                or IOException
+                or UnauthorizedAccessException
+                or System.ComponentModel.Win32Exception)
+        {
+            return WorkflowResults.Failed<BuildResponseDto>(name, exception.ToMessage());
+        }
+    }
+
     public async Task<WorkflowResult<OpenResponseDto>> OpenAsync(string? target)
     {
         (string? name, WorkflowResult<OpenResponseDto>? error) =

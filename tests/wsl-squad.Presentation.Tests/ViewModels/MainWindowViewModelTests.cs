@@ -17,7 +17,6 @@ public class MainWindowViewModelTests
     private readonly Mock<IPackCatalogService> _catalogue = new();
     private readonly TestThemeService _ui = new();
     private readonly TestDialogService _dialogs = new();
-    private readonly TestBuildLauncher _buildLauncher = new();
     private readonly RecordingLogger _logger = new();
     private readonly MainWindowViewModel _viewModel;
 
@@ -45,7 +44,6 @@ public class MainWindowViewModelTests
             _ui,
             _catalogue.Object,
             _dialogs,
-            _buildLauncher,
             _logger);
     }
 
@@ -139,7 +137,7 @@ public class MainWindowViewModelTests
 
         await _viewModel.AddCommand.ExecuteAsync(null);
 
-        _buildLauncher.Request.Should().BeNull();
+        _instance.Verify(service => service.Build(It.IsAny<BuildDto>()), Times.Never);
     }
 
     [Fact]
@@ -166,15 +164,35 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public async Task Add_runs_the_build_in_a_terminal()
+    public async Task Add_runs_the_build_through_the_workflow()
     {
         BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Dockerfile, BuildPath = "/x" };
         _dialogs.BuildAnswer = request;
+        _instance.Setup(service => service.Build(request))
+            .Returns(new BuildResponseDto { InstanceName = "beta" });
 
         await _viewModel.AddCommand.ExecuteAsync(null);
 
-        _buildLauncher.Request.Should().Be(request);
-        _instance.Verify(service => service.Build(It.IsAny<BuildDto>()), Times.Never);
+        _instance.Verify(service => service.Build(request), Times.Once);
+    }
+
+    [Fact]
+    public async Task Add_surfaces_the_build_notices()
+    {
+        BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Dockerfile, BuildPath = "/x" };
+        _dialogs.BuildAnswer = request;
+        _instance.Setup(service => service.Build(request)).Returns(new BuildResponseDto
+        {
+            InstanceName = "beta",
+            Status = WslRecipeStatus.Warning,
+            Notices = [new BuildNoticeDto(BuildNoticeKind.DockerReady)],
+        });
+
+        await _viewModel.AddCommand.ExecuteAsync(null);
+
+        _logger.Entries.Should().Contain(entry =>
+            entry.Message != null &&
+            entry.Message.Contains("Docker Desktop: ready", StringComparison.Ordinal));
     }
 
     [Fact]

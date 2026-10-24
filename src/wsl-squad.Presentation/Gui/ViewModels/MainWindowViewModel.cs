@@ -19,7 +19,6 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private readonly IUiThemeService _ui;
     private readonly IPackCatalogService _catalogue;
     private readonly IDialogService _dialogs;
-    private readonly IBuildLauncher _buildLauncher;
     private readonly InstanceWorkflow _workflow;
     private readonly FleetWorkflow _fleetWorkflow;
     private readonly ILoggerService _logger;
@@ -44,7 +43,6 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         IUiThemeService ui,
         IPackCatalogService catalogue,
         IDialogService dialogs,
-        IBuildLauncher buildLauncher,
         ILoggerService logger)
     {
         _instance = instance;
@@ -52,7 +50,6 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _ui = ui;
         _catalogue = catalogue;
         _dialogs = dialogs;
-        _buildLauncher = buildLauncher;
         DialogInstanceInteraction interaction = new(dialogs);
         _workflow = new InstanceWorkflow(
             instance,
@@ -173,27 +170,12 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        SetBusy(true, $"Building '{request.Name}' in a terminal...");
-
-        try
-        {
-            int exitCode = await _buildLauncher.RunAsync(request);
-            await LoadAsync();
-            SetStatus(
-                exitCode == 0
-                    ? $"Created '{request.Name}'."
-                    : $"The build of '{request.Name}' ended with code {exitCode}.",
-                exitCode != 0);
-        }
-        catch (Exception exception) when (
-            exception is InvalidOperationException or IOException or UnauthorizedAccessException)
-        {
-            SetStatus($"Creating '{request.Name}' - {exception.ToMessage()}", true);
-        }
-        finally
-        {
-            SetBusy(false, null);
-        }
+        await RunWorkflowAsync(
+            "Build",
+            request.Name ?? string.Empty,
+            () => _workflow.BuildAsync(request),
+            reload: true,
+            successMessage: DescribeBuild);
     }
 
     [RelayCommand]
@@ -434,7 +416,8 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         string operation,
         string name,
         Func<Task<WorkflowResult<T>>> run,
-        bool reload)
+        bool reload,
+        Func<T, string>? successMessage = null)
     {
         if (IsLocked)
         {
@@ -455,7 +438,10 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                         await LoadAsync();
                     }
 
-                    SetStatus($"{operation} : {result.Subject}", false);
+                    string successText = successMessage is not null && result.Response is not null
+                        ? successMessage(result.Response)
+                        : $"{operation} : {result.Subject}";
+                    SetStatus(successText, false);
 
                     break;
                 case WorkflowStatus.Cancelled:
@@ -491,6 +477,16 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             InFlight = false;
             SetBusy(false, null);
         }
+    }
+
+    private static string DescribeBuild(BuildResponseDto response)
+    {
+        string summary = $"Built '{response.InstanceName}'.";
+        string[] notices = [.. response.Notices
+            .Select(notice => notice.ToMessage().ReplaceLineEndings(" "))
+            .Where(message => message.Length > 0)];
+
+        return notices.Length == 0 ? summary : $"{summary} {string.Join(" ", notices)}";
     }
 
     private async Task LoadAsync()

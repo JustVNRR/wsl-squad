@@ -9,6 +9,12 @@
 ; 0 = framework-dependent, 1 = self-contained
 #define SelfContained 0
 
+#if SelfContained == 1
+#define PublishModeDir "self-contained"
+#else
+#define PublishModeDir "framework-dependent"
+#endif
+
 ; 1 = install redist\windowsdesktop-runtime-10.0.x-win-x64.exe before launching the app
 #define BundleRuntime 0
 
@@ -47,11 +53,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 DialogFontSize=12
 
 [Files]
-#if SelfContained == 1
-Source: "{#PublishDir}\self-contained\gui\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
-#else
-Source: "{#PublishDir}\framework-dependent\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
-#endif
+Source: "{#PublishDir}\{#PublishModeDir}\gui\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+Source: "{#PublishDir}\{#PublishModeDir}\cli\*"; DestDir: "{app}\cli"; Flags: recursesubdirs createallsubdirs
 Source: "wsl-squad.cmd"; DestDir: "{app}"; Flags: ignoreversion
 
 #if BundleRuntime == 1

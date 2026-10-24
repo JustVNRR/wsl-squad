@@ -81,7 +81,7 @@ In this mode:
 
 - the .NET runtime is not required;
 - the Desktop Runtime check is disabled;
-- files come from `artifacts\publish\self-contained\gui\*`, CLI included under `cli\`.
+- files come from `artifacts\publish\self-contained\gui\*` and `artifacts\publish\self-contained\cli\*`; the CLI is installed under `cli\`.
 
 ## Bundled .NET runtime
 

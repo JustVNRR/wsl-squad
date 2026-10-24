@@ -1,6 +1,5 @@
 using WslSquad.Core.Services;
 using WslSquad.UI.Cli;
-using WslSquad.UI.Cli.Commands;
 using WslSquad.UI.Cli.Composition;
 
 try
@@ -14,11 +13,6 @@ try
         await Console.Error.WriteLineAsync("https://learn.microsoft.com/windows/wsl/install");
 
         return 1;
-    }
-
-    if (invocation.BuildRequest is not null)
-    {
-        return BuildRequestRunner.Run(invocation.BuildRequest);
     }
 
     return new CliComposition().Run(invocation.Command, invocation.Name);

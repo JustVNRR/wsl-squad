@@ -46,6 +46,7 @@ public class BuildDtoTests
         dto.Onboarding.Should().BeEmpty();
         dto.KeepImage.Should().BeFalse();
         dto.RegisterDocker.Should().BeFalse();
+        dto.Interactive.Should().BeTrue();
     }
 
     [Fact]

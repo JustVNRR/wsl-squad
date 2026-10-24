@@ -165,7 +165,7 @@ public sealed record BuildDto
         string onboarding = "",
         bool keepImage = false,
         bool registerDocker = false,
-        bool interactive = false)
+        bool interactive = true)
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(user);
@@ -214,6 +214,7 @@ public enum BuildNoticeKind
     NoIconGenerated,
     GhostEntriesNotPruned,
     NoWslFragment,
+    ShellOpenFailed,
 }
 
 public sealed record BuildNoticeDto(

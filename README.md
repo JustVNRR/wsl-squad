@@ -75,7 +75,7 @@ wsl-squad/
 ├── .github/workflows/            # release workflow
 ├── src/
 │   ├── wsl-squad.Core/           # Entities, Dtos, Mappers, Repositories, Services, Resources
-│   ├── wsl-squad.Presentation/   # ViewModels, Presenters, Abstractions, Settings, Drawing
+│   ├── wsl-squad.Presentation/   # Workflows, CLI presenters, GUI view models, localization
 │   ├── wsl-squad.UI.Cli/         # CLI menu, console views, composition root
 │   └── wsl-squad.UI.Wpf/         # WPF views, themes, services, assets
 ├── tests/
