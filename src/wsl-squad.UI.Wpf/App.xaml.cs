@@ -4,6 +4,7 @@ using System.Windows;
 using WslSquad.Core.Services;
 using WslSquad.Presentation.Gui.ViewModels;
 using WslSquad.UI.Wpf.Services;
+using WslSquad.UI.Wpf.Views;
 
 namespace WslSquad.UI.Wpf;
 

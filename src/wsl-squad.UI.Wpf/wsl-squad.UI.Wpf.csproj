@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\wsl-squad.Presentation\wsl-squad.Presentation.csproj" />
-    <Resource Include="..\..\Assets\fonts\**\*.ttf" Link="Assets\Fonts\%(Filename)%(Extension)" />
+    <Resource Include="..\..\Assets\fonts\FontAwesome\fa-solid-900.ttf" Link="Assets\Fonts\fa-solid-900.ttf" />
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
 

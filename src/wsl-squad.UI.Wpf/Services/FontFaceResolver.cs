@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
 using System.Windows.Media;
 
 namespace WslSquad.UI.Wpf.Services;
@@ -68,26 +67,6 @@ public static class FontFaceResolver
             return registered;
         }
 
-        if (family.Equals("VT323", StringComparison.OrdinalIgnoreCase))
-        {
-            return Find("UiFaceVT323", family);
-        }
-
-        if (family.Equals("MesloLGS NF", StringComparison.OrdinalIgnoreCase))
-        {
-            return Find("UiFaceMeslo", family);
-        }
-
         return new FontFamily(family);
-    }
-
-    private static FontFamily Find(string resourceKey, string fallbackName)
-    {
-        if (Application.Current?.TryFindResource(resourceKey) is FontFamily face)
-        {
-            return face;
-        }
-
-        return new FontFamily(fallbackName);
     }
 }

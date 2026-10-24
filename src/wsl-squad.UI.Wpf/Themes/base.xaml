@@ -23,9 +23,6 @@
     <SolidColorBrush x:Key="AppDeleteBorderBrush" Color="#BB2D0F"/>
     <SolidColorBrush x:Key="AppDeleteInkBrush" Color="#FFFFFF"/>
 
-    <FontFamily x:Key="UiFaceVT323">pack://application:,,,/Assets/Fonts/VT323-Regular.ttf#VT323</FontFamily>
-    <FontFamily x:Key="UiFaceMeslo">pack://application:,,,/Assets/Fonts/MesloLGS%20NF%20Regular.ttf#MesloLGS NF</FontFamily>
-
     <FontFamily x:Key="IconFace">pack://application:,,,/Assets/Fonts/fa-solid-900.ttf#Font Awesome 6 Free Solid</FontFamily>
 
     <Style TargetType="CheckBox">
@@ -79,8 +76,9 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
                     <Border x:Name="Row" Background="Transparent" Padding="2,2" SnapsToDevicePixels="True">
-                        <GridViewRowPresenter Columns="{TemplateBinding GridView.ColumnCollection}"
-                                              Content="{TemplateBinding Content}"/>
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          SnapsToDevicePixels="True"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="ItemsControl.AlternationIndex" Value="1">
@@ -105,24 +103,6 @@
                         <ScrollViewer Focusable="False" Padding="{TemplateBinding Padding}">
                             <ItemsPresenter/>
                         </ScrollViewer>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style TargetType="GridViewColumnHeader">
-        <Setter Property="Background" Value="{DynamicResource AppFaceBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource AppForegroundBrush}"/>
-        <Setter Property="Padding" Value="6,4"/>
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="GridViewColumnHeader">
-                    <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource AppDividerBrush}"
-                            BorderThickness="0,0,1,1" SnapsToDevicePixels="True">
-                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

@@ -6,14 +6,12 @@ using System.Windows.Threading;
 
 using WslSquad.Presentation.Gui.ViewModels;
 
-namespace WslSquad.UI.Wpf;
+namespace WslSquad.UI.Wpf.Views;
 
-public partial class MainWindow : Views.ChromeWindow
+public partial class MainWindow : ChromeWindow
 {
     private MainWindowViewModel? _viewModel;
-    private bool _recreating;
     private bool _refitQueued;
-    private string? _lastRowSignature;
 
     public MainWindow()
     {
@@ -56,6 +54,17 @@ public partial class MainWindow : Views.ChromeWindow
 
     private void OnRowsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        QueueRefit();
+    }
+
+    private void OnLookChanged(object? sender, EventArgs e)
+    {
+        Dress();
+        QueueRefit();
+    }
+
+    private void QueueRefit()
+    {
         if (_refitQueued)
         {
             return;
@@ -67,44 +76,8 @@ public partial class MainWindow : Views.ChromeWindow
             new Action(() =>
             {
                 _refitQueued = false;
-                string signature = RowSignature();
-
-                if (_lastRowSignature is not null &&
-                    !string.Equals(signature, _lastRowSignature, StringComparison.Ordinal))
-                {
-                    RecreateWindow();
-                }
-                else
-                {
-                    _lastRowSignature = signature;
-                }
+                RefitWindow();
             }));
-    }
-
-    private void RecreateWindow()
-    {
-        if (_recreating)
-        {
-            return;
-        }
-
-        _recreating = true;
-        MainWindow replacement = new()
-        {
-            DataContext = DataContext,
-            AnimateOnShow = false,
-            Opacity = 1,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
-        };
-
-        Application.Current.MainWindow = replacement;
-        replacement.Show();
-        Close();
-    }
-
-    private void OnLookChanged(object? sender, EventArgs e)
-    {
-        RecreateWindow();
     }
 
     private void OnQuit(object sender, RoutedEventArgs e)
@@ -122,23 +95,51 @@ public partial class MainWindow : Views.ChromeWindow
 
     private void OnContentRendered(object? sender, EventArgs e)
     {
-        _lastRowSignature = RowSignature();
         FitCeiling();
         LstInstances.Focus();
     }
 
-    private string RowSignature()
+    private void RefitWindow()
     {
-        return _viewModel is null
-            ? string.Empty
-            : string.Join(
-                '\n',
-                _viewModel.Rows.Select(row =>
-                    $"{row.Name}|{row.Size}|{row.IsArchive}|{string.Join(",", row.Commands.Select(command => command.Kind))}"));
+        SizeToContent = SizeToContent.Manual;
+        Width = double.NaN;
+        Height = double.NaN;
+        LstInstances.Width = double.NaN;
+
+        Grid.SetIsSharedSizeScope(LstInstances, false);
+        Grid.SetIsSharedSizeScope(LstInstances, true);
+
+        LstInstances.InvalidateMeasure();
+        InvalidateMeasure();
+        UpdateLayout();
+
+        SizeToContent = SizeToContent.WidthAndHeight;
+        UpdateLayout();
+        FitCeiling();
+        KeepOnScreen();
+    }
+
+    private void KeepOnScreen()
+    {
+        if (!TryGetWorkArea(this, out Rect area))
+        {
+            area = SystemParameters.WorkArea;
+        }
+
+        if (ActualWidth > 0 && Left + ActualWidth > area.Right)
+        {
+            Left = Math.Max(area.Left, area.Right - ActualWidth);
+        }
+
+        if (ActualHeight > 0 && Top + ActualHeight > area.Bottom)
+        {
+            Top = Math.Max(area.Top, area.Bottom - ActualHeight);
+        }
     }
 
     private void FitCeiling()
     {
-        MaxHeight = Math.Max(360, SystemParameters.WorkArea.Height - 40);
+        Rect area = TryGetWorkArea(this, out Rect monitor) ? monitor : SystemParameters.WorkArea;
+        MaxHeight = Math.Max(360, area.Height - 40);
     }
 }

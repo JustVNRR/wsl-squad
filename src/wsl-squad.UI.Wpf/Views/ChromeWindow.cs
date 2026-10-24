@@ -130,7 +130,7 @@ public partial class ChromeWindow : Window
         Top = Math.Max(area.Top, Math.Min(top, area.Bottom - ActualHeight));
     }
 
-    private static bool TryGetWorkArea(Window reference, out Rect area)
+    protected static bool TryGetWorkArea(Window reference, out Rect area)
     {
         area = default;
         IntPtr handle = new WindowInteropHelper(reference).Handle;
