@@ -366,7 +366,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
                     if (!verdict.Valid)
                     {
-                        RegistryError = $"Unknown registry image '{reference}' - {verdict.Why}";
+                        RegistryError = $"Unknown registry image '{reference}' - {verdict.Error.ToMessage(verdict.TechnicalDetail)}";
                     }
                 }
                 catch (InvalidOperationException ex)

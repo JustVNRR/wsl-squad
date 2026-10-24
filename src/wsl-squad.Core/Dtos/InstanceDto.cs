@@ -419,11 +419,19 @@ public sealed record RegisterDockerDto
     public bool Restart { get; init; } = true;
 }
 
+public enum DockerRestartOutcome
+{
+    NotRequested,
+    Restarted,
+    Started,
+    Pending,
+}
+
 public sealed record RegisterDockerResponseDto
 {
     public string? InstanceName { get; init; }
 
-    public string Restart { get; init; } = string.Empty;
+    public DockerRestartOutcome Restart { get; init; }
 }
 
 public sealed record UnregisterDockerDto
@@ -437,7 +445,7 @@ public sealed record UnregisterDockerResponseDto
 {
     public string? InstanceName { get; init; }
 
-    public string Restart { get; init; } = string.Empty;
+    public DockerRestartOutcome Restart { get; init; }
 }
 
 public sealed record LogEntryDto

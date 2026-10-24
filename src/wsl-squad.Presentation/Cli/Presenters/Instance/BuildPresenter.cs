@@ -168,7 +168,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                             break;
                         }
 
-                        View.ShowUnknownRegistry(reference, verdict.Why ?? string.Empty);
+                        View.ShowUnknownRegistry(reference, verdict.Error.ToMessage(verdict.TechnicalDetail));
                     }
 
                     if (!ok)

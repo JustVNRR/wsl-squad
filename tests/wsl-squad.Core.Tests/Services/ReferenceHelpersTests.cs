@@ -28,9 +28,9 @@ public class ReferenceHelpersTests
         using TemporaryDirectory temp = new();
         _ = Directory.CreateDirectory(temp.Combine("archives"));
 
-        ReferenceHelpers.TestFleetTarget(null).Should().Contain("no destination");
-        ReferenceHelpers.TestFleetTarget("relative").Should().Contain("not an absolute folder");
-        ReferenceHelpers.TestFleetTarget(temp.Path).Should().Contain("already exists");
+        ReferenceHelpers.TestFleetTarget(null).Should().Be(FleetTargetProblem.Empty);
+        ReferenceHelpers.TestFleetTarget("relative").Should().Be(FleetTargetProblem.NotAbsolutePath);
+        ReferenceHelpers.TestFleetTarget(temp.Path).Should().Be(FleetTargetProblem.ArchivesFolderAlreadyExists);
     }
 
     [Fact]
@@ -38,6 +38,6 @@ public class ReferenceHelpersTests
     {
         using TemporaryDirectory temp = new();
 
-        ReferenceHelpers.TestFleetTarget(temp.Combine("fleet")).Should().BeNull();
+        ReferenceHelpers.TestFleetTarget(temp.Combine("fleet")).Should().Be(FleetTargetProblem.None);
     }
 }

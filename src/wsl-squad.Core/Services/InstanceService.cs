@@ -166,7 +166,7 @@ public sealed class InstanceService : IInstanceService
         ArgumentNullException.ThrowIfNull(dto);
 
         string name = dto.InstanceName ?? string.Empty;
-        string restart = string.Empty;
+        DockerRestartOutcome restart = DockerRestartOutcome.NotRequested;
 
         try
         {
@@ -181,18 +181,18 @@ public sealed class InstanceService : IInstanceService
 
         if (dto.Restart)
         {
-            restart = "pending";
+            restart = DockerRestartOutcome.Pending;
 
             if (_dockerRepository.TestRunning())
             {
                 if (_dockerRepository.RestartDesktop())
                 {
-                    restart = "restarted";
+                    restart = DockerRestartOutcome.Restarted;
                 }
             }
             else if (_dockerRepository.StartDesktop())
             {
-                restart = "started";
+                restart = DockerRestartOutcome.Started;
             }
         }
 
@@ -204,7 +204,7 @@ public sealed class InstanceService : IInstanceService
         ArgumentNullException.ThrowIfNull(dto);
 
         string name = dto.InstanceName ?? string.Empty;
-        string restart = string.Empty;
+        DockerRestartOutcome restart = DockerRestartOutcome.NotRequested;
 
         try
         {
@@ -219,7 +219,9 @@ public sealed class InstanceService : IInstanceService
 
         if (dto.Restart && _dockerRepository.TestRunning())
         {
-            restart = _dockerRepository.RestartDesktop() ? "restarted" : "pending";
+            restart = _dockerRepository.RestartDesktop()
+                ? DockerRestartOutcome.Restarted
+                : DockerRestartOutcome.Pending;
         }
 
         return new UnregisterDockerResponseDto { InstanceName = name, Restart = restart };
@@ -797,8 +799,9 @@ public sealed class InstanceService : IInstanceService
 
         return new IsRegistryImageValidResponseDto
         {
-            Valid = answer.Ok,
-            Why = answer.Why,
+            Valid = answer.Error == RegistryValidationError.None,
+            Error = answer.Error,
+            TechnicalDetail = answer.TechnicalDetail,
         };
     }
 

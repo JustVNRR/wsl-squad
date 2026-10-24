@@ -2,9 +2,11 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
 
+using wsl_squad.Core.Dtos;
+
 namespace wsl_squad.Core.Repositories;
 
-public sealed record RegistryAnswer(bool Ok, string Why);
+public sealed record RegistryAnswer(RegistryValidationError Error, string? TechnicalDetail);
 
 public sealed record SavedImageRow(string Name, string Path, DateTime Modified);
 
@@ -23,7 +25,7 @@ public sealed class DockerRepository : IDockerRepository
     {
         if (!NativeCommand.Test("docker", ["--version"]))
         {
-            return new RegistryAnswer(false, "docker is not on the PATH.");
+            return new RegistryAnswer(RegistryValidationError.DockerUnavailable, "docker is not on the PATH.");
         }
 
         bool onHub = true;
@@ -72,19 +74,19 @@ public sealed class DockerRepository : IDockerRepository
 
                 if (answer.StatusCode == HttpStatusCode.OK)
                 {
-                    return new RegistryAnswer(true, string.Empty);
+                    return new RegistryAnswer(RegistryValidationError.None, null);
                 }
 
                 if (answer.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return new RegistryAnswer(false, "no such image or tag on Docker Hub.");
+                    return new RegistryAnswer(RegistryValidationError.NotFound, null);
                 }
 
-                return new RegistryAnswer(false, $"Docker Hub answered '{(int)answer.StatusCode}'.");
+                return new RegistryAnswer(RegistryValidationError.Rejected, $"Docker Hub answered '{(int)answer.StatusCode}'.");
             }
             catch (HttpRequestException)
             {
-                return new RegistryAnswer(false, "Docker Hub could not be reached.");
+                return new RegistryAnswer(RegistryValidationError.Unreachable, null);
             }
         }
 
@@ -92,7 +94,7 @@ public sealed class DockerRepository : IDockerRepository
 
         if (code == 0)
         {
-            return new RegistryAnswer(true, string.Empty);
+            return new RegistryAnswer(RegistryValidationError.None, null);
         }
 
         string why = output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -103,7 +105,7 @@ public sealed class DockerRepository : IDockerRepository
             why = $"docker exited with code {code}.";
         }
 
-        return new RegistryAnswer(false, why);
+        return new RegistryAnswer(RegistryValidationError.Rejected, why);
     }
 
     public void Build(string tag, string dockerfile, string context, bool interactive = false)

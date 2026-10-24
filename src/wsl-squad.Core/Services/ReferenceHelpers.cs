@@ -2,6 +2,15 @@ using System.Globalization;
 
 namespace wsl_squad.Core.Services;
 
+public enum FleetTargetProblem
+{
+    None,
+    Empty,
+    NotAbsolutePath,
+    DriveUnavailable,
+    ArchivesFolderAlreadyExists,
+}
+
 public static class ReferenceHelpers
 {
     public static string FormatSize(long bytes)
@@ -23,11 +32,11 @@ public static class ReferenceHelpers
         return string.Create(CultureInfo.CurrentCulture, $"{bytes / kilo:N0} KB");
     }
 
-    public static string? TestFleetTarget(string? target)
+    public static FleetTargetProblem TestFleetTarget(string? target)
     {
         if (string.IsNullOrEmpty(target))
         {
-            return "no destination was given.";
+            return FleetTargetProblem.Empty;
         }
 
         string? root = Path.GetPathRoot(target);
@@ -36,18 +45,18 @@ public static class ReferenceHelpers
             !Path.IsPathRooted(target) ||
             (root.Length == 2 && root[1] == ':'))
         {
-            return $"'{target}' is not an absolute folder - give a full path, like 'D:\\WSL'.";
+            return FleetTargetProblem.NotAbsolutePath;
         }
 
         if (!Directory.Exists(root))
         {
-            return $"the drive '{root.TrimEnd('\\')}' does not answer.";
+            return FleetTargetProblem.DriveUnavailable;
         }
 
         string archives = Path.Combine(target, "archives");
 
         return Directory.Exists(archives)
-            ? $"'{archives}' already exists - move it away first."
-            : null;
+            ? FleetTargetProblem.ArchivesFolderAlreadyExists
+            : FleetTargetProblem.None;
     }
 }

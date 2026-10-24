@@ -39,11 +39,11 @@ public sealed partial class RootMoveViewModel : BaseViewModel
             return;
         }
 
-        string? problem = ReferenceHelpers.TestFleetTarget(chosen);
+        FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(chosen);
 
-        if (problem is not null)
+        if (problem != FleetTargetProblem.None)
         {
-            Warning = problem;
+            Warning = problem.ToMessage(chosen) ?? string.Empty;
 
             return;
         }

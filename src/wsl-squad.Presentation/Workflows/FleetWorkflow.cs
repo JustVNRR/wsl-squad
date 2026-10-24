@@ -82,11 +82,11 @@ public sealed class FleetWorkflow : IFleetWorkflow
                     continue;
                 }
 
-                string? problem = ReferenceHelpers.TestFleetTarget(candidate);
+                FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(candidate);
 
-                if (problem is not null)
+                if (problem != FleetTargetProblem.None)
                 {
-                    _interaction.ShowTargetProblem(problem);
+                    _interaction.ShowTargetProblem(problem.ToMessage(candidate)!);
 
                     continue;
                 }
@@ -98,11 +98,13 @@ public sealed class FleetWorkflow : IFleetWorkflow
         else
         {
             destination = Normalize(target);
-            string? problem = ReferenceHelpers.TestFleetTarget(destination);
+            FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(destination);
 
-            if (problem is not null)
+            if (problem != FleetTargetProblem.None)
             {
-                return WorkflowResults.Failed<MigrateResponseDto>(destination, problem);
+                return WorkflowResults.Failed<MigrateResponseDto>(
+                    destination,
+                    problem.ToMessage(destination)!);
             }
         }
 
@@ -114,6 +116,12 @@ public sealed class FleetWorkflow : IFleetWorkflow
             MigrateResponseDto response = await Task.Run(() => _service.Migrate(destination));
 
             return WorkflowResults.Success(destination, response);
+        }
+        catch (FleetTargetException exception)
+        {
+            return WorkflowResults.Failed<MigrateResponseDto>(
+                destination,
+                exception.Problem.ToMessage(exception.Target)!);
         }
         catch (InvalidOperationException exception)
         {

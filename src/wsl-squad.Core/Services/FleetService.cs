@@ -69,11 +69,11 @@ public sealed class FleetService : IFleetService
 
     public string SetRoot(string target)
     {
-        string? problem = ReferenceHelpers.TestFleetTarget(target);
+        FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(target);
 
-        if (problem is not null)
+        if (problem != FleetTargetProblem.None)
         {
-            throw new InvalidOperationException(problem);
+            throw new FleetTargetException(problem, target);
         }
 
         _instanceRepository.EnsureFolder(target);
@@ -135,11 +135,11 @@ public sealed class FleetService : IFleetService
 
     public MigrateResponseDto Migrate(string target)
     {
-        string? problem = ReferenceHelpers.TestFleetTarget(target);
+        FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(target);
 
-        if (problem is not null)
+        if (problem != FleetTargetProblem.None)
         {
-            throw new InvalidOperationException(problem);
+            throw new FleetTargetException(problem, target);
         }
 
         List<string> moved = [];

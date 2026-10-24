@@ -139,7 +139,11 @@ public class BuildViewModelTests
     public void Registry_road_reports_an_unknown_image()
     {
         _instance.Setup(service => service.IsRegistryImageValid("ghost:latest"))
-            .Returns(new IsRegistryImageValidResponseDto { Valid = false, Why = "not found" });
+            .Returns(new IsRegistryImageValidResponseDto
+            {
+                Valid = false,
+                Error = RegistryValidationError.NotFound,
+            });
         BuildViewModel viewModel = Create();
         viewModel.Name = "alpha";
         viewModel.RoadIndex = 2;

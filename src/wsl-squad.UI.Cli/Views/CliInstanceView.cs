@@ -1,6 +1,7 @@
 using System.Diagnostics;
 
 using wsl_squad.Core.Dtos;
+using wsl_squad.Presentation;
 using wsl_squad.Presentation.Cli.Ports;
 using wsl_squad.UI.Cli.Interaction;
 
@@ -182,12 +183,12 @@ public sealed class CliInstanceView : CliViewBase, IInstanceView
 
     public void Show(RegisterDockerResponseDto response)
     {
-        Write($"==> Docker Desktop: {response.InstanceName} {response.Restart}.", ConsoleTone.Success);
+        Write($"==> Docker Desktop: {response.InstanceName} {response.Restart.ToMessage()}.", ConsoleTone.Success);
     }
 
     public void Show(UnregisterDockerResponseDto response)
     {
-        Write($"==> Docker Desktop: {response.InstanceName} {response.Restart}.", ConsoleTone.Success);
+        Write($"==> Docker Desktop: {response.InstanceName} {response.Restart.ToMessage()}.", ConsoleTone.Success);
     }
 
     public bool ConfirmDestruction(string instanceName)
