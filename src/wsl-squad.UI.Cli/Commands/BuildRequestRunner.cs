@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Services;
+using wsl_squad.Presentation;
 using wsl_squad.UI.Cli.Composition;
 
 namespace wsl_squad.UI.Cli.Commands;
@@ -50,9 +51,9 @@ public static class BuildRequestRunner
             return Fail($"Build : {name} - {exception.Message}");
         }
 
-        foreach (string message in response.Messages)
+        foreach (BuildNoticeDto notice in response.Notices)
         {
-            Console.WriteLine(message);
+            Console.WriteLine(notice.ToMessage());
         }
 
         if (response.Status is not (WslRecipeStatus.Ok or WslRecipeStatus.Warning))

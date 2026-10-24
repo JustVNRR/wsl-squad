@@ -4,6 +4,28 @@ namespace wsl_squad.Presentation;
 
 public static class OperationMessages
 {
+    public static string ToMessage(this BuildNoticeDto notice)
+    {
+        return notice.Kind switch
+        {
+            BuildNoticeKind.LookFailed => $"the look failed: {notice.TechnicalDetail}",
+            BuildNoticeKind.ImageSaveFailed => $"the image could not be saved to '{notice.Subject}'.",
+            BuildNoticeKind.DockerReady => "Docker Desktop: ready - 'docker' works in this instance.",
+            BuildNoticeKind.DockerNotAnswering =>
+                "Docker Desktop: 'docker' does not answer in this instance yet." +
+                Environment.NewLine +
+                "  run 'docker version' in there; if it names the socket's permissions, restart Docker Desktop and open a new terminal.",
+            BuildNoticeKind.FontInstallFailed =>
+                $"the font '{notice.Subject}' would not install: {notice.TechnicalDetail}",
+            BuildNoticeKind.NoIconGenerated => $"no icon ({notice.TechnicalDetail})",
+            BuildNoticeKind.GhostEntriesNotPruned =>
+                $"ghost entries NOT pruned in {notice.Subject} (unreadable JSON - a // comment breaks parsing; remove them by hand)",
+            BuildNoticeKind.NoWslFragment =>
+                $"no WSL fragment for '{notice.Subject}' - the profile was not applied",
+            _ => string.Empty,
+        };
+    }
+
     public static string ToMessage(this DockerRestartOutcome outcome)
     {
         return outcome switch

@@ -1,4 +1,5 @@
 using wsl_squad.Core.Dtos;
+using wsl_squad.Presentation;
 using wsl_squad.Presentation.Cli.Ports;
 using wsl_squad.UI.Cli.Interaction;
 
@@ -105,10 +106,10 @@ public sealed class CliBuildView : CliViewBase, IBuildView
 
     public void Show(BuildResponseDto response)
     {
-        foreach (string message in response.Messages)
+        foreach (BuildNoticeDto notice in response.Notices)
         {
             Write(string.Empty);
-            Write($"  {message}", ConsoleTone.Muted);
+            Write($"  {notice.ToMessage()}", ConsoleTone.Muted);
         }
 
         Write(string.Empty);

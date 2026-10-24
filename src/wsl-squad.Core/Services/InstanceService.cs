@@ -417,7 +417,7 @@ public sealed class InstanceService : IInstanceService
                 exception);
         }
 
-        List<string> warnings = [];
+        List<BuildNoticeDto> warnings = [];
 
         try
         {
@@ -425,7 +425,7 @@ public sealed class InstanceService : IInstanceService
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            warnings.Add($"the look failed: {exception.Message}");
+            warnings.Add(new BuildNoticeDto(BuildNoticeKind.LookFailed, name, exception.Message));
         }
 
         if (dto.BuildType == WslBuildType.Dockerfile)
@@ -436,7 +436,7 @@ public sealed class InstanceService : IInstanceService
 
                 if (!_dockerRepository.SaveImage(tag, savePath))
                 {
-                    warnings.Add($"the image could not be saved to '{savePath}'.");
+                    warnings.Add(new BuildNoticeDto(BuildNoticeKind.ImageSaveFailed, savePath));
                 }
             }
 
@@ -460,7 +460,7 @@ public sealed class InstanceService : IInstanceService
         {
             InstanceName = name,
             Status = status,
-            Messages = warnings,
+            Notices = warnings,
         };
     }
 
@@ -1096,9 +1096,9 @@ public sealed class InstanceService : IInstanceService
         };
     }
 
-    private List<string> ApplyLook(string name, WslInstance instance)
+    private List<BuildNoticeDto> ApplyLook(string name, WslInstance instance)
     {
-        List<string> warnings = [];
+        List<BuildNoticeDto> warnings = [];
         WslTheme theme = instance.Theme ?? WslTheme.Default(name);
 
         if (!_terminalRepository.IsFontInstalled(theme.FontName ?? string.Empty))
@@ -1109,7 +1109,7 @@ public sealed class InstanceService : IInstanceService
             }
             catch (Exception exception) when (exception is IOException or InvalidOperationException or PlatformNotSupportedException or HttpRequestException)
             {
-                warnings.Add($"the font '{theme.FontName}' would not install: {exception.Message}");
+                warnings.Add(new BuildNoticeDto(BuildNoticeKind.FontInstallFailed, theme.FontName, exception.Message));
             }
         }
 
@@ -1124,7 +1124,7 @@ public sealed class InstanceService : IInstanceService
         catch (Exception exception) when (exception is InvalidOperationException or IOException or PlatformNotSupportedException)
         {
             TryDeleteFile(iconPath);
-            warnings.Add($"no icon ({exception.Message})");
+            warnings.Add(new BuildNoticeDto(BuildNoticeKind.NoIconGenerated, null, exception.Message));
         }
 
         WslGuids fragments = _terminalRepository.GetWslGuids(name);
@@ -1135,7 +1135,7 @@ public sealed class InstanceService : IInstanceService
 
             foreach (string path in ghosts.Unreadable)
             {
-                warnings.Add($"ghost entries NOT pruned in {path} (unreadable JSON - a // comment breaks parsing; remove them by hand)");
+                warnings.Add(new BuildNoticeDto(BuildNoticeKind.GhostEntriesNotPruned, path));
             }
         }
 
@@ -1148,7 +1148,7 @@ public sealed class InstanceService : IInstanceService
         }
         else
         {
-            warnings.Add($"no WSL fragment for '{name}' - the profile was not applied");
+            warnings.Add(new BuildNoticeDto(BuildNoticeKind.NoWslFragment, name));
         }
 
         instance.Theme = theme;
@@ -1177,7 +1177,7 @@ public sealed class InstanceService : IInstanceService
         }
     }
 
-    private IReadOnlyList<string> WaitDockerClient(string name)
+    private IReadOnlyList<BuildNoticeDto> WaitDockerClient(string name)
     {
         bool usable = false;
 
@@ -1192,15 +1192,8 @@ public sealed class InstanceService : IInstanceService
         }
 
         return usable
-            ?
-            [
-                "Docker Desktop: ready - 'docker' works in this instance.",
-            ]
-            :
-            [
-                "Docker Desktop: 'docker' does not answer in this instance yet.",
-                "run 'docker version' in there; if it names the socket's permissions, restart Docker Desktop and open a new terminal.",
-            ];
+            ? [new BuildNoticeDto(BuildNoticeKind.DockerReady)]
+            : [new BuildNoticeDto(BuildNoticeKind.DockerNotAnswering)];
     }
 
     private static IReadOnlyList<WslCommandDto> LiveCommands(

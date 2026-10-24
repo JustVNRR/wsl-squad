@@ -187,13 +187,30 @@ public enum WslRecipeStatus
     Nok,
 }
 
+public enum BuildNoticeKind
+{
+    LookFailed,
+    ImageSaveFailed,
+    DockerReady,
+    DockerNotAnswering,
+    FontInstallFailed,
+    NoIconGenerated,
+    GhostEntriesNotPruned,
+    NoWslFragment,
+}
+
+public sealed record BuildNoticeDto(
+    BuildNoticeKind Kind,
+    string? Subject = null,
+    string? TechnicalDetail = null);
+
 public sealed record BuildResponseDto
 {
     public string? InstanceName { get; init; }
 
     public WslRecipeStatus Status { get; init; }
 
-    public List<string> Messages { get; init; } = [];
+    public List<BuildNoticeDto> Notices { get; init; } = [];
 }
 
 public sealed record RemoveDto

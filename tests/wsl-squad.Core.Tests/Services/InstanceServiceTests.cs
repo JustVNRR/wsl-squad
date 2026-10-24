@@ -389,7 +389,7 @@ public class InstanceServiceTests
         });
 
         response.Status.Should().Be(WslRecipeStatus.Warning);
-        response.Messages.Should().Contain(message => message.Contains("the look failed", StringComparison.Ordinal));
+        response.Notices.Should().Contain(notice => notice.Kind == BuildNoticeKind.LookFailed);
         _instances.Verify(instances => instances.SaveInstance(
             It.Is<WslInstance>(instance => instance.Family == "debian"),
             It.IsAny<string>()), Times.AtLeastOnce);
