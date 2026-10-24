@@ -1,15 +1,13 @@
+using wsl_squad.Core.Exceptions;
 namespace wsl_squad.Core.Services;
 
-public sealed class FleetTargetException : InvalidOperationException
+public sealed class FleetTargetException : WslSquadException
 {
     public FleetTargetException(FleetTargetProblem problem, string? target)
-        : base($"Invalid fleet target: {problem} ('{target}').")
+        : base(WslSquadErrorCode.InvalidFleetTarget, target, problem.ToString())
     {
         Problem = problem;
-        Target = target;
     }
 
     public FleetTargetProblem Problem { get; }
-
-    public string? Target { get; }
 }

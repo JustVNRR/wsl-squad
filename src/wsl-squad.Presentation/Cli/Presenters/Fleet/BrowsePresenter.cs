@@ -40,7 +40,7 @@ public sealed class BrowsePresenter : BasePresenter<IFleetView>
         }
         catch (InvalidOperationException exception)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
             Miss = "failure";
             Error = exception.Message;
 
@@ -82,7 +82,7 @@ public sealed class BrowsePresenter : BasePresenter<IFleetView>
         }
         catch (InvalidOperationException exception)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
             Miss = "failure";
             Error = exception.Message;
 

@@ -39,7 +39,7 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<SetAppearanceResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<SetAppearanceResponseDto>(instance, exception.ToMessage());
         }
 
         IReadOnlyList<SetAppearanceDto> requests = _interaction.PromptAppearance(instance, context);
@@ -71,7 +71,7 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<SetAppearanceResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<SetAppearanceResponseDto>(instance, exception.ToMessage());
         }
     }
 }

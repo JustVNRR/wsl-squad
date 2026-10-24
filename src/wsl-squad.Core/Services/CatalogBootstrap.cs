@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Reflection;
 
 namespace wsl_squad.Core.Services;
@@ -8,7 +9,7 @@ public static class CatalogBootstrap
     {
         Assembly assembly = typeof(ServiceFactory).Assembly;
         using Stream source = assembly.GetManifestResourceStream(logicalName)
-            ?? throw new InvalidOperationException($"The embedded resource '{logicalName}' is missing.");
+            ?? throw new WslSquadException(WslSquadErrorCode.EmbeddedResourceMissing, logicalName);
         using StreamReader reader = new(source);
 
         return reader.ReadToEnd();

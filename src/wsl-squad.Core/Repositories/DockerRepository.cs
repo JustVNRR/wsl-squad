@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
@@ -117,7 +118,7 @@ public sealed class DockerRepository : IDockerRepository
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException($"Docker build failed. (Exit code: {exitCode})");
+            throw new WslSquadException(WslSquadErrorCode.DockerOperationFailed, "build", $"exit code {exitCode}");
         }
     }
 
@@ -129,7 +130,7 @@ public sealed class DockerRepository : IDockerRepository
 
         if (code != 0)
         {
-            throw new InvalidOperationException($"The Docker image could not be loaded:{Environment.NewLine}{output}");
+            throw new WslSquadException(WslSquadErrorCode.DockerOperationFailed, "load", output);
         }
 
         foreach (string line in output.Split('\n'))
@@ -147,7 +148,7 @@ public sealed class DockerRepository : IDockerRepository
             }
         }
 
-        throw new InvalidOperationException($"docker load told nothing usable about the image in '{tarPath}'.");
+        throw new WslSquadException(WslSquadErrorCode.DockerOperationFailed, tarPath, "docker load told nothing usable about the image");
     }
 
     public void ExportRootfs(string imageName, string outputPath, bool interactive = false)
@@ -164,8 +165,10 @@ public sealed class DockerRepository : IDockerRepository
 
                 if (createCode != 0)
                 {
-                    throw new InvalidOperationException(
-                        $"Docker could not create a container from '{imageName}'. (Exit code: {createCode})");
+                    throw new WslSquadException(
+                        WslSquadErrorCode.DockerOperationFailed,
+                        imageName,
+                        $"could not create a container (exit code {createCode})");
                 }
 
                 int exportCode = NativeCommand.RunAttached(
@@ -174,8 +177,10 @@ public sealed class DockerRepository : IDockerRepository
 
                 if (exportCode != 0)
                 {
-                    throw new InvalidOperationException(
-                        $"Docker export failed. (Exit code: {exportCode})");
+                    throw new WslSquadException(
+                        WslSquadErrorCode.DockerOperationFailed,
+                        imageName,
+                        $"export failed (exit code {exportCode})");
                 }
             }
             else
@@ -183,8 +188,15 @@ public sealed class DockerRepository : IDockerRepository
                 NativeCommand.Invoke(
                     "docker",
                     ["create", "--name", container, imageName],
-                    $"Docker could not create a container from '{imageName}'.");
-                NativeCommand.Invoke("docker", ["export", "-o", outputPath, container], "Docker export failed.");
+                    WslSquadErrorCode.DockerOperationFailed,
+                    imageName,
+                    "create container");
+                NativeCommand.Invoke(
+                    "docker",
+                    ["export", "-o", outputPath, container],
+                    WslSquadErrorCode.DockerOperationFailed,
+                    outputPath,
+                    "export");
             }
         }
         finally
@@ -454,7 +466,7 @@ public sealed class DockerRepository : IDockerRepository
 
         if (!File.Exists(path))
         {
-            throw new FileNotFoundException("Docker Desktop's settings file was not found.", path);
+            throw new WslSquadException(WslSquadErrorCode.DockerSettingsUnreadable, path);
         }
 
         JsonObject config = JsonNode.Parse(

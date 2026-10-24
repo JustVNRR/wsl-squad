@@ -46,7 +46,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         }
         catch (InvalidOperationException exception)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
             Miss = "failure";
             Error = exception.Message;
 
@@ -88,9 +88,9 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         }
         catch (InvalidOperationException exception)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed("Settings", exception.Message);
+            return WorkflowResults.Failed("Settings", exception.ToMessage());
         }
 
         View.ShowOpening(pack.Name ?? string.Empty);
@@ -121,9 +121,9 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         catch (Exception exception) when (
             exception is InvalidOperationException or ArgumentException or IOException or UnauthorizedAccessException)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed("Settings", exception.Message);
+            return WorkflowResults.Failed("Settings", exception.ToMessage());
         }
 
         View.ShowDuplicated(newName);
@@ -153,9 +153,9 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
         }
         catch (InvalidOperationException exception)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed("Settings", exception.Message);
+            return WorkflowResults.Failed("Settings", exception.ToMessage());
         }
 
         View.ShowRemoved(pack.Name ?? string.Empty);

@@ -33,7 +33,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         }
         catch (InvalidOperationException exception)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
 
             return WorkflowResults.Failed(string.Empty, $"Build : {exception.Message}");
         }
@@ -368,9 +368,9 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         }
         catch (InvalidOperationException exception)
         {
-            ShowFailure(exception.Message);
+            ShowFailure(exception.ToMessage());
 
-            return WorkflowResults.Failed(dto.Name ?? string.Empty, exception.Message);
+            return WorkflowResults.Failed(dto.Name ?? string.Empty, exception.ToMessage());
         }
     }
 

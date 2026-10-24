@@ -55,7 +55,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<ArchiveResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<ArchiveResponseDto>(instance, exception.ToMessage());
         }
     }
 
@@ -101,7 +101,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<CompactResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<CompactResponseDto>(instance, exception.ToMessage());
         }
     }
 
@@ -148,7 +148,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<RestoreResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<RestoreResponseDto>(instance, exception.ToMessage());
         }
     }
 
@@ -183,7 +183,7 @@ public sealed class InstanceStorageWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<DeleteArchiveResponseDto>(archive, exception.Message);
+            return WorkflowResults.Failed<DeleteArchiveResponseDto>(archive, exception.ToMessage());
         }
     }
 }

@@ -27,7 +27,7 @@ public abstract class WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return ([], WorkflowResults.Failed<T>(string.Empty, exception.Message));
+            return ([], WorkflowResults.Failed<T>(string.Empty, exception.ToMessage()));
         }
     }
 

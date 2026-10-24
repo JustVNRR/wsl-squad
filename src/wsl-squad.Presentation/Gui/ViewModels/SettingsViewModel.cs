@@ -263,7 +263,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
-            ThemeError = $"The theme was not uploaded: {exception.Message}";
+            ThemeError = $"The theme was not uploaded: {exception.ToMessage()}";
         }
     }
 
@@ -336,7 +336,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            ThemeError = $"The file did not open: {exception.Message}";
+            ThemeError = $"The file did not open: {exception.ToMessage()}";
         }
     }
 
@@ -355,7 +355,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            CatalogueError = $"The folder did not open: {exception.Message}";
+            CatalogueError = $"The folder did not open: {exception.ToMessage()}";
         }
     }
 
@@ -389,7 +389,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
-            CatalogueError = $"The pack was not duplicated: {exception.Message}";
+            CatalogueError = $"The pack was not duplicated: {exception.ToMessage()}";
 
             return;
         }
@@ -429,7 +429,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
-            CatalogueError = $"The pack was not removed: {exception.Message}";
+            CatalogueError = $"The pack was not removed: {exception.ToMessage()}";
 
             return;
         }

@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Win32;
@@ -104,8 +105,10 @@ public sealed class WslRepository : IWslRepository
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException(
-                $"'{instanceName}' could not be imported. (Exit code: {exitCode})");
+            throw new WslSquadException(
+                WslSquadErrorCode.WslImportFailed,
+                instanceName,
+                $"exit code {exitCode}");
         }
     }
 
@@ -117,8 +120,10 @@ public sealed class WslRepository : IWslRepository
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException(
-                $"'{instanceName}' could not be exported. (Exit code: {exitCode})");
+            throw new WslSquadException(
+                WslSquadErrorCode.WslExportFailed,
+                instanceName,
+                $"exit code {exitCode}");
         }
     }
 
@@ -128,8 +133,10 @@ public sealed class WslRepository : IWslRepository
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException(
-                $"'{instanceName}' could not be unregistered. (Exit code: {exitCode})");
+            throw new WslSquadException(
+                WslSquadErrorCode.WslUnregisterFailed,
+                instanceName,
+                $"exit code {exitCode}");
         }
     }
 
@@ -138,7 +145,8 @@ public sealed class WslRepository : IWslRepository
         NativeCommand.Invoke(
             "wsl.exe",
             ["-d", instanceName, "--exec", "/bin/true"],
-            $"'{instanceName}' could not be started.");
+            WslSquadErrorCode.WslStartFailed,
+            instanceName);
     }
 
     public void Terminate(string instanceName)
@@ -146,7 +154,8 @@ public sealed class WslRepository : IWslRepository
         NativeCommand.Invoke(
             "wsl.exe",
             ["--terminate", instanceName],
-            $"'{instanceName}' could not be stopped.");
+            WslSquadErrorCode.WslStopFailed,
+            instanceName);
     }
 
     public void TerminateQuietly(string instanceName)
@@ -157,7 +166,11 @@ public sealed class WslRepository : IWslRepository
 
     public void Compact(string instanceName)
     {
-        NativeCommand.Invoke("wsl.exe", ["--manage", instanceName, "--compact"], "The compact failed.");
+        NativeCommand.Invoke(
+            "wsl.exe",
+            ["--manage", instanceName, "--compact"],
+            WslSquadErrorCode.WslCompactFailed,
+            instanceName);
     }
 
     public void OpenProfile(string instanceName)
@@ -217,8 +230,9 @@ public sealed class WslRepository : IWslRepository
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException(
-                $"The pack manager could not be placed in '{instanceName}'.");
+            throw new WslSquadException(
+                WslSquadErrorCode.WslPackManagerCopyFailed,
+                instanceName);
         }
     }
 
@@ -405,8 +419,9 @@ public sealed class WslRepository : IWslRepository
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException(
-                $"'{source}' could not be placed in '{instanceName}' as /root/onboarding.sh - are the Windows drives mounted in it?");
+            throw new WslSquadException(
+                WslSquadErrorCode.WslOnboardingCopyFailed,
+                source);
         }
     }
 

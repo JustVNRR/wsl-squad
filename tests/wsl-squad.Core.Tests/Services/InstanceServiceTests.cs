@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using FluentAssertions;
 
 using Moq;
@@ -138,7 +139,7 @@ public class InstanceServiceTests
 
         Action act = () => _service.Build(new BuildDto { Name = "alpha" });
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*registered on this machine*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.InstanceAlreadyExists);
         _docker.VerifyNoOtherCalls();
     }
 
@@ -150,7 +151,7 @@ public class InstanceServiceTests
 
         Action act = () => _service.Build(new BuildDto { Name = "alpha" });
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*already exists*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.InstallFolderNotEmpty);
     }
 
     [Fact]
@@ -217,7 +218,7 @@ public class InstanceServiceTests
 
         Action act = () => _service.Archive(new ArchiveDto { InstanceName = "alpha", Format = "tar.gz", Permit = true });
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*Not enough room*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.InsufficientDiskSpace);
     }
 
     [Fact]
@@ -233,7 +234,7 @@ public class InstanceServiceTests
             Font = "Consolas",
         });
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*no profile*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.TerminalProfileMissing);
     }
 
     [Fact]
@@ -286,7 +287,7 @@ public class InstanceServiceTests
 
         Action act = () => _service.OpenPackManager("alpha");
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*No pack*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.PackManagerUnavailable);
         _wsl.Verify(wsl => wsl.SavePackManager(
             It.IsAny<string>(),
             It.IsAny<string>(),
@@ -308,7 +309,7 @@ public class InstanceServiceTests
 
         Action act = () => _service.OpenPackManager("alpha");
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*No pack*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.PackManagerUnavailable);
     }
 
     [Fact]
@@ -325,7 +326,7 @@ public class InstanceServiceTests
             InstanceName = "alpha",
         });
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*No tar*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.ArchiveTarMissing);
     }
 
     [Fact]
@@ -418,7 +419,7 @@ public class InstanceServiceTests
             KeepImage = false,
         });
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*instance file*disk full*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.InstanceWriteFailed);
         _wsl.Verify(wsl => wsl.Unregister("alpha"), Times.Once);
         Directory.Exists(folder).Should().BeFalse();
         _terminal.Verify(terminal => terminal.SaveFragment(

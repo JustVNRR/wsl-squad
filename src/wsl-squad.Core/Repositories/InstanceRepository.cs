@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json.Serialization;
@@ -128,7 +129,7 @@ public sealed class InstanceRepository : IInstanceRepository
         }
         catch (IOException exception)
         {
-            throw new InvalidOperationException($"The icon could not be copied: {exception.Message}", exception);
+            throw new WslSquadException(WslSquadErrorCode.FileOperationFailed, null, exception.Message, exception);
         }
     }
 
@@ -226,7 +227,7 @@ public sealed class InstanceRepository : IInstanceRepository
     public long GetFreeSpace(string path)
     {
         string root = Path.GetPathRoot(Path.GetFullPath(path))
-            ?? throw new InvalidOperationException($"'{path}' has no volume.");
+            ?? throw new WslSquadException(WslSquadErrorCode.FileOperationFailed, path, "the path has no volume");
 
         return new DriveInfo(root).AvailableFreeSpace;
     }

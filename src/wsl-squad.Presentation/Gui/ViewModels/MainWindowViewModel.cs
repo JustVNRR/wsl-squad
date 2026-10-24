@@ -186,7 +186,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         catch (Exception exception) when (
             exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            SetStatus($"Creating '{request.Name}' - {exception.Message}", true);
+            SetStatus($"Creating '{request.Name}' - {exception.ToMessage()}", true);
         }
         finally
         {
@@ -233,7 +233,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            SetStatus($"Settings : {fontFamily}/{colourSet} - {exception.Message}", true);
+            SetStatus($"Settings : {fontFamily}/{colourSet} - {exception.ToMessage()}", true);
 
             return;
         }
@@ -293,7 +293,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            SetStatus($"Could not keep the {other} version: {exception.Message}", true);
+            SetStatus($"Could not keep the {other} version: {exception.ToMessage()}", true);
 
             return;
         }
@@ -482,7 +482,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         catch (Exception exception) when (
             exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            SetStatus($"{operation} : {name} - {exception.Message}", true);
+            SetStatus($"{operation} : {name} - {exception.ToMessage()}", true);
         }
         finally
         {
@@ -514,7 +514,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         }
         catch (InvalidOperationException exception)
         {
-            SetStatus($"Error reading instances: {exception.Message}", true);
+            SetStatus($"Error reading instances: {exception.ToMessage()}", true);
         }
     }
 

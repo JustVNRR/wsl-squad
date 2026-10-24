@@ -38,7 +38,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<OpenResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<OpenResponseDto>(instance, exception.ToMessage());
         }
     }
 
@@ -73,7 +73,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<RestartResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<RestartResponseDto>(instance, exception.ToMessage());
         }
     }
 
@@ -102,7 +102,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<bool>(instance, exception.Message);
+            return WorkflowResults.Failed<bool>(instance, exception.ToMessage());
         }
     }
 
@@ -149,7 +149,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<DuplicateResponseDto>(instance, exception.Message);
+            return WorkflowResults.Failed<DuplicateResponseDto>(instance, exception.ToMessage());
         }
     }
 
@@ -195,7 +195,7 @@ public sealed class InstanceLifecycleWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<RemoveDto>(instance, exception.Message);
+            return WorkflowResults.Failed<RemoveDto>(instance, exception.ToMessage());
         }
     }
 }

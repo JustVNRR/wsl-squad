@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
@@ -184,7 +185,7 @@ public sealed class ConfigRepository : IConfigRepository
 
         if (!under)
         {
-            throw new InvalidOperationException($"'{slot}' is not a recipe slot - nothing was removed.");
+            throw new WslSquadException(WslSquadErrorCode.RecipeSlotNotFound, slot);
         }
 
         Directory.Delete(slot, recursive: true);
@@ -226,7 +227,7 @@ public sealed class ConfigRepository : IConfigRepository
 
         if (!File.Exists(target))
         {
-            throw new InvalidOperationException($"No theme named '{name}' lives in the themes folder.");
+            throw new WslSquadException(WslSquadErrorCode.ThemeNotFound, name);
         }
 
         File.Delete(target);
@@ -238,7 +239,7 @@ public sealed class ConfigRepository : IConfigRepository
 
         if (!File.Exists(target))
         {
-            throw new InvalidOperationException($"No theme named '{name}' lives in the themes folder.");
+            throw new WslSquadException(WslSquadErrorCode.ThemeNotFound, name);
         }
 
         OpenWithShell(target);

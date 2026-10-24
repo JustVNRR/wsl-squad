@@ -262,7 +262,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
         catch (InvalidOperationException ex)
         {
-            RecipeError = ex.Message;
+            RecipeError = ex.ToMessage();
         }
     }
 
@@ -581,7 +581,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         {
             if (listName == "DockerImages")
             {
-                ImageError = ex.Message;
+                ImageError = ex.ToMessage();
             }
             else
             {

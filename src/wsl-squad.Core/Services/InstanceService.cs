@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -174,8 +175,10 @@ public sealed class InstanceService : IInstanceService
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException or FileNotFoundException)
         {
-            throw new InvalidOperationException(
-                $"Docker Desktop's settings could not take '{name}': {exception.Message}",
+            throw new WslSquadException(
+                WslSquadErrorCode.DockerSettingsWriteFailed,
+                name,
+                exception.Message,
                 exception);
         }
 
@@ -212,8 +215,10 @@ public sealed class InstanceService : IInstanceService
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException or FileNotFoundException)
         {
-            throw new InvalidOperationException(
-                $"Docker Desktop's settings could not release '{name}': {exception.Message}",
+            throw new WslSquadException(
+                WslSquadErrorCode.DockerSettingsWriteFailed,
+                name,
+                exception.Message,
                 exception);
         }
 
@@ -271,20 +276,20 @@ public sealed class InstanceService : IInstanceService
         {
             if (distro.Name == name)
             {
-                throw new InvalidOperationException($"An instance named '{name}' is registered on this machine.");
+                throw new WslSquadException(WslSquadErrorCode.InstanceAlreadyExists, name);
             }
         }
 
         if (_instanceRepository.IsFolderOccupied(name))
         {
-            throw new InvalidOperationException(
-                $"Installation folder '{_instanceRepository.GetFolder(name)}' already exists and is not empty.");
+            throw new WslSquadException(
+                WslSquadErrorCode.InstallFolderNotEmpty,
+                _instanceRepository.GetFolder(name));
         }
 
         if (!StartDocker())
         {
-            throw new InvalidOperationException(
-                "Docker Desktop is not running and could not be started.");
+            throw new WslSquadException(WslSquadErrorCode.DockerUnavailable);
         }
 
         string tag = $"wsl-squad:{name}";
@@ -294,7 +299,7 @@ public sealed class InstanceService : IInstanceService
         {
             if (dto.BuildType == WslBuildType.Recipe && !File.Exists(imageRef))
             {
-                throw new InvalidOperationException($"The recipe carries no Dockerfile: '{dto.Context}'.");
+                throw new WslSquadException(WslSquadErrorCode.InvalidBuildSource, dto.Context);
             }
 
             _dockerRepository.Build(tag, imageRef, dto.Context ?? string.Empty, dto.Interactive);
@@ -412,8 +417,10 @@ public sealed class InstanceService : IInstanceService
                 Trace.TraceWarning($"[InstanceService] Could not remove '{installPath}' after the instance file failed: {cleanupException.Message}");
             }
 
-            throw new InvalidOperationException(
-                $"The instance file could not be written for '{name}': {exception.Message}",
+            throw new WslSquadException(
+                WslSquadErrorCode.InstanceWriteFailed,
+                name,
+                exception.Message,
                 exception);
         }
 
@@ -502,8 +509,10 @@ public sealed class InstanceService : IInstanceService
         }
         catch (InvalidOperationException exception)
         {
-            throw new InvalidOperationException(
-                $"The stop did not complete - '{instanceName}' may still be running, and was not started again. {exception.Message}",
+            throw new WslSquadException(
+                WslSquadErrorCode.RestartStopFailed,
+                instanceName,
+                exception.Message,
                 exception);
         }
 
@@ -513,8 +522,10 @@ public sealed class InstanceService : IInstanceService
         }
         catch (InvalidOperationException exception)
         {
-            throw new InvalidOperationException(
-                $"The start did not complete - '{instanceName}' is stopped. {exception.Message}",
+            throw new WslSquadException(
+                WslSquadErrorCode.RestartStartFailed,
+                instanceName,
+                exception.Message,
                 exception);
         }
 
@@ -535,8 +546,10 @@ public sealed class InstanceService : IInstanceService
             }
             catch (Exception exception) when (exception is InvalidOperationException or IOException)
             {
-                throw new InvalidOperationException(
-                    $"The archive did not complete - nothing was destroyed. {exception.Message}",
+                throw new WslSquadException(
+                    WslSquadErrorCode.ArchiveFailed,
+                    null,
+                    exception.Message,
                     exception);
             }
         }
@@ -575,8 +588,10 @@ public sealed class InstanceService : IInstanceService
             }
             catch (Exception exception) when (exception is InvalidOperationException or IOException)
             {
-                throw new InvalidOperationException(
-                    $"The archive did not complete - nothing was compacted: {exception.Message}",
+                throw new WslSquadException(
+                    WslSquadErrorCode.CompactFailed,
+                    null,
+                    exception.Message,
                     exception);
             }
 
@@ -728,8 +743,7 @@ public sealed class InstanceService : IInstanceService
 
         if (profileGuid.Length == 0)
         {
-            throw new InvalidOperationException(
-                $"Windows Terminal has no profile for '{name}' - the look cannot be applied.");
+            throw new WslSquadException(WslSquadErrorCode.TerminalProfileMissing, name);
         }
 
         _terminalRepository.SaveFragment(name, profileGuid, theme);
@@ -752,8 +766,7 @@ public sealed class InstanceService : IInstanceService
 
         if (!CanManagePacks(family, _packCatalogRepository.GetAllPacks()))
         {
-            throw new InvalidOperationException(
-                $"No pack can be installed or removed on '{instanceName}'.");
+            throw new WslSquadException(WslSquadErrorCode.PackManagerUnavailable, instanceName);
         }
 
         string script = CatalogBootstrap.ReadText("ingredients/manage-packs.sh");
@@ -822,8 +835,10 @@ public sealed class InstanceService : IInstanceService
         {
             string drive = (Path.GetPathRoot(Path.GetFullPath(archiveDir)) ?? string.Empty).TrimEnd(':');
 
-            throw new InvalidOperationException(
-                $"Not enough room on {drive}: needed {ReferenceHelpers.FormatSize(diskBytes)}, free {ReferenceHelpers.FormatSize(freeBytes)}.");
+            throw new WslSquadException(
+                WslSquadErrorCode.InsufficientDiskSpace,
+                drive,
+                $"needed {ReferenceHelpers.FormatSize(diskBytes)}, free {ReferenceHelpers.FormatSize(freeBytes)}");
         }
 
         bool stopped = false;
@@ -832,8 +847,7 @@ public sealed class InstanceService : IInstanceService
         {
             if (!dto.Permit)
             {
-                throw new InvalidOperationException(
-                    $"'{name}' is running, and stopping it was not allowed: an archive reads a still disk.");
+                throw new WslSquadException(WslSquadErrorCode.InstanceRunning, name);
             }
 
             _wslRepository.Terminate(name);
@@ -912,9 +926,10 @@ public sealed class InstanceService : IInstanceService
             {
                 string registered = _wslRepository.GetFolder(name);
 
-                throw new InvalidOperationException(
-                    $"An instance named '{name}' is already registered at '{registered}'. " +
-                    "Unregister it first, or restore the archive under another name.");
+                throw new WslSquadException(
+                    WslSquadErrorCode.InstanceAlreadyExists,
+                    name,
+                    $"registered at '{registered}'");
             }
         }
 
@@ -922,15 +937,16 @@ public sealed class InstanceService : IInstanceService
 
         if (Directory.Exists(installPath))
         {
-            throw new InvalidOperationException($"A folder with that name already exists: {installPath}");
+            throw new WslSquadException(WslSquadErrorCode.TargetFolderExists, installPath);
         }
 
         string tar = _archiveRepository.GetTar(archiveName);
 
         if (tar.Length == 0)
         {
-            throw new InvalidOperationException(
-                $"No tar in the archive folder: {_archiveRepository.GetFolder(archiveName)}");
+            throw new WslSquadException(
+                WslSquadErrorCode.ArchiveTarMissing,
+                _archiveRepository.GetFolder(archiveName));
         }
 
         _wslRepository.Import(name, installPath, tar);
@@ -992,7 +1008,7 @@ public sealed class InstanceService : IInstanceService
         {
             if (distro.Name == copy)
             {
-                throw new InvalidOperationException($"An instance named '{copy}' already exists.");
+                throw new WslSquadException(WslSquadErrorCode.InstanceAlreadyExists, copy);
             }
         }
 
@@ -1000,7 +1016,7 @@ public sealed class InstanceService : IInstanceService
         {
             if (archive.Name == copy)
             {
-                throw new InvalidOperationException($"An instance named '{copy}' already exists.");
+                throw new WslSquadException(WslSquadErrorCode.InstanceAlreadyExists, copy);
             }
         }
 
@@ -1013,8 +1029,10 @@ public sealed class InstanceService : IInstanceService
         {
             string drive = (Path.GetPathRoot(Path.GetFullPath(destination)) ?? string.Empty).TrimEnd(':');
 
-            throw new InvalidOperationException(
-                $"Not enough room on {drive}: needed {ReferenceHelpers.FormatSize(needed)}, free {ReferenceHelpers.FormatSize(freeBytes)}.");
+            throw new WslSquadException(
+                WslSquadErrorCode.InsufficientDiskSpace,
+                drive,
+                $"needed {ReferenceHelpers.FormatSize(needed)}, free {ReferenceHelpers.FormatSize(freeBytes)}");
         }
 
         WslInstance stored = _instanceRepository.GetInstance(source);
@@ -1166,14 +1184,16 @@ public sealed class InstanceService : IInstanceService
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
-            throw new InvalidOperationException(
-                $"Docker Desktop's settings could not take '{name}': {exception.Message}",
+            throw new WslSquadException(
+                WslSquadErrorCode.DockerSettingsWriteFailed,
+                name,
+                exception.Message,
                 exception);
         }
 
         if (!_dockerRepository.RestartDesktop())
         {
-            throw new InvalidOperationException($"Docker Desktop would not restart to pick '{name}' up.");
+            throw new WslSquadException(WslSquadErrorCode.DockerRestartFailed, name);
         }
     }
 

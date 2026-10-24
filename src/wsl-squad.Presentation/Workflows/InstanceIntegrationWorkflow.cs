@@ -127,7 +127,7 @@ public sealed class InstanceIntegrationWorkflow : WorkflowBase
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<TResponse>(name, exception.Message);
+            return WorkflowResults.Failed<TResponse>(name, exception.ToMessage());
         }
     }
 }

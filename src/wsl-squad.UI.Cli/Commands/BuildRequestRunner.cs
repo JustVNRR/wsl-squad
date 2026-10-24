@@ -24,7 +24,7 @@ public static class BuildRequestRunner
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
-            return Fail($"Build : the request could not be read - {exception.Message}");
+            return Fail($"Build : the request could not be read - {exception.ToMessage()}");
         }
         finally
         {
@@ -48,7 +48,7 @@ public static class BuildRequestRunner
         }
         catch (Exception exception) when (IsExternalFailure(exception))
         {
-            return Fail($"Build : {name} - {exception.Message}");
+            return Fail($"Build : {name} - {exception.ToMessage()}");
         }
 
         foreach (BuildNoticeDto notice in response.Notices)
@@ -70,7 +70,7 @@ public static class BuildRequestRunner
         }
         catch (Exception exception) when (IsExternalFailure(exception))
         {
-            Console.WriteLine($"The shell window could not be opened: {exception.Message}");
+            Console.WriteLine($"The shell window could not be opened: {exception.ToMessage()}");
         }
 
         return 0;

@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Entities;
 using wsl_squad.Core.Mappers;
@@ -77,7 +78,7 @@ public sealed class PackCatalogService : IPackCatalogService
 
         if (_catalog.GetPack(packName) is null)
         {
-            throw new InvalidOperationException($"There is no pack named '{packName}' in the catalogue.");
+            throw new WslSquadException(WslSquadErrorCode.PackNotFound, packName);
         }
     }
 }

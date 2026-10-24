@@ -58,7 +58,7 @@ public sealed class FleetWorkflow : IFleetWorkflow
             }
             catch (InvalidOperationException exception)
             {
-                return WorkflowResults.Failed<MigrateResponseDto>(string.Empty, exception.Message);
+                return WorkflowResults.Failed<MigrateResponseDto>(string.Empty, exception.ToMessage());
             }
 
             bool chosen = false;
@@ -125,7 +125,7 @@ public sealed class FleetWorkflow : IFleetWorkflow
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<MigrateResponseDto>(destination, exception.Message);
+            return WorkflowResults.Failed<MigrateResponseDto>(destination, exception.ToMessage());
         }
     }
 
@@ -139,7 +139,7 @@ public sealed class FleetWorkflow : IFleetWorkflow
         }
         catch (InvalidOperationException exception)
         {
-            return WorkflowResults.Failed<WslConfigResponseDto>(string.Empty, exception.Message);
+            return WorkflowResults.Failed<WslConfigResponseDto>(string.Empty, exception.ToMessage());
         }
     }
 

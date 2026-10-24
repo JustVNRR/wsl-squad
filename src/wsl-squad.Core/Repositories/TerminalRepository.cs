@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -579,7 +580,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
     {
         if (!OperatingSystem.IsWindows())
         {
-            throw new PlatformNotSupportedException("Installing fonts is only supported on Windows.");
+            throw new WslSquadException(WslSquadErrorCode.PlatformUnsupported, null, "Installing fonts is only supported on Windows.");
         }
 
         string userFontsDir = Path.Combine(
@@ -798,7 +799,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
     {
         if (!OperatingSystem.IsWindows())
         {
-            throw new PlatformNotSupportedException("Icon drawing needs Windows.");
+            throw new WslSquadException(WslSquadErrorCode.PlatformUnsupported, null, "Icon drawing needs Windows.");
         }
 
         return IconPainter.Draw(instanceName, outputPath, drawing);
@@ -849,7 +850,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
                 AllowTrailingCommas = true,
                 CommentHandling = JsonCommentHandling.Skip,
             })?.AsObject()
-            ?? throw new JsonException("The file does not contain a JSON object.");
+            ?? throw new WslSquadException(WslSquadErrorCode.CorruptState, null, "The file does not contain a JSON object.");
     }
 
     private static string? StringOrNull(JsonNode? node)

@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -59,7 +60,7 @@ public sealed partial class TerminalRepository
             canvas.FillPath(gradient, tile);
 
             using FontFamily family = LoadMonogramFamily()
-                ?? throw new InvalidOperationException("No usable font family found on this machine.");
+                ?? throw new WslSquadException(WslSquadErrorCode.NoUsableFont);
 
             using GraphicsPath probe = Monogram(text, family, 100);
             RectangleF probeBounds = probe.GetBounds();

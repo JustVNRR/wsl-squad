@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Diagnostics;
 
 namespace wsl_squad.Core.Repositories;
@@ -30,7 +31,7 @@ internal static class NativeCommand
         }
 
         using Process process = Process.Start(start)
-            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+            ?? throw new WslSquadException(WslSquadErrorCode.ExternalToolFailed, program, "could not be started");
 
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
@@ -65,7 +66,7 @@ internal static class NativeCommand
         }
 
         using Process process = Process.Start(start)
-            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+            ?? throw new WslSquadException(WslSquadErrorCode.ExternalToolFailed, program, "could not be started");
 
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
@@ -103,7 +104,7 @@ internal static class NativeCommand
         }
 
         using Process process = Process.Start(start)
-            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+            ?? throw new WslSquadException(WslSquadErrorCode.ExternalToolFailed, program, "could not be started");
 
         process.WaitForExit();
 
@@ -135,7 +136,7 @@ internal static class NativeCommand
         }
 
         using Process process = Process.Start(start)
-            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+            ?? throw new WslSquadException(WslSquadErrorCode.ExternalToolFailed, program, "could not be started");
         System.Text.StringBuilder captured = new();
 
         void Keep(string? line, bool error)
@@ -209,7 +210,7 @@ internal static class NativeCommand
         }
 
         using Process process = Process.Start(start)
-            ?? throw new InvalidOperationException($"'{program}' could not be started.");
+            ?? throw new WslSquadException(WslSquadErrorCode.ExternalToolFailed, program, "could not be started");
 
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
@@ -236,13 +237,22 @@ internal static class NativeCommand
         return process.ExitCode;
     }
 
-    public static void Invoke(string program, IReadOnlyList<string> arguments, string message)
+    public static void Invoke(
+        string program,
+        IReadOnlyList<string> arguments,
+        WslSquadErrorCode code,
+        string? target = null,
+        string? detail = null)
     {
         (int exitCode, _) = Run(program, arguments);
 
         if (exitCode != 0)
         {
-            throw new InvalidOperationException($"{message} (Exit code: {exitCode})");
+            string technical = string.IsNullOrEmpty(detail)
+                ? $"exit code {exitCode}"
+                : $"{detail} (exit code {exitCode})";
+
+            throw new WslSquadException(code, target, technical);
         }
     }
 }

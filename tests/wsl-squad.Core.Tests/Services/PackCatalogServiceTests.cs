@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using FluentAssertions;
 
 using Moq;
@@ -72,6 +73,6 @@ public class PackCatalogServiceTests
 
         Action act = () => _service.DeletePack("ghost");
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*no pack named*");
+        act.Should().Throw<WslSquadException>().Which.Code.Should().Be(WslSquadErrorCode.PackNotFound);
     }
 }

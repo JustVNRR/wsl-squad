@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Diagnostics;
 using System.Text;
 
@@ -91,7 +92,7 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
     {
         if (Directory.Exists(GetFolder(newName)))
         {
-            throw new InvalidOperationException($"A pack named '{newName}' already lives in the catalogue.");
+            throw new WslSquadException(WslSquadErrorCode.PackAlreadyExists, newName);
         }
 
         CopyTree(GetFolder(sourceName), GetFolder(newName));

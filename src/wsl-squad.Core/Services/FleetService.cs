@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using wsl_squad.Core.Dtos;
 using wsl_squad.Core.Repositories;
 
@@ -63,8 +64,7 @@ public sealed class FleetService : IFleetService
             return homes[0];
         }
 
-        throw new InvalidOperationException(
-            $"The working folder '{saved}' is gone, and no existing folder holds your instances.");
+        throw new WslSquadException(WslSquadErrorCode.WorkingFolderLost, saved);
     }
 
     public string SetRoot(string target)

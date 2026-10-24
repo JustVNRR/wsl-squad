@@ -1,3 +1,4 @@
+using wsl_squad.Core.Exceptions;
 using System.Globalization;
 
 using wsl_squad.Core.Entities;
@@ -144,7 +145,7 @@ public sealed class ArchiveRepository : IArchiveRepository
 
         if (!Directory.Exists(folder))
         {
-            throw new InvalidOperationException($"There is no archive named '{archiveName}': {folder} does not exist.");
+            throw new WslSquadException(WslSquadErrorCode.ArchiveMissing, archiveName, folder);
         }
 
         Directory.Delete(folder, recursive: true);
@@ -162,7 +163,7 @@ public sealed class ArchiveRepository : IArchiveRepository
 
         if (Directory.Exists(newArchives))
         {
-            throw new InvalidOperationException($"'{newArchives}' already exists - nothing was moved. Move it away first.");
+            throw new WslSquadException(WslSquadErrorCode.ArchiveFolderExists, newArchives);
         }
 
         string sourceRoot = Path.GetPathRoot(ArchivesRoot) ?? string.Empty;
@@ -177,7 +178,7 @@ public sealed class ArchiveRepository : IArchiveRepository
             }
             catch (IOException exception)
             {
-                throw new InvalidOperationException($"the move failed: {exception.Message}", exception);
+                throw new WslSquadException(WslSquadErrorCode.FileOperationFailed, null, exception.Message, exception);
             }
 
             return;
@@ -189,10 +190,12 @@ public sealed class ArchiveRepository : IArchiveRepository
 
         if (free < archivesSize + (2L * 1024 * 1024 * 1024))
         {
-            throw new InvalidOperationException(
+            throw new WslSquadException(
+                WslSquadErrorCode.InsufficientDiskSpace,
+                targetRoot.TrimEnd('\\'),
                 string.Create(
                     CultureInfo.InvariantCulture,
-                    $"not enough free space on '{targetRoot.TrimEnd('\\')}' - {(archivesSize + (2L * 1024 * 1024 * 1024) + (1024L * 1024 * 1024) - 1) / (1024L * 1024 * 1024)} GB needed."));
+                    $"{(archivesSize + (2L * 1024 * 1024 * 1024) + (1024L * 1024 * 1024) - 1) / (1024L * 1024 * 1024)} GB needed"));
         }
 
         CopyTree(ArchivesRoot, newArchives);
