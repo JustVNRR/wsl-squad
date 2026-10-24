@@ -119,6 +119,27 @@ public sealed partial class BuildViewModel : BaseViewModel
         DockerfileError = string.Empty;
         RegisterDocker = true;
         CreateCommand = new RelayCommand(Create, () => _nameOk && _userOk);
+        UploadDockerfileCommand = new RelayCommand(PickDockerfile);
+        UploadOnboardingCommand = new RelayCommand(PickOnboarding);
+        UploadImageCommand = new RelayCommand(PickImage);
+        DownloadDockerfileCommand = new RelayCommand(() => Download("Dockerfiles"));
+        DownloadOnboardingCommand = new RelayCommand(() => Download("Onboardings"));
+        DownloadImageCommand = new RelayCommand(() => Download("DockerImages"));
+        EditSourceCommand = new RelayCommand<string>(listName =>
+        {
+            if (listName is not null)
+            {
+                EditSource(listName);
+            }
+        });
+        DeleteSelectedCommand = new RelayCommand<string>(listName =>
+        {
+            if (listName is not null)
+            {
+                DeleteSelected(listName);
+            }
+        });
+        NewRecipeCommand = new RelayCommand(NewRecipe);
 
         try
         {
@@ -174,6 +195,24 @@ public sealed partial class BuildViewModel : BaseViewModel
     public BuildDto? Result { get; private set; }
 
     public IRelayCommand CreateCommand { get; }
+
+    public IRelayCommand UploadDockerfileCommand { get; }
+
+    public IRelayCommand UploadOnboardingCommand { get; }
+
+    public IRelayCommand UploadImageCommand { get; }
+
+    public IRelayCommand DownloadDockerfileCommand { get; }
+
+    public IRelayCommand DownloadOnboardingCommand { get; }
+
+    public IRelayCommand DownloadImageCommand { get; }
+
+    public IRelayCommand<string> EditSourceCommand { get; }
+
+    public IRelayCommand<string> DeleteSelectedCommand { get; }
+
+    public IRelayCommand NewRecipeCommand { get; }
 
     partial void OnNameChanged(string value)
     {
@@ -235,6 +274,59 @@ public sealed partial class BuildViewModel : BaseViewModel
         AddRecipe("dockerimages", source, Path.GetFileName(source), "DockerImages");
     }
 
+    private void PickDockerfile()
+    {
+        string? source = _dialogs.PickOpenFile(
+            "A Dockerfile for the build",
+            "Dockerfiles (Dockerfile*)|Dockerfile*|All files (*.*)|*.*");
+
+        if (source is not null)
+        {
+            AddDockerfile(source);
+        }
+    }
+
+    private void PickOnboarding()
+    {
+        string? source = _dialogs.PickOpenFile(
+            "An onboarding script for the build",
+            "Shell scripts (*.sh)|*.sh|All files (*.*)|*.*");
+
+        if (source is not null)
+        {
+            AddOnboarding(source);
+        }
+    }
+
+    private void PickImage()
+    {
+        string? source = _dialogs.PickOpenFile(
+            "A Docker image for the build",
+            "Docker images (*.tar)|*.tar|All files (*.*)|*.*");
+
+        if (source is not null)
+        {
+            AddImage(source);
+        }
+    }
+
+    private void Download(string kind)
+    {
+        string proposed = DownloadName(kind);
+
+        if (proposed.Length == 0)
+        {
+            return;
+        }
+
+        string? target = _dialogs.PickSaveFile($"Save '{proposed}'", proposed);
+
+        if (target is not null)
+        {
+            ExportRecipeTo(kind, target);
+        }
+    }
+
     public void DeleteSelected(string listName)
     {
         string title = listName switch
@@ -272,9 +364,9 @@ public sealed partial class BuildViewModel : BaseViewModel
         {
             WslBuildSourceDto row = _instance.CreateRecipe(new NewRecipeDto { Name = chosen });
             _recipes.Add(row);
-            RecipeIndex = _recipes.Count - 1;
             RecipeError = string.Empty;
             SyncLists();
+            RecipeIndex = _recipes.Count - 1;
         }
         catch (InvalidOperationException ex)
         {
@@ -455,16 +547,21 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     private void SyncLists()
     {
+        int dockerfileIndex = DockerfileIndex;
+        int onboardingIndex = OnboardingIndex;
+        int imageIndex = ImageIndex;
+        int recipeIndex = RecipeIndex;
+
         Fill(DockerfileNames, _dockerfiles.Select(row => row.Name));
         Fill(OnboardingNames, _onboardings.Select(row => row.Name));
         Fill(ImageNames, _images.Select(row => row.Name));
         Fill(RecipeNames, _recipes.Select(row => row.Name));
-        SyncButtons();
 
-        OnPropertyChanged(nameof(DockerfileIndex));
-        OnPropertyChanged(nameof(OnboardingIndex));
-        OnPropertyChanged(nameof(ImageIndex));
-        OnPropertyChanged(nameof(RecipeIndex));
+        DockerfileIndex = dockerfileIndex >= 0 && dockerfileIndex < _dockerfiles.Count ? dockerfileIndex : -1;
+        OnboardingIndex = onboardingIndex >= 0 && onboardingIndex < _onboardings.Count ? onboardingIndex : -1;
+        ImageIndex = imageIndex >= 0 && imageIndex < _images.Count ? imageIndex : -1;
+        RecipeIndex = recipeIndex >= 0 && recipeIndex < _recipes.Count ? recipeIndex : -1;
+        SyncButtons();
     }
 
     private void SyncButtons()
@@ -510,25 +607,38 @@ public sealed partial class BuildViewModel : BaseViewModel
         if (listName == "Dockerfiles")
         {
             _dockerfiles.RemoveAll(item => item.Path == row.Path);
-            DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
         }
         else if (listName == "Onboardings")
         {
             _onboardings.RemoveAll(item => item.Path == row.Path);
-            OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
         }
         else if (listName == "Recipes")
         {
             _recipes.RemoveAll(item => item.Path == row.Path);
-            RecipeIndex = _recipes.Count > 0 ? 0 : -1;
         }
         else
         {
             _images.RemoveAll(item => item.Path == row.Path);
-            ImageIndex = _images.Count > 0 ? 0 : -1;
         }
 
         SyncLists();
+
+        if (listName == "Dockerfiles")
+        {
+            DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
+        }
+        else if (listName == "Onboardings")
+        {
+            OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
+        }
+        else if (listName == "Recipes")
+        {
+            RecipeIndex = _recipes.Count > 0 ? 0 : -1;
+        }
+        else
+        {
+            ImageIndex = _images.Count > 0 ? 0 : -1;
+        }
     }
 
     private void AddRecipe(string kind, string source, string fileName, string listName)
@@ -550,20 +660,30 @@ public sealed partial class BuildViewModel : BaseViewModel
             if (listName == "Dockerfiles")
             {
                 _dockerfiles.Add(row);
-                DockerfileIndex = _dockerfiles.Count - 1;
             }
             else if (listName == "Onboardings")
             {
                 _onboardings.Add(row);
-                OnboardingIndex = _onboardings.Count - 1;
             }
             else
             {
                 _images.Add(row);
-                ImageIndex = _images.Count - 1;
             }
 
             SyncLists();
+
+            if (listName == "Dockerfiles")
+            {
+                DockerfileIndex = _dockerfiles.Count - 1;
+            }
+            else if (listName == "Onboardings")
+            {
+                OnboardingIndex = _onboardings.Count - 1;
+            }
+            else
+            {
+                ImageIndex = _images.Count - 1;
+            }
         }
         catch (InvalidOperationException ex)
         {

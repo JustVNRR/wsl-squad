@@ -6,8 +6,6 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-using Microsoft.Win32;
-
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Gui.ViewModels;
 using WslSquad.UI.Wpf.Services;
@@ -27,35 +25,16 @@ public partial class AppearanceWindow : ChromeWindow
         _viewModel = viewModel;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.CloseRequested += (_, _) => Close();
-        BtnImage.Click += (_, _) => PickImage();
         ContentRendered += (_, _) => TxtIconText.Focus();
 
-        UpdateIconError();
         PaintPreview();
         PaintIcon();
-    }
-
-    private void PickImage()
-    {
-        OpenFileDialog dialog = new()
-        {
-            Title = $"Icon image for '{_viewModel.InstanceName}'",
-            Filter = "Images (*.png;*.jpg;*.jpeg;*.ico;*.bmp)|*.png;*.jpg;*.jpeg;*.ico;*.bmp",
-        };
-
-        if (dialog.ShowDialog(this) == true)
-        {
-            _viewModel.SetImage(dialog.FileName);
-        }
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {
-            case nameof(SetAppearanceViewModel.IconError):
-                UpdateIconError();
-                break;
             case nameof(SetAppearanceViewModel.IconText):
             case nameof(SetAppearanceViewModel.PairIndex):
             case nameof(SetAppearanceViewModel.ImagePath):
@@ -68,13 +47,6 @@ public partial class AppearanceWindow : ChromeWindow
             default:
                 break;
         }
-    }
-
-    private void UpdateIconError()
-    {
-        GuiIconError.Visibility = _viewModel.IconError.Length == 0
-            ? Visibility.Collapsed
-            : Visibility.Visible;
     }
 
     private void PaintIcon()

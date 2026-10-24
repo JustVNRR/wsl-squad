@@ -62,6 +62,21 @@ public class InstanceServiceTests
     }
 
     [Fact]
+    public void Saved_images_are_removable()
+    {
+        _docker.Setup(docker => docker.GetAllSavedImages()).Returns(
+        [
+            new SavedImageRow("alpha", "/assets/dockerimages/alpha/alpha.tar", DateTime.UnixEpoch),
+        ]);
+
+        WslBuildSourceDto row = _service.GetAllSavedImages().Should().ContainSingle().Subject;
+
+        row.Name.Should().StartWith("alpha");
+        row.Path.Should().Be("/assets/dockerimages/alpha/alpha.tar");
+        row.Uploaded.Should().BeTrue();
+    }
+
+    [Fact]
     public void Offers_manage_packs_when_the_family_has_a_catalog_pack()
     {
         SetupListedInstance("debian");

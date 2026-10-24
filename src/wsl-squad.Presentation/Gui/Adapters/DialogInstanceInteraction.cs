@@ -75,7 +75,8 @@ public sealed class DialogInstanceInteraction : IInstanceInteraction, IAppearanc
             context.Appearance,
             context.Fonts,
             context.ColorSchemes,
-            context.IconPairs);
+            context.IconPairs,
+            _dialogs);
 
         SetAppearanceDto? request = _dialogs.ShowSetAppearance(viewModel);
 

@@ -18,12 +18,12 @@
                 <Border BorderBrush="{DynamicResource AppDividerBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
                 <TextBlock Margin="0,10,0,0" Text="Instance name:"/>
                 <TextBox x:Name="TxtName" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0" Background="{DynamicResource AppInputBackgroundBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
-                <TextBlock x:Name="GuiNameError" Text="{Binding NameError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
-                <TextBlock x:Name="LblUser" Margin="0,12,0,0" Text="User name:" IsEnabled="{Binding RunOnboarding}"/>
+                <TextBlock Text="{Binding NameError}" Visibility="{Binding NameError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
+                <TextBlock Margin="0,12,0,0" Text="User name:" IsEnabled="{Binding RunOnboarding}"/>
                 <TextBox Text="{Binding User, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding RunOnboarding}" Margin="0,6,0,0" Background="{DynamicResource AppInputBackgroundBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
-                <TextBlock x:Name="GuiUserError" Text="{Binding UserError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
+                <TextBlock Text="{Binding UserError}" Visibility="{Binding UserError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
                 <TextBlock Margin="0,12,0,0" Text="Build from:"/>
-                <ComboBox SelectedIndex="{Binding RoadIndex, Mode=OneWay}" SelectionChanged="OnRoadSelected" Margin="0,6,0,0">
+                <ComboBox SelectedIndex="{Binding RoadIndex, Mode=TwoWay}" Margin="0,6,0,0">
                     <ComboBoxItem Content="Dockerfile"/>
                     <ComboBoxItem Content="Docker image"/>
                     <ComboBoxItem Content="Docker registry"/>
@@ -39,13 +39,13 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <ComboBox ItemsSource="{Binding DockerfileNames}" SelectedIndex="{Binding DockerfileIndex, Mode=OneWay}" SelectionChanged="OnDockerfileSelected" Grid.Column="0"/>
-                        <Button Grid.Column="1" Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Upload a Dockerfile..." Click="OnUploadDockerfile"/>
-                        <Button Grid.Column="2" Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanDownloadDockerfile}" ToolTip="Save the selected Dockerfile..." Click="OnDownloadDockerfile"/>
-                        <Button Grid.Column="3" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Edit the selected Dockerfile in the code editor" Click="OnEditDockerfile"/>
-                        <Button Grid.Column="4" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashDockerfile}" ToolTip="Delete the selected uploaded file" Click="OnDeleteSource" Tag="Dockerfiles"/>
+                        <ComboBox ItemsSource="{Binding DockerfileNames}" SelectedIndex="{Binding DockerfileIndex, Mode=TwoWay}" Grid.Column="0"/>
+                        <Button Grid.Column="1" Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Upload a Dockerfile..." Command="{Binding UploadDockerfileCommand}"/>
+                        <Button Grid.Column="2" Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanDownloadDockerfile}" ToolTip="Save the selected Dockerfile..." Command="{Binding DownloadDockerfileCommand}"/>
+                        <Button Grid.Column="3" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Edit the selected Dockerfile in the code editor" Command="{Binding EditSourceCommand}" CommandParameter="Dockerfiles"/>
+                        <Button Grid.Column="4" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashDockerfile}" ToolTip="Delete the selected uploaded file" Command="{Binding DeleteSelectedCommand}" CommandParameter="Dockerfiles"/>
                     </Grid>
-                    <TextBlock x:Name="GuiDockerfileError" Text="{Binding DockerfileError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
+                    <TextBlock Text="{Binding DockerfileError}" Visibility="{Binding DockerfileError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
                     <CheckBox Content="Save image locally" IsChecked="{Binding SaveImage, Mode=TwoWay}" Margin="0,10,0,0" Foreground="{DynamicResource AppForegroundBrush}"/>
                 </StackPanel>
                 <StackPanel Visibility="{Binding ShowImage, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -57,17 +57,17 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <ComboBox ItemsSource="{Binding ImageNames}" SelectedIndex="{Binding ImageIndex, Mode=OneWay}" SelectionChanged="OnImageSelected" Grid.Column="0"/>
-                        <Button Grid.Column="1" Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Upload an image (.tar)..." Click="OnUploadImage"/>
-                        <Button Grid.Column="2" Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanDownloadImage}" ToolTip="Save the selected Docker image..." Click="OnDownloadImage"/>
-                        <Button Grid.Column="3" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashImage}" ToolTip="Delete the selected uploaded file" Click="OnDeleteSource" Tag="DockerImages"/>
+                        <ComboBox ItemsSource="{Binding ImageNames}" SelectedIndex="{Binding ImageIndex, Mode=TwoWay}" Grid.Column="0"/>
+                        <Button Grid.Column="1" Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Upload an image (.tar)..." Command="{Binding UploadImageCommand}"/>
+                        <Button Grid.Column="2" Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanDownloadImage}" ToolTip="Save the selected Docker image..." Command="{Binding DownloadImageCommand}"/>
+                        <Button Grid.Column="3" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashImage}" ToolTip="Delete the selected uploaded file" Command="{Binding DeleteSelectedCommand}" CommandParameter="DockerImages"/>
                     </Grid>
-                    <TextBlock x:Name="GuiImageError" Text="{Binding ImageError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
+                    <TextBlock Text="{Binding ImageError}" Visibility="{Binding ImageError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
                 </StackPanel>
                 <StackPanel Visibility="{Binding ShowRegistry, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock Margin="0,10,0,0" Text="Registry image:"/>
                     <TextBox Text="{Binding RegistryRef, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0" Background="{DynamicResource AppInputBackgroundBrush}" Foreground="{DynamicResource AppForegroundBrush}" BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
-                    <TextBlock x:Name="GuiRegistryError" Text="{Binding RegistryError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
+                    <TextBlock Text="{Binding RegistryError}" Visibility="{Binding RegistryError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
                 </StackPanel>
                 <StackPanel Visibility="{Binding ShowRecipe, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock Margin="0,10,0,0" Text="Recipe:"/>
@@ -78,12 +78,12 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <ComboBox ItemsSource="{Binding RecipeNames}" SelectedIndex="{Binding RecipeIndex, Mode=OneWay}" SelectionChanged="OnRecipeSelected" Grid.Column="0"/>
-                        <Button Grid.Column="1" Content="&#xF067;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Create a recipe..." Click="OnNewRecipe"/>
-                        <Button Grid.Column="2" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Open the recipe's folder in the code editor" Click="OnEditRecipe"/>
-                        <Button Grid.Column="3" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashRecipe}" ToolTip="Delete the selected recipe" Click="OnDeleteSource" Tag="Recipes"/>
+                        <ComboBox ItemsSource="{Binding RecipeNames}" SelectedIndex="{Binding RecipeIndex, Mode=TwoWay}" Grid.Column="0"/>
+                        <Button Grid.Column="1" Content="&#xF067;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Create a recipe..." Command="{Binding NewRecipeCommand}"/>
+                        <Button Grid.Column="2" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Open the recipe's folder in the code editor" Command="{Binding EditSourceCommand}" CommandParameter="Recipes"/>
+                        <Button Grid.Column="3" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashRecipe}" ToolTip="Delete the selected recipe" Command="{Binding DeleteSelectedCommand}" CommandParameter="Recipes"/>
                     </Grid>
-                    <TextBlock x:Name="GuiRecipeError" Text="{Binding RecipeError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
+                    <TextBlock Text="{Binding RecipeError}" Visibility="{Binding RecipeError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
                 </StackPanel>
                 <CheckBox Content="Add Docker Desktop support (will be restarted)" IsChecked="{Binding RegisterDocker, Mode=TwoWay}" Margin="0,12,0,0" Foreground="{DynamicResource AppForegroundBrush}"
                           Visibility="{Binding ShowGeneralOptions, Converter={StaticResource BooleanToVisibilityConverter}}"/>
@@ -100,11 +100,11 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <ComboBox ItemsSource="{Binding OnboardingNames}" SelectedIndex="{Binding OnboardingIndex, Mode=OneWay}" SelectionChanged="OnOnboardingSelected" Grid.Column="0"/>
-                        <Button Grid.Column="1" Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Upload onboarding shell..." Click="OnUploadOnboarding"/>
-                        <Button Grid.Column="2" Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanDownloadOnboarding}" ToolTip="Save the selected onboarding shell..." Click="OnDownloadOnboarding"/>
-                        <Button Grid.Column="3" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Edit the selected onboarding shell in the code editor" Click="OnEditOnboarding"/>
-                        <Button Grid.Column="4" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashOnboarding}" ToolTip="Delete the selected uploaded file" Click="OnDeleteSource" Tag="Onboardings"/>
+                        <ComboBox ItemsSource="{Binding OnboardingNames}" SelectedIndex="{Binding OnboardingIndex, Mode=TwoWay}" Grid.Column="0"/>
+                        <Button Grid.Column="1" Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Upload onboarding shell..." Command="{Binding UploadOnboardingCommand}"/>
+                        <Button Grid.Column="2" Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanDownloadOnboarding}" ToolTip="Save the selected onboarding shell..." Command="{Binding DownloadOnboardingCommand}"/>
+                        <Button Grid.Column="3" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="Edit the selected onboarding shell in the code editor" Command="{Binding EditSourceCommand}" CommandParameter="Onboardings"/>
+                        <Button Grid.Column="4" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashOnboarding}" ToolTip="Delete the selected uploaded file" Command="{Binding DeleteSelectedCommand}" CommandParameter="Onboardings"/>
                     </Grid>
                 </StackPanel>
             </StackPanel>

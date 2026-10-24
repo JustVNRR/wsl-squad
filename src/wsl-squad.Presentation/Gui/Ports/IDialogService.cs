@@ -7,6 +7,10 @@ public interface IDialogService
 {
     bool Confirm(string title, string question, string? danger = null);
 
+    string? PickOpenFile(string title, string filter);
+
+    string? PickSaveFile(string title, string defaultFileName, string filter = "All files (*.*)|*.*");
+
     void ShowError(LogEntryDto entry);
 
     string? ShowRecipeName();

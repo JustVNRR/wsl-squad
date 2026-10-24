@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using System.Windows;
-
 using WslSquad.Presentation.Gui.ViewModels;
 
 namespace WslSquad.UI.Wpf.Views.Dialogs;
@@ -13,18 +10,7 @@ public partial class RecipeNameWindow : ChromeWindow
         Dress();
         DataContext = viewModel;
 
-        viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.CloseRequested += (_, _) => DialogResult = true;
         ContentRendered += (_, _) => TxtRecipeName.Focus();
-    }
-
-
-    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(RecipeNameViewModel.NameError))
-        {
-            string error = ((RecipeNameViewModel)sender!).NameError;
-            GuiNameError.Visibility = error.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        }
     }
 }

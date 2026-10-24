@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using WslSquad.Core.Dtos;
+using WslSquad.Presentation.Gui.Ports;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -14,6 +15,7 @@ public sealed record LookSchemeRow(WslColorSchemeDto Scheme, string Label);
 public sealed partial class SetAppearanceViewModel : BaseViewModel
 {
     private readonly GetAppearanceResponseDto _appearance;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial string IconText { get; set; }
@@ -38,14 +40,17 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
         GetAppearanceResponseDto appearance,
         IReadOnlyList<string> fonts,
         IReadOnlyList<WslColorSchemeDto> schemes,
-        IReadOnlyList<WslIconPairDto> pairs)
+        IReadOnlyList<WslIconPairDto> pairs,
+        IDialogService dialogs)
     {
         InstanceName = name;
         _appearance = appearance;
+        _dialogs = dialogs;
         Lead = $"{name}'s appearance.".ToUpperInvariant();
         IconError = string.Empty;
         ImagePath = string.Empty;
         ApplyCommand = new RelayCommand(Apply, () => IconError.Length == 0);
+        PickImageCommand = new RelayCommand(PickImage);
         IconText = appearance.Icon?.Text ?? string.Empty;
 
         List<LookPairRow> pairRows = [];
@@ -126,6 +131,8 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
 
     public IRelayCommand ApplyCommand { get; }
 
+    public IRelayCommand PickImageCommand { get; }
+
     public string SelectedFontName =>
         Fonts.Count == 0 ? _appearance.Font ?? string.Empty : Fonts[Math.Clamp(FontIndex, 0, Fonts.Count - 1)].Name;
 
@@ -149,6 +156,18 @@ public sealed partial class SetAppearanceViewModel : BaseViewModel
     public void SetImage(string path)
     {
         ImagePath = path;
+    }
+
+    private void PickImage()
+    {
+        string? path = _dialogs.PickOpenFile(
+            $"Icon image for '{InstanceName}'",
+            "Images (*.png;*.jpg;*.jpeg;*.ico;*.bmp)|*.png;*.jpg;*.jpeg;*.ico;*.bmp");
+
+        if (path is not null)
+        {
+            SetImage(path);
+        }
     }
 
     private void ValidateIcon()

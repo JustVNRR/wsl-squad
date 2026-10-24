@@ -8,7 +8,15 @@ public sealed class TestDialogService : IDialogService
 {
     public bool ConfirmAnswer { get; set; }
 
+    public string? OpenFileAnswer { get; set; }
+
+    public string? SaveFileAnswer { get; set; }
+
     public (string Title, string Question, string? Danger)? LastConfirm { get; private set; }
+
+    public (string Title, string Filter)? LastOpenFile { get; private set; }
+
+    public (string Title, string DefaultFileName, string Filter)? LastSaveFile { get; private set; }
 
     public string? RecipeNameAnswer { get; set; }
 
@@ -43,6 +51,20 @@ public sealed class TestDialogService : IDialogService
         LastConfirm = (title, question, danger);
 
         return ConfirmAnswer;
+    }
+
+    public string? PickOpenFile(string title, string filter)
+    {
+        LastOpenFile = (title, filter);
+
+        return OpenFileAnswer;
+    }
+
+    public string? PickSaveFile(string title, string defaultFileName, string filter = "All files (*.*)|*.*")
+    {
+        LastSaveFile = (title, defaultFileName, filter);
+
+        return SaveFileAnswer;
     }
 
     public void ShowError(LogEntryDto entry)

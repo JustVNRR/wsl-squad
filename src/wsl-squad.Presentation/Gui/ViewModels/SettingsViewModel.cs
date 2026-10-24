@@ -33,6 +33,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
     public partial int SizeIndex { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedColour))]
     public partial int ColourIndex { get; set; }
 
     [ObservableProperty]
@@ -143,11 +144,14 @@ public sealed partial class SettingsViewModel : BaseViewModel
         int packIndex = Packs.Count > 0 ? 0 : -1;
 
         CloseCommand = new RelayCommand(Close);
+        EditRootCommand = new RelayCommand(EditRoot);
         WslConfigCommand = new RelayCommand(WslConfig);
         OpenPackCommand = new RelayCommand(OpenPack, () => CanPack);
         DuplicatePackCommand = new RelayCommand(DuplicatePack, () => CanPack);
         DeletePackCommand = new RelayCommand(DeletePack, () => CanPack);
-        UploadThemeCommand = new RelayCommand<string>(UploadTheme);
+        UploadFontCommand = new RelayCommand(PickUploadFont);
+        UploadThemeCommand = new RelayCommand(PickUploadTheme);
+        ExportThemeCommand = new RelayCommand(PickExportTheme);
         DeleteThemeCommand = new RelayCommand<string>(DeleteTheme);
         OpenThemeCommand = new RelayCommand<string>(OpenTheme);
 
@@ -174,6 +178,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     public IRelayCommand CloseCommand { get; }
 
+    public IRelayCommand EditRootCommand { get; }
+
     public IRelayCommand WslConfigCommand { get; }
 
     public IRelayCommand OpenPackCommand { get; }
@@ -182,7 +188,11 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     public IRelayCommand DeletePackCommand { get; }
 
-    public IRelayCommand<string> UploadThemeCommand { get; }
+    public IRelayCommand UploadFontCommand { get; }
+
+    public IRelayCommand UploadThemeCommand { get; }
+
+    public IRelayCommand ExportThemeCommand { get; }
 
     public IRelayCommand<string> DeleteThemeCommand { get; }
 
@@ -242,6 +252,18 @@ public sealed partial class SettingsViewModel : BaseViewModel
         return Colours.Exists(row => row.Name == name);
     }
 
+    private void PickUploadFont()
+    {
+        string? source = _dialogs.PickOpenFile(
+            "A font file for the window",
+            "Fonts (*.ttf;*.otf)|*.ttf;*.otf");
+
+        if (source is not null)
+        {
+            UploadFont(source);
+        }
+    }
+
     public string? UploadFont(string source)
     {
         string? family = _ui.UploadFont(source);
@@ -259,6 +281,18 @@ public sealed partial class SettingsViewModel : BaseViewModel
         return family;
     }
 
+    private void PickUploadTheme()
+    {
+        string? source = _dialogs.PickOpenFile(
+            "A theme file for the windows",
+            "Themes (*.xaml)|*.xaml");
+
+        if (source is not null)
+        {
+            UploadTheme(source);
+        }
+    }
+
     public void UploadTheme(string? source)
     {
         if (string.IsNullOrEmpty(source))
@@ -266,10 +300,20 @@ public sealed partial class SettingsViewModel : BaseViewModel
             return;
         }
 
+        string name = Path.GetFileNameWithoutExtension(source);
+
+        if (HasTheme(name) &&
+            !_dialogs.Confirm("Replace theme", $"Replace the theme '{name}' with the chosen file?"))
+        {
+            return;
+        }
+
+        ThemeError = string.Empty;
+
         try
         {
-            string name = _ui.UploadTheme(source);
-            AddColour(name);
+            string uploaded = _ui.UploadTheme(source);
+            AddColour(uploaded);
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
@@ -277,39 +321,22 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
     }
 
-    public void FailTheme(string message)
+    private void PickExportTheme()
     {
-        ThemeError = message;
-    }
+        string name = SelectedColour;
+        string proposed = _ui.ThemeFileFor(name);
+        string? target = _dialogs.PickSaveFile($"Save '{proposed}'", proposed);
 
-    public void ClearThemeError()
-    {
-        ThemeError = string.Empty;
-    }
-
-    public string ThemePathFor(string name)
-    {
-        return _ui.ThemePathFor(name);
-    }
-
-    public string ThemeFileFor(string name)
-    {
-        return _ui.ThemeFileFor(name);
-    }
-
-    public void ExportTheme(string? target, string? source = null)
-    {
-        if (string.IsNullOrEmpty(target))
+        if (target is not null)
         {
-            return;
+            _ui.ExportTheme(_ui.ThemePathFor(name), target);
         }
-
-        _ui.ExportTheme(source ?? ThemePathFor(SelectedColour), target);
     }
 
     public void DeleteTheme(string? name)
     {
-        if (string.IsNullOrEmpty(name))
+        if (string.IsNullOrEmpty(name) ||
+            !_dialogs.Confirm("Delete theme", $"Remove '{name}'?"))
         {
             return;
         }
@@ -329,6 +356,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         Colours = kept;
         OnPropertyChanged(nameof(Colours));
         ColourIndex = next;
+        OnPropertyChanged(nameof(SelectedColour));
         CanTheme = HasRealTheme();
         Preview();
     }
@@ -503,6 +531,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         Colours = rows;
         OnPropertyChanged(nameof(Colours));
         ColourIndex = rows.Count - 1;
+        OnPropertyChanged(nameof(SelectedColour));
         CanTheme = HasRealTheme();
     }
 

@@ -55,6 +55,51 @@ public class BuildViewModelTests
     }
 
     [Fact]
+    public void Uploading_a_dockerfile_through_the_file_dialog_adds_it()
+    {
+        _instance.Setup(service => service.UploadRecipe(
+                It.Is<UploadRecipeDto>(dto => dto.Kind == "dockerfiles" && dto.Source == "/tmp/Dockerfile")))
+            .Returns(new WslBuildSourceDto
+            {
+                Name = "uploaded (01/01 12:00)",
+                Path = "/catalog/dockerfiles/uploaded/Dockerfile",
+                Uploaded = true,
+            });
+        _dialogs.OpenFileAnswer = "/tmp/Dockerfile";
+        BuildViewModel viewModel = Create();
+
+        viewModel.UploadDockerfileCommand.Execute(null);
+
+        viewModel.DockerfileNames.Should().Contain("uploaded (01/01 12:00)");
+        _dialogs.LastOpenFile!.Value.Filter.Should().Contain("Dockerfile");
+    }
+
+    [Fact]
+    public void Downloading_a_dockerfile_uses_the_save_dialog()
+    {
+        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
+        {
+            Dockerfiles =
+            [
+                new WslBuildSourceDto
+                {
+                    Name = "ubuntu (01/01 12:00)",
+                    Path = "/catalog/ubuntu/Dockerfile",
+                    Uploaded = true,
+                },
+            ],
+        });
+        _dialogs.SaveFileAnswer = "/tmp/out";
+        BuildViewModel viewModel = Create();
+
+        viewModel.DownloadDockerfileCommand.Execute(null);
+
+        _dialogs.LastSaveFile!.Value.DefaultFileName.Should().Be("ubuntu");
+        _instance.Verify(service => service.ExportRecipe(It.Is<ExportRecipeDto>(dto =>
+            dto.Path == "/catalog/ubuntu/Dockerfile" && dto.Target == "/tmp/out")), Times.Once);
+    }
+
+    [Fact]
     public void Creates_a_dockerfile_build_request()
     {
         BuildViewModel viewModel = Create();

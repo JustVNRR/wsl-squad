@@ -105,15 +105,31 @@ public class SettingsViewModelTests
     }
 
     [Fact]
-    public void Deleting_the_selected_theme_keeps_a_visible_selection()
+    public void Deleting_the_selected_theme_asks_first_and_keeps_a_visible_selection()
     {
         SettingsViewModel viewModel = Create();
+        _dialogs.ConfirmAnswer = true;
 
         viewModel.DeleteTheme("amber");
 
+        _dialogs.LastConfirm!.Value.Title.Should().Be("Delete theme");
+        _dialogs.LastConfirm.Value.Question.Should().Contain("amber");
+        _ui.DeletedThemes.Should().Contain("amber");
         viewModel.Colours.Should().NotBeEmpty();
         viewModel.SelectedColour.Should().NotBeNullOrEmpty();
         viewModel.ColourIndex.Should().BeInRange(0, viewModel.Colours.Count - 1);
+    }
+
+    [Fact]
+    public void Deleting_a_theme_can_be_cancelled()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.ConfirmAnswer = false;
+
+        viewModel.DeleteTheme("amber");
+
+        _ui.DeletedThemes.Should().BeEmpty();
+        viewModel.Colours.Should().Contain(row => row.Name == "amber");
     }
 
     [Fact]
@@ -198,6 +214,42 @@ public class SettingsViewModelTests
     }
 
     [Fact]
+    public void Uploading_a_font_through_the_file_dialog_adds_it()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.OpenFileAnswer = "/tmp/font.ttf";
+
+        viewModel.UploadFontCommand.Execute(null);
+
+        viewModel.SelectedFont.Should().Be("Cascadia Mono");
+        _dialogs.LastOpenFile!.Value.Filter.Should().Contain("*.ttf");
+    }
+
+    [Fact]
+    public void Uploading_a_theme_through_the_file_dialog_adds_it()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.OpenFileAnswer = "/tmp/theme.xaml";
+
+        viewModel.UploadThemeCommand.Execute(null);
+
+        viewModel.SelectedColour.Should().Be("mine");
+        _dialogs.LastOpenFile!.Value.Filter.Should().Contain("*.xaml");
+    }
+
+    [Fact]
+    public void Exporting_a_theme_uses_the_save_dialog()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.SaveFileAnswer = "/tmp/out.xaml";
+
+        viewModel.ExportThemeCommand.Execute(null);
+
+        _dialogs.LastSaveFile!.Value.DefaultFileName.Should().Be("amber.xaml");
+        _ui.ExportedThemes.Should().Contain(("/themes/amber.xaml", "/tmp/out.xaml"));
+    }
+
+    [Fact]
     public void Uploading_a_theme_adds_it_to_the_list()
     {
         SettingsViewModel viewModel = Create();
@@ -206,6 +258,19 @@ public class SettingsViewModelTests
 
         viewModel.Colours.Select(row => row.Label).Should().Contain("mine  (just uploaded)");
         viewModel.SelectedColour.Should().Be("mine");
+    }
+
+    [Fact]
+    public void Replacing_an_existing_theme_asks_first()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.ConfirmAnswer = false;
+
+        viewModel.UploadTheme("/tmp/amber.xaml");
+
+        _dialogs.LastConfirm!.Value.Title.Should().Be("Replace theme");
+        _dialogs.LastConfirm.Value.Question.Should().Contain("amber");
+        viewModel.Colours.Select(row => row.Label).Should().NotContain("mine  (just uploaded)");
     }
 
     private SettingsViewModel Create()

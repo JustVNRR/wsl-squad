@@ -31,7 +31,7 @@
                              Background="{DynamicResource AppInputBackgroundBrush}"
                              Foreground="{DynamicResource AppForegroundBrush}"
                              BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
-                    <TextBlock x:Name="GuiIconError" Text="{Binding IconError}" Visibility="Collapsed" Margin="0,4,0,0" TextWrapping="Wrap"
+                    <TextBlock Text="{Binding IconError}" Visibility="{Binding IconError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap"
                                Foreground="{DynamicResource AppDangerBrush}"/>
                 </StackPanel>
                 <Grid Grid.Column="1" VerticalAlignment="Top" Margin="14,0,0,0" Width="64" Height="64">
@@ -52,7 +52,7 @@
                         <TextBlock x:Name="TxtImagePath" Grid.Column="0" Text="{Binding ImagePath}" ToolTip="{Binding ImagePath}"
                                    Foreground="{DynamicResource AppMutedBrush}"
                                    TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Button x:Name="BtnImage" Grid.Column="1" Content="Upload"
+                        <Button Grid.Column="1" Content="Upload" Command="{Binding PickImageCommand}"
                                 Background="{DynamicResource AppFaceBrush}"
                                 Foreground="{DynamicResource AppForegroundBrush}"
                                 BorderBrush="{DynamicResource AppBorderBrush}"/>

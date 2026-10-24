@@ -142,6 +142,11 @@ public sealed class WpfThemeService : IUiThemeService
 
     public string UploadTheme(string source)
     {
+        if (!LoadsAsTheme(source))
+        {
+            throw new InvalidOperationException("The chosen file is not a theme.");
+        }
+
         string name = Path.GetFileNameWithoutExtension(source);
         string target = Path.Combine(_assetsRoot, "themes", $"{name}.xaml");
         Directory.CreateDirectory(Path.GetDirectoryName(target) ?? _assetsRoot);
@@ -379,6 +384,29 @@ public sealed class WpfThemeService : IUiThemeService
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Trace.TraceWarning($"[WpfThemeService] Could not read file to check XAML format '{path}': {ex.Message}");
+            return false;
+        }
+    }
+
+    private static bool LoadsAsTheme(string path)
+    {
+        try
+        {
+            using XmlReader reader = XmlReader.Create(path);
+            object? loaded = XamlReader.Load(reader);
+
+            return loaded is ResourceDictionary;
+        }
+        catch (XamlParseException)
+        {
+            return false;
+        }
+        catch (XmlException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
             return false;
         }
     }

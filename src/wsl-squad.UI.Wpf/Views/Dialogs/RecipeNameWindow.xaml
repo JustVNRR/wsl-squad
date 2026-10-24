@@ -15,7 +15,7 @@
                  Background="{DynamicResource AppInputBackgroundBrush}"
                  Foreground="{DynamicResource AppForegroundBrush}"
                  BorderBrush="{DynamicResource AppBorderBrush}" Padding="4"/>
-        <TextBlock x:Name="GuiNameError" Text="{Binding NameError}" Visibility="Collapsed" Margin="0,4,0,0"
+        <TextBlock Text="{Binding NameError}" Visibility="{Binding NameError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0"
                    TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Content="Cancel" Margin="0,0,8,0" IsCancel="True"

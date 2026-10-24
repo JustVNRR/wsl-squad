@@ -800,7 +800,7 @@ public sealed class InstanceService : IInstanceService
             {
                 Name = $"{image.Name} ({image.Modified:dd'/'MM HH:mm})",
                 Path = image.Path,
-                Uploaded = HasFingerprint(Path.GetFileName(Path.GetDirectoryName(image.Path) ?? string.Empty)),
+                Uploaded = true,
             });
         }
 

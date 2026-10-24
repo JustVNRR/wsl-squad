@@ -2,6 +2,7 @@ using FluentAssertions;
 
 using WslSquad.Core.Dtos;
 using WslSquad.Presentation.Gui.ViewModels;
+using WslSquad.Presentation.Tests.Support;
 
 namespace WslSquad.Presentation.Tests.ViewModels;
 
@@ -66,7 +67,19 @@ public class AppearanceViewModelTests
         viewModel.ImagePath.Should().BeEmpty();
     }
 
-    private static SetAppearanceViewModel Create()
+    [Fact]
+    public void Uploading_an_icon_through_the_file_dialog_sets_the_path()
+    {
+        TestDialogService dialogs = new() { OpenFileAnswer = "/tmp/icon.png" };
+        SetAppearanceViewModel viewModel = Create(dialogs);
+
+        viewModel.PickImageCommand.Execute(null);
+
+        viewModel.ImagePath.Should().Be("/tmp/icon.png");
+        dialogs.LastOpenFile!.Value.Filter.Should().Contain("*.png");
+    }
+
+    private static SetAppearanceViewModel Create(TestDialogService? dialogs = null)
     {
         return new SetAppearanceViewModel(
             "alpha",
@@ -103,6 +116,7 @@ public class AppearanceViewModelTests
                     Bottom = "#2563EB",
                     TextColor = "#FFFFFF",
                 },
-            ]);
+            ],
+            dialogs ?? new TestDialogService());
     }
 }
