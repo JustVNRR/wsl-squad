@@ -44,7 +44,7 @@ public class FleetServiceTests
     {
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("alpha");
-        _ = Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(folder);
         _config.Setup(config => config.GetSavedRoot()).Returns(temp.Path);
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([new WslInstance { Name = "alpha" }]);
         _wsl.Setup(wsl => wsl.GetFolder("alpha")).Returns(folder);
@@ -112,7 +112,7 @@ public class FleetServiceTests
                 importedTar = tar;
                 _ = instanceName;
                 _ = interactive;
-                _ = Directory.CreateDirectory(folder);
+                Directory.CreateDirectory(folder);
             });
 
         instance.Restore(new RestoreDto { ArchiveName = "saved", InstanceName = "restored" });

@@ -15,7 +15,7 @@ public partial class App : Application
 
         if (!WslService.IsAvailable())
         {
-            _ = MessageBox.Show(
+            MessageBox.Show(
                 "WSL 2 is required but was not detected." + Environment.NewLine + Environment.NewLine +
                 "Install it from an elevated PowerShell:" + Environment.NewLine +
                 "    wsl --install" + Environment.NewLine + Environment.NewLine +
@@ -33,7 +33,7 @@ public partial class App : Application
         string assets = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "wsl-squad");
-        _ = Directory.CreateDirectory(assets);
+        Directory.CreateDirectory(assets);
 
         CatalogBootstrap.Ensure(assets);
         FontFaceResolver.LoadCatalog(assets);

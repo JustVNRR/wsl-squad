@@ -201,7 +201,7 @@ public sealed class DockerRepository : IDockerRepository
         }
         finally
         {
-            _ = NativeCommand.Test("docker", ["rm", "-f", container]);
+            NativeCommand.Test("docker", ["rm", "-f", container]);
         }
     }
 
@@ -211,7 +211,7 @@ public sealed class DockerRepository : IDockerRepository
 
         if (!string.IsNullOrEmpty(folder))
         {
-            _ = Directory.CreateDirectory(folder);
+            Directory.CreateDirectory(folder);
         }
 
         return NativeCommand.Test("docker", ["save", "-o", outputPath, tag]);

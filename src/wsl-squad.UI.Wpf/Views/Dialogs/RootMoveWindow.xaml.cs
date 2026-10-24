@@ -13,7 +13,7 @@ public partial class RootMoveWindow : ChromeWindow
         viewModel.CloseRequested += (_, _) => DialogResult = true;
         ContentRendered += (_, _) =>
         {
-            _ = TxtNewRoot.Focus();
+            TxtNewRoot.Focus();
             TxtNewRoot.SelectAll();
         };
     }

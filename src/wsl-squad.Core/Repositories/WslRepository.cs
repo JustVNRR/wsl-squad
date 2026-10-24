@@ -160,7 +160,7 @@ public sealed class WslRepository : IWslRepository
 
     public void TerminateQuietly(string instanceName)
     {
-        _ = NativeCommand.Test("wsl.exe", ["--terminate", instanceName]);
+        NativeCommand.Test("wsl.exe", ["--terminate", instanceName]);
         Thread.Sleep(1000);
     }
 
@@ -176,7 +176,7 @@ public sealed class WslRepository : IWslRepository
     public void OpenProfile(string instanceName)
     {
         Thread.Sleep(400);
-        _ = Process.Start(new ProcessStartInfo("wt.exe")
+        Process.Start(new ProcessStartInfo("wt.exe")
         {
             ArgumentList = { "-p", instanceName },
             UseShellExecute = true,
@@ -185,7 +185,7 @@ public sealed class WslRepository : IWslRepository
 
     public void OpenBareShell(string instanceName)
     {
-        _ = Process.Start(new ProcessStartInfo("wsl.exe")
+        Process.Start(new ProcessStartInfo("wsl.exe")
         {
             Arguments = $"-d {instanceName} --cd ~",
             UseShellExecute = true,
@@ -194,7 +194,7 @@ public sealed class WslRepository : IWslRepository
 
     public void OpenBareShellAsRoot(string instanceName)
     {
-        _ = Process.Start(new ProcessStartInfo("wsl.exe")
+        Process.Start(new ProcessStartInfo("wsl.exe")
         {
             Arguments = $"-d {instanceName} -u root --cd ~",
             UseShellExecute = true,
@@ -277,7 +277,7 @@ public sealed class WslRepository : IWslRepository
             Trace.TraceWarning($"[WslRepository] Windows Terminal could not be started: {exception.Message}");
         }
 
-        _ = Process.Start(new ProcessStartInfo("wsl.exe")
+        Process.Start(new ProcessStartInfo("wsl.exe")
         {
             Arguments = $"-d {instanceName} -u root --cd /root -- /bin/sh /root/manage-packs-bootstrap.sh",
             UseShellExecute = true,

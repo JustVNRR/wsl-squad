@@ -68,7 +68,7 @@ public partial class SettingsWindow : ChromeWindow
 
         if (dialog.ShowDialog(this) == true)
         {
-            _ = _viewModel.UploadFont(dialog.FileName);
+            _viewModel.UploadFont(dialog.FileName);
         }
     }
 

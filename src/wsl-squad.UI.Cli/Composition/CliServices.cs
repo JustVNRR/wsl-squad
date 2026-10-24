@@ -22,7 +22,7 @@ public sealed class CliServices
         string assets = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "wsl-squad");
-        _ = Directory.CreateDirectory(assets);
+        Directory.CreateDirectory(assets);
         CatalogBootstrap.Ensure(assets);
 
         ServiceFactory factory = new();

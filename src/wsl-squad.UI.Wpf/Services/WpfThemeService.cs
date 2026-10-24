@@ -65,7 +65,7 @@ public sealed class WpfThemeService : IUiThemeService
         {
             foreach (string file in Directory.EnumerateFiles(root, "*.xaml"))
             {
-                _ = names.Add(Path.GetFileNameWithoutExtension(file));
+                names.Add(Path.GetFileNameWithoutExtension(file));
             }
         }
 
@@ -116,7 +116,7 @@ public sealed class WpfThemeService : IUiThemeService
                 _assetsRoot,
                 "fonts",
                 $"{Path.GetFileNameWithoutExtension(source)}-{fingerprint}");
-            _ = Directory.CreateDirectory(folder);
+            Directory.CreateDirectory(folder);
             string target = Path.Combine(folder, Path.GetFileName(source));
             File.Copy(source, target, overwrite: true);
 
@@ -144,7 +144,7 @@ public sealed class WpfThemeService : IUiThemeService
     {
         string name = Path.GetFileNameWithoutExtension(source);
         string target = Path.Combine(_assetsRoot, "themes", $"{name}.xaml");
-        _ = Directory.CreateDirectory(Path.GetDirectoryName(target) ?? _assetsRoot);
+        Directory.CreateDirectory(Path.GetDirectoryName(target) ?? _assetsRoot);
         File.Copy(source, target, overwrite: true);
 
         return name;
@@ -171,7 +171,7 @@ public sealed class WpfThemeService : IUiThemeService
             throw new InvalidOperationException($"No theme named '{name}' lives in the themes folder.");
         }
 
-        _ = Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
     }
 
     public void ExportTheme(string source, string target)
@@ -231,7 +231,7 @@ public sealed class WpfThemeService : IUiThemeService
 
         if (_applied is not null)
         {
-            _ = merged.Remove(_applied);
+            merged.Remove(_applied);
         }
 
         merged.Add(chosen);
@@ -287,7 +287,7 @@ public sealed class WpfThemeService : IUiThemeService
     {
         try
         {
-            _ = Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath) ?? _assetsRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath) ?? _assetsRoot);
             File.WriteAllText(
                 _settingsPath,
                 JsonSerializer.Serialize(_settings, _jsonOptions));
@@ -323,7 +323,7 @@ public sealed class WpfThemeService : IUiThemeService
     private void EnsureBuiltInThemes()
     {
         string root = Path.Combine(_assetsRoot, "themes");
-        _ = Directory.CreateDirectory(root);
+        Directory.CreateDirectory(root);
 
         foreach (string name in _builtIns)
         {

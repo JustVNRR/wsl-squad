@@ -17,7 +17,7 @@ public partial class RestoreWindow : ChromeWindow
         viewModel.CloseRequested += (_, _) => DialogResult = true;
         ContentRendered += (_, _) =>
         {
-            _ = TxtName.Focus();
+            TxtName.Focus();
             TxtName.SelectAll();
         };
     }

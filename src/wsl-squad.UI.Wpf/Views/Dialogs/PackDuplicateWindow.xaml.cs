@@ -17,7 +17,7 @@ public partial class PackDuplicateWindow : ChromeWindow
         viewModel.CloseRequested += (_, _) => DialogResult = true;
         ContentRendered += (_, _) =>
         {
-            _ = TxtDupName.Focus();
+            TxtDupName.Focus();
             TxtDupName.SelectAll();
         };
     }

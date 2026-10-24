@@ -92,11 +92,11 @@ public static class NameRules
             if (char.IsAsciiLetterLower(character) ||
                 (clean.Length > 0 && (char.IsAsciiDigit(character) || character is '_' or '-')))
             {
-                _ = clean.Append(character);
+                clean.Append(character);
             }
             else if (clean.Length > 0 && clean[^1] != '-')
             {
-                _ = clean.Append('-');
+                clean.Append('-');
             }
         }
 

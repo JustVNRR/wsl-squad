@@ -83,7 +83,7 @@ public sealed partial class TerminalRepository
 
             if (!string.IsNullOrEmpty(directory))
             {
-                _ = Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(directory);
             }
 
             bitmap.Save(Path.GetFullPath(outputPath), ImageFormat.Png);

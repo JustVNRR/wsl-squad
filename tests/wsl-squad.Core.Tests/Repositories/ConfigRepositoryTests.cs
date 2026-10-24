@@ -18,12 +18,12 @@ public class ConfigRepositoryTests
 
         FontGlyphReader.HasGlyph(temp.Combine("fonts", "meslo", "Meslo.ttf"), 'A').Should().BeTrue();
         FontGlyphReader.HasIconGlyph(temp.Combine("fonts", "meslo", "Meslo.ttf")).Should().BeTrue();
-        _ = fonts.Should().Contain("MesloLGS NF");
+        fonts.Should().Contain("MesloLGS NF");
     }
 
     private static void ExtractFont(string resource, string target)
     {
-        _ = Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         string normalized = resource.Replace('\\', '/');
         string[] names = typeof(ConfigRepository).Assembly.GetManifestResourceNames();
         string? name = Array.Find(names, candidate => candidate.Replace('\\', '/') == normalized)
@@ -38,7 +38,7 @@ public class ConfigRepositoryTests
     public void Reads_dockerfile_sources()
     {
         using TemporaryDirectory temp = new();
-        _ = temp.Write("dockerfiles/ubuntu/Dockerfile", "FROM --platform=linux/amd64 ubuntu:24.04\n");
+        temp.Write("dockerfiles/ubuntu/Dockerfile", "FROM --platform=linux/amd64 ubuntu:24.04\n");
         ConfigRepository repository = new(temp.Path);
 
         SourceRow row = repository.GetDockerfiles().Should().ContainSingle().Subject;
@@ -49,8 +49,8 @@ public class ConfigRepositoryTests
     public void Seeds_dockerfiles_and_onboardings_from_ingredients()
     {
         using TemporaryDirectory temp = new();
-        _ = temp.Write("ingredients/Dockerfile", "FROM alpine:3.20\n");
-        _ = temp.Write("ingredients/onboarding.sh", "#!/bin/sh\n");
+        temp.Write("ingredients/Dockerfile", "FROM alpine:3.20\n");
+        temp.Write("ingredients/onboarding.sh", "#!/bin/sh\n");
         ConfigRepository repository = new(temp.Path, temp.Path);
 
         SourceRow dockerfile = repository.GetDockerfiles().Should().ContainSingle().Subject;
@@ -67,7 +67,7 @@ public class ConfigRepositoryTests
     public void Reads_recipes()
     {
         using TemporaryDirectory temp = new();
-        _ = temp.Write("recipes/alpine/Dockerfile", "FROM alpine:3.20\n");
+        temp.Write("recipes/alpine/Dockerfile", "FROM alpine:3.20\n");
         ConfigRepository repository = new(temp.Path);
 
         SourceRow row = repository.GetRecipes().Should().ContainSingle().Subject;
@@ -92,7 +92,7 @@ public class ConfigRepositoryTests
     public void Refuses_to_remove_a_folder_outside_the_catalogue()
     {
         using TemporaryDirectory temp = new();
-        _ = temp.Write("outside/file.txt", "x");
+        temp.Write("outside/file.txt", "x");
         ConfigRepository repository = new(temp.Combine("assets"));
 
         Action act = () => repository.RemoveRecipe(temp.Combine("outside", "file.txt"));

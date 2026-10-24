@@ -26,7 +26,7 @@ public class ReferenceHelpersTests
     public void Rejects_missing_relative_and_occupied_targets()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("archives"));
+        Directory.CreateDirectory(temp.Combine("archives"));
 
         ReferenceHelpers.TestFleetTarget(null).Should().Be(FleetTargetProblem.Empty);
         ReferenceHelpers.TestFleetTarget("relative").Should().Be(FleetTargetProblem.NotAbsolutePath);

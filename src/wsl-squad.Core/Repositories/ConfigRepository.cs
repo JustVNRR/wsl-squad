@@ -68,7 +68,7 @@ public sealed class ConfigRepository : IConfigRepository
                 if (!string.IsNullOrEmpty(family) &&
                     !family.StartsWith("Font Awesome", StringComparison.OrdinalIgnoreCase))
                 {
-                    _ = names.Add(family);
+                    names.Add(family);
                 }
             }
         }
@@ -129,7 +129,7 @@ public sealed class ConfigRepository : IConfigRepository
         string fingerprint = Guid.NewGuid().ToString("N")[..8];
         string slot = Path.Combine(_assetsDir, "recipes", $"{name}-{fingerprint}");
 
-        _ = Directory.CreateDirectory(slot);
+        Directory.CreateDirectory(slot);
 
         return slot;
     }
@@ -142,7 +142,7 @@ public sealed class ConfigRepository : IConfigRepository
             kind,
             $"{Path.GetFileNameWithoutExtension(source)}-{fingerprint}");
 
-        _ = Directory.CreateDirectory(slot);
+        Directory.CreateDirectory(slot);
         string target = Path.Combine(slot, fileName);
         File.Copy(source, target, overwrite: true);
         File.SetLastWriteTime(target, DateTime.Now);
@@ -209,7 +209,7 @@ public sealed class ConfigRepository : IConfigRepository
             return;
         }
 
-        _ = Directory.CreateDirectory(Path.GetDirectoryName(file) ?? string.Empty);
+        Directory.CreateDirectory(Path.GetDirectoryName(file) ?? string.Empty);
         AtomicFile.WriteText(file, root.TrimEnd('\\'));
     }
 
@@ -268,7 +268,7 @@ public sealed class ConfigRepository : IConfigRepository
                     continue;
                 }
 
-                _ = names.Add(family);
+                names.Add(family);
             }
         }
 
@@ -319,7 +319,7 @@ public sealed class ConfigRepository : IConfigRepository
         }
 
         string targetDirectory = Path.Combine(_assetsDir, kind, slot);
-        _ = Directory.CreateDirectory(targetDirectory);
+        Directory.CreateDirectory(targetDirectory);
 
         string target = Path.Combine(targetDirectory, fileName);
         File.Copy(source, target, overwrite: true);

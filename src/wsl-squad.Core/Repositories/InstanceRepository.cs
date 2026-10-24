@@ -221,7 +221,7 @@ public sealed class InstanceRepository : IInstanceRepository
 
     public void EnsureFolder(string folder)
     {
-        _ = Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(folder);
     }
 
     public long GetFreeSpace(string path)

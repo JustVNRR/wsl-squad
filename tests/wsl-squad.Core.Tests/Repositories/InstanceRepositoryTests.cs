@@ -13,7 +13,7 @@ public class InstanceRepositoryTests
     {
         using TemporaryDirectory temp = new();
         string root = temp.Combine("fleet");
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
+        Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
         InstanceRepository repository = new(root);
         WslInstance instance = new()
         {
@@ -43,7 +43,7 @@ public class InstanceRepositoryTests
     public void Writes_and_lists_the_marker()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
+        Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
         InstanceRepository repository = new(temp.Combine("fleet"));
 
         repository.WriteMarker("alpha", "build");
@@ -56,7 +56,7 @@ public class InstanceRepositoryTests
     public void Measures_the_disk_and_occupancy()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
+        Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
         File.WriteAllBytes(temp.Combine("fleet", "alpha", "ext4.vhdx"), new byte[1536]);
         InstanceRepository repository = new(temp.Combine("fleet"));
 
@@ -69,7 +69,7 @@ public class InstanceRepositoryTests
     public void Removes_an_instance_folder()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
+        Directory.CreateDirectory(temp.Combine("fleet", "alpha"));
         InstanceRepository repository = new(temp.Combine("fleet"));
 
         repository.RemoveFolder("alpha");
@@ -82,7 +82,7 @@ public class InstanceRepositoryTests
     {
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("fleet", "alpha");
-        _ = Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(folder);
         string file = Path.Combine(folder, "ext4.vhdx");
         File.WriteAllText(file, "x");
         FileStream? holder = null;

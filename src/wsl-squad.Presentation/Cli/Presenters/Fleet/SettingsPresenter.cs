@@ -112,7 +112,7 @@ public sealed class SettingsPresenter : BasePresenter<IFleetView>
 
         try
         {
-            _ = _catalogue.CreatePack(new CreatePackDto
+            _catalogue.CreatePack(new CreatePackDto
             {
                 SourceName = pack.Name,
                 NewName = newName,

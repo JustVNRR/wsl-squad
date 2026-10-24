@@ -21,7 +21,7 @@ public partial class BuildWindow : ChromeWindow
         _viewModel = viewModel;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.CloseRequested += (_, _) => DialogResult = true;
-        ContentRendered += (_, _) => _ = TxtName.Focus();
+        ContentRendered += (_, _) => TxtName.Focus();
     }
 
     private void OnRoadSelected(object sender, SelectionChangedEventArgs e)

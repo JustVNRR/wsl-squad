@@ -509,22 +509,22 @@ public sealed partial class BuildViewModel : BaseViewModel
 
         if (listName == "Dockerfiles")
         {
-            _ = _dockerfiles.RemoveAll(item => item.Path == row.Path);
+            _dockerfiles.RemoveAll(item => item.Path == row.Path);
             DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
         }
         else if (listName == "Onboardings")
         {
-            _ = _onboardings.RemoveAll(item => item.Path == row.Path);
+            _onboardings.RemoveAll(item => item.Path == row.Path);
             OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
         }
         else if (listName == "Recipes")
         {
-            _ = _recipes.RemoveAll(item => item.Path == row.Path);
+            _recipes.RemoveAll(item => item.Path == row.Path);
             RecipeIndex = _recipes.Count > 0 ? 0 : -1;
         }
         else
         {
-            _ = _images.RemoveAll(item => item.Path == row.Path);
+            _images.RemoveAll(item => item.Path == row.Path);
             ImageIndex = _images.Count > 0 ? 0 : -1;
         }
 

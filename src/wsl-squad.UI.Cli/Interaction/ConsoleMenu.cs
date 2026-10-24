@@ -386,7 +386,7 @@ public sealed class ConsoleMenu
     {
         if (canPaint)
         {
-            _ = _console.SetTop(top + visible + 1 + extra);
+            _console.SetTop(top + visible + 1 + extra);
         }
     }
 }

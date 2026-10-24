@@ -38,7 +38,7 @@ public static class CatalogBootstrap
                 continue;
             }
 
-            _ = Directory.CreateDirectory(Path.GetDirectoryName(target) ?? assetsRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(target) ?? assetsRoot);
 
             using Stream source = assembly.GetManifestResourceStream(resource)!;
             using FileStream destination = File.Create(target);

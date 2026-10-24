@@ -66,7 +66,7 @@ public static class BuildRequestRunner
         try
         {
             Console.WriteLine($"Opening a shell into '{name}'...");
-            _ = service.Open(name);
+            service.Open(name);
         }
         catch (Exception exception) when (IsExternalFailure(exception))
         {
@@ -98,7 +98,7 @@ public static class BuildRequestRunner
         {
             Console.WriteLine();
             Console.WriteLine("Press Enter to close.");
-            _ = Console.ReadLine();
+            Console.ReadLine();
         }
     }
 

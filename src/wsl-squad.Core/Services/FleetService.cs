@@ -121,7 +121,7 @@ public sealed class FleetService : IFleetService
         bool created = !File.Exists(path);
         path = _configRepository.EnsureWslConfig();
 
-        _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path)
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path)
         {
             UseShellExecute = true,
         });

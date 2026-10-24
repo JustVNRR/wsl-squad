@@ -105,7 +105,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (picked is null)
                         {
-                            _ = stack.Pop();
+                            stack.Pop();
 
                             break;
                         }
@@ -178,7 +178,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (!ok)
                         {
-                            _ = stack.Pop();
+                            stack.Pop();
                         }
                         else
                         {
@@ -204,7 +204,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (picked is null)
                         {
-                            _ = stack.Pop();
+                            stack.Pop();
 
                             break;
                         }
@@ -221,7 +221,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (run is null)
                         {
-                            _ = stack.Pop();
+                            stack.Pop();
 
                             break;
                         }
@@ -281,7 +281,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (!ok)
                         {
-                            _ = stack.Pop();
+                            stack.Pop();
                         }
                         else
                         {
@@ -297,7 +297,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (answer is null)
                         {
-                            _ = stack.Pop();
+                            stack.Pop();
                         }
                         else
                         {
@@ -314,7 +314,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (answer is null)
                         {
-                            _ = stack.Pop();
+                            stack.Pop();
                         }
                         else
                         {
@@ -364,7 +364,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
             try
             {
-                _ = _service.Open(dto.Name ?? string.Empty);
+                _service.Open(dto.Name ?? string.Empty);
             }
             catch (InvalidOperationException ex)
             {

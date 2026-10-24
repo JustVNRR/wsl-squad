@@ -12,7 +12,7 @@ public class ArchiveRepositoryTests
     public void Lists_archives_that_hold_a_tar()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
+        Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
         File.WriteAllBytes(temp.Combine("fleet", "archives", "alpha_archive", "alpha_archive.tar.gz"), new byte[2048]);
         ArchiveRepository repository = new(temp.Combine("fleet", "archives"));
 
@@ -28,7 +28,7 @@ public class ArchiveRepositoryTests
     public void Saves_and_loads_archive_metadata()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
+        Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
         ArchiveRepository repository = new(temp.Combine("fleet", "archives"));
         WslInstance archive = new()
         {
@@ -50,7 +50,7 @@ public class ArchiveRepositoryTests
     public void Deletes_an_archive_folder()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
+        Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
         ArchiveRepository repository = new(temp.Combine("fleet", "archives"));
 
         repository.DeleteArchive("alpha_archive");
@@ -62,7 +62,7 @@ public class ArchiveRepositoryTests
     public void Moves_the_archive_folder_to_a_new_root()
     {
         using TemporaryDirectory temp = new();
-        _ = Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
+        Directory.CreateDirectory(temp.Combine("fleet", "archives", "alpha_archive"));
         File.WriteAllText(temp.Combine("fleet", "archives", "alpha_archive", "keep.txt"), "x");
         ArchiveRepository repository = new(temp.Combine("fleet", "archives"));
         string target = temp.Combine("moved");

@@ -22,7 +22,7 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
             return;
         }
 
-        _ = Directory.CreateDirectory(_packsRoot);
+        Directory.CreateDirectory(_packsRoot);
 
         foreach (string directory in Directory.EnumerateDirectories(sourceRoot))
         {
@@ -105,7 +105,7 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
 
     public void OpenFolder(string packName)
     {
-        _ = Process.Start(new ProcessStartInfo(GetFolder(packName)) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(GetFolder(packName)) { UseShellExecute = true });
     }
 
     private WslPack GetPack(string folder)
@@ -118,20 +118,20 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
 
             if (TryValue(text, "PACK_DESCRIPTION", out string description))
             {
-                _ = pack.WithDescription(description);
+                pack.WithDescription(description);
             }
             else if (TryValue(text, "PACK_REQUIRES", out string requires))
             {
-                _ = pack.WithRequires(
+                pack.WithRequires(
                     [.. requires.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)]);
             }
             else if (TryValue(text, "PACK_VISIBLE", out string visible))
             {
-                _ = pack.WithOffered(!visible.Equals("no", StringComparison.OrdinalIgnoreCase));
+                pack.WithOffered(!visible.Equals("no", StringComparison.OrdinalIgnoreCase));
             }
             else if (TryValue(text, "PACK_FAMILY", out string family))
             {
-                _ = pack.WithFamily(family.ToLowerInvariant());
+                pack.WithFamily(family.ToLowerInvariant());
             }
         }
 
@@ -168,7 +168,7 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
 
     private static void CopyTree(string source, string target)
     {
-        _ = Directory.CreateDirectory(target);
+        Directory.CreateDirectory(target);
 
         foreach (string file in Directory.EnumerateFiles(source))
         {

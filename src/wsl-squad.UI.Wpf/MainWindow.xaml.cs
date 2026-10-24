@@ -62,7 +62,7 @@ public partial class MainWindow : Views.ChromeWindow
         }
 
         _refitQueued = true;
-        _ = Dispatcher.BeginInvoke(
+        Dispatcher.BeginInvoke(
             DispatcherPriority.ContextIdle,
             new Action(() =>
             {
@@ -124,7 +124,7 @@ public partial class MainWindow : Views.ChromeWindow
     {
         _lastRowSignature = RowSignature();
         FitCeiling();
-        _ = LstInstances.Focus();
+        LstInstances.Focus();
     }
 
     private string RowSignature()

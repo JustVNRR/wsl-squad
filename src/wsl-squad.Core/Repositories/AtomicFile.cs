@@ -54,7 +54,7 @@ internal static class AtomicFile
 
         if (directory.Length > 0)
         {
-            _ = Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(directory);
         }
 
         string temporary = path + ".tmp";

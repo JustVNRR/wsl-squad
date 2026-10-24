@@ -15,7 +15,7 @@ public partial class RecipeNameWindow : ChromeWindow
 
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.CloseRequested += (_, _) => DialogResult = true;
-        ContentRendered += (_, _) => _ = TxtRecipeName.Focus();
+        ContentRendered += (_, _) => TxtRecipeName.Focus();
     }
 
 

@@ -11,7 +11,7 @@ public partial class DeleteArchiveWindow : ChromeWindow
         DataContext = viewModel;
 
         viewModel.CloseRequested += (_, _) => DialogResult = true;
-        ContentRendered += (_, _) => _ = TxtName.Focus();
+        ContentRendered += (_, _) => TxtName.Focus();
     }
 
 }

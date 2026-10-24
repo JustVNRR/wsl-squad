@@ -122,11 +122,11 @@ public sealed class CliComposition
     private int RunMenu()
     {
         ConsoleMenu menu = new("WSL SQUAD CLI", _host);
-        _ = menu.Add("build", "build an instance from the image");
-        _ = menu.Add("settings", "the working folder, .wslconfig, and the packs catalog");
-        _ = menu.Add("instances", "choose an instance and act on it");
-        _ = menu.Add("archives", "choose an archive: restore or delete");
-        _ = menu.Add("exit", "leave the CLI");
+        menu.Add("build", "build an instance from the image");
+        menu.Add("settings", "the working folder, .wslconfig, and the packs catalog");
+        menu.Add("instances", "choose an instance and act on it");
+        menu.Add("archives", "choose an archive: restore or delete");
+        menu.Add("exit", "leave the CLI");
 
         bool alternate = ConsoleMode.EnterAlternateScreen();
 
@@ -146,7 +146,7 @@ public sealed class CliComposition
 
                 try
                 {
-                    _ = RunGesture(picked[0].Key, string.Empty);
+                    RunGesture(picked[0].Key, string.Empty);
                 }
                 catch (ConsoleQuitException)
                 {
@@ -155,7 +155,7 @@ public sealed class CliComposition
 
                 _host.Line(string.Empty);
                 _host.Line("Press Enter to return to the menu.", ConsoleTone.Muted);
-                _ = Console.ReadLine();
+                Console.ReadLine();
             }
         }
         finally

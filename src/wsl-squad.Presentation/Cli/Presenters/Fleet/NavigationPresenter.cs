@@ -76,7 +76,7 @@ public sealed class NavigationPresenter
 
                     if (action is null)
                     {
-                        _ = _stack.Pop();
+                        _stack.Pop();
                         return null;
                     }
 
@@ -126,7 +126,7 @@ public sealed class NavigationPresenter
 
                     if (choice is null)
                     {
-                        _ = _stack.Pop();
+                        _stack.Pop();
                         return null;
                     }
 
@@ -149,7 +149,7 @@ public sealed class NavigationPresenter
 
     private WorkflowOutcome? Pop(object presenter, string label)
     {
-        _ = _stack.Pop();
+        _stack.Pop();
 
         if (_stack.Count > 0)
         {

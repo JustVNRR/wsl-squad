@@ -28,7 +28,7 @@ public partial class AppearanceWindow : ChromeWindow
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.CloseRequested += (_, _) => Close();
         BtnImage.Click += (_, _) => PickImage();
-        ContentRendered += (_, _) => _ = TxtIconText.Focus();
+        ContentRendered += (_, _) => TxtIconText.Focus();
 
         UpdateIconError();
         PaintPreview();
@@ -181,7 +181,7 @@ public partial class AppearanceWindow : ChromeWindow
                     ParseColor(index < palette.Count ? palette[index] : foreground, Colors.White)),
             };
 
-            _ = PnlPalette.Children.Add(swatch);
+            PnlPalette.Children.Add(swatch);
         }
     }
 

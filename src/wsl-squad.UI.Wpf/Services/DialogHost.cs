@@ -45,13 +45,13 @@ public static class DialogHost
         }
         finally
         {
-            _ = _stack.Pop();
+            _stack.Pop();
 
             if (hideMain)
             {
                 main!.Show();
-                _ = main.Activate();
-                _ = main.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+                main.Activate();
+                main.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
             }
         }
     }

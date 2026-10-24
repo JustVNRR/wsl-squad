@@ -390,7 +390,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
         try
         {
-            _ = _catalogue.CreatePack(new CreatePackDto
+            _catalogue.CreatePack(new CreatePackDto
             {
                 SourceName = row.Name,
                 NewName = duplicate.Name,

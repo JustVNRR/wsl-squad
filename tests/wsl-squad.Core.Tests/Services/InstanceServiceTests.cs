@@ -401,7 +401,7 @@ public class InstanceServiceTests
     {
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("alpha");
-        _ = Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(folder);
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
         _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
         _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);

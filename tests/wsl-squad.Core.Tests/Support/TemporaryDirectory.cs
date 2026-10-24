@@ -8,7 +8,7 @@ public sealed class TemporaryDirectory : IDisposable
         Path = System.IO.Path.Combine(
             System.IO.Path.GetTempPath(),
             $"wsl-squad-tests-{Guid.NewGuid():N}");
-        _ = Directory.CreateDirectory(Path);
+        Directory.CreateDirectory(Path);
     }
 
     public string Path { get; }
@@ -21,7 +21,7 @@ public sealed class TemporaryDirectory : IDisposable
     public string Write(string relativePath, string content)
     {
         string target = Combine(relativePath.Split('/'));
-        _ = Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target) ?? Path);
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target) ?? Path);
         File.WriteAllText(target, content);
 
         return target;

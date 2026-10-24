@@ -17,7 +17,7 @@ public sealed class LoggerService : ILoggerService
         {
             try
             {
-                _ = Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(directory);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

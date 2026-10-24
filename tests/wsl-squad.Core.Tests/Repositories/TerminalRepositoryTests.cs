@@ -32,7 +32,7 @@ public class TerminalRepositoryTests
         TerminalRepository repository = new(string.Empty);
         string name = $"catch-{Guid.NewGuid():N}";
         string path = repository.GetFragmentPath(name);
-        _ = Directory.CreateDirectory(path);
+        Directory.CreateDirectory(path);
 
         try
         {

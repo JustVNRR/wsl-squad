@@ -91,7 +91,7 @@ public sealed class CliFleetView : CliViewBase, IFleetView
 
         foreach (ConsoleMenuItem item in items)
         {
-            _ = menu.Add(item);
+            menu.Add(item);
         }
 
         IReadOnlyList<ConsoleMenuItem>? picked = menu.Prompt();

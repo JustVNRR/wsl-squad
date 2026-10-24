@@ -26,7 +26,7 @@ public class LoggerServiceTests
         using TemporaryDirectory temp = new();
         string path = temp.Combine("wsl-squad.log");
         File.WriteAllBytes(path, new byte[(1024 * 1024) + 1]);
-        _ = Directory.CreateDirectory(path + ".1");
+        Directory.CreateDirectory(path + ".1");
 
         Action act = () => _ = new LoggerService(path);
 
@@ -38,7 +38,7 @@ public class LoggerServiceTests
     {
         using TemporaryDirectory temp = new();
         string path = temp.Combine("wsl-squad.log");
-        _ = Directory.CreateDirectory(path);
+        Directory.CreateDirectory(path);
 
         Action act = () =>
         {

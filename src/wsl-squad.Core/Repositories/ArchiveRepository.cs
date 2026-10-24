@@ -116,7 +116,7 @@ public sealed class ArchiveRepository : IArchiveRepository
 
     public void EnsureFolder(string archiveName)
     {
-        _ = Directory.CreateDirectory(GetFolder(archiveName));
+        Directory.CreateDirectory(GetFolder(archiveName));
     }
 
     public bool HasArchive(string archiveName)
@@ -173,7 +173,7 @@ public sealed class ArchiveRepository : IArchiveRepository
         {
             try
             {
-                _ = Directory.CreateDirectory(Path.GetDirectoryName(newArchives) ?? targetFull);
+                Directory.CreateDirectory(Path.GetDirectoryName(newArchives) ?? targetFull);
                 Directory.Move(ArchivesRoot, newArchives);
             }
             catch (IOException exception)
@@ -203,11 +203,11 @@ public sealed class ArchiveRepository : IArchiveRepository
 
     private static void CopyTree(string source, string target)
     {
-        _ = Directory.CreateDirectory(target);
+        Directory.CreateDirectory(target);
 
         foreach (string directory in Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories))
         {
-            _ = Directory.CreateDirectory(Path.Combine(target, Path.GetRelativePath(source, directory)));
+            Directory.CreateDirectory(Path.Combine(target, Path.GetRelativePath(source, directory)));
         }
 
         foreach (string file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))

@@ -58,7 +58,7 @@ public class WslPackTests
             Family = "debian",
         };
 
-        _ = pack.WithName("other").WithDescription("").WithFamily("");
+        pack.WithName("other").WithDescription("").WithFamily("");
 
         pack.Name.Should().Be("other");
         pack.Description.Should().Be("Tools");

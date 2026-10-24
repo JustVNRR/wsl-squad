@@ -150,7 +150,7 @@ public sealed class InstanceService : IInstanceService
     {
         try
         {
-            _ = Process.Start(new ProcessStartInfo("code")
+            Process.Start(new ProcessStartInfo("code")
             {
                 ArgumentList = { path },
                 UseShellExecute = true,
@@ -158,7 +158,7 @@ public sealed class InstanceService : IInstanceService
         }
         catch (System.ComponentModel.Win32Exception)
         {
-            _ = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
         }
     }
 
@@ -319,7 +319,7 @@ public sealed class InstanceService : IInstanceService
 
             if (!Directory.Exists(installPath))
             {
-                _ = Directory.CreateDirectory(installPath);
+                Directory.CreateDirectory(installPath);
             }
 
             _wslRepository.Import(name, installPath, tarPath, dto.Interactive);
@@ -447,7 +447,7 @@ public sealed class InstanceService : IInstanceService
                 }
             }
 
-            _ = _dockerRepository.RemoveImage(tag);
+            _dockerRepository.RemoveImage(tag);
         }
 
         if (dto.RegisterDocker)
@@ -542,7 +542,7 @@ public sealed class InstanceService : IInstanceService
         {
             try
             {
-                _ = Archive(ArchiveDtoFor(name));
+                Archive(ArchiveDtoFor(name));
             }
             catch (Exception exception) when (exception is InvalidOperationException or IOException)
             {
@@ -559,9 +559,9 @@ public sealed class InstanceService : IInstanceService
         _instanceRepository.RemoveFolder(name);
 
         WslGuids fragments = _terminalRepository.GetWslGuids(name);
-        _ = _terminalRepository.PruneGhostEntries(name, fragments.Guids);
+        _terminalRepository.PruneGhostEntries(name, fragments.Guids);
         _terminalRepository.DeleteFragment(name);
-        _ = _terminalRepository.RemoveStaleFragments(fragments.Guids);
+        _terminalRepository.RemoveStaleFragments(fragments.Guids);
 
         try
         {
@@ -584,7 +584,7 @@ public sealed class InstanceService : IInstanceService
         {
             try
             {
-                _ = Archive(ArchiveDtoFor(name));
+                Archive(ArchiveDtoFor(name));
             }
             catch (Exception exception) when (exception is InvalidOperationException or IOException)
             {
@@ -984,7 +984,7 @@ public sealed class InstanceService : IInstanceService
         if (carried == "yes" && _dockerRepository.GetDesktopState(name) == "no")
         {
             _dockerRepository.SetDesktopState(name);
-            _ = _dockerRepository.RestartDesktop();
+            _dockerRepository.RestartDesktop();
         }
 
         return new RestoreResponseDto { ArchiveName = archiveName, InstanceName = name };
@@ -1088,7 +1088,7 @@ public sealed class InstanceService : IInstanceService
             if (dockerCarried == "yes" && _dockerRepository.GetDesktopState(copy) == "no")
             {
                 _dockerRepository.SetDesktopState(copy);
-                _ = _dockerRepository.RestartDesktop();
+                _dockerRepository.RestartDesktop();
             }
         }
         finally
@@ -1157,7 +1157,7 @@ public sealed class InstanceService : IInstanceService
             }
         }
 
-        _ = _terminalRepository.RemoveStaleFragments(fragments.Guids);
+        _terminalRepository.RemoveStaleFragments(fragments.Guids);
 
         if (!string.IsNullOrEmpty(fragments.ProfileGuid))
         {

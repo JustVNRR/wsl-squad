@@ -148,7 +148,7 @@ internal static class NativeCommand
 
             lock (captured)
             {
-                _ = captured.AppendLine(line);
+                captured.AppendLine(line);
             }
 
             if (error)
@@ -226,13 +226,12 @@ internal static class NativeCommand
                 return -1;
             }
 
-            _ = process.WaitForExit(1000);
+            process.WaitForExit(1000);
 
             return -1;
         }
 
-        _ = output.GetAwaiter().GetResult();
-        _ = error.GetAwaiter().GetResult();
+        Task.WhenAll(output, error).GetAwaiter().GetResult();
 
         return process.ExitCode;
     }

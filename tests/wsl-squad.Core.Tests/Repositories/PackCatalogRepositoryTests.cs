@@ -41,7 +41,7 @@ public class PackCatalogRepositoryTests
     public void Copies_and_deletes_a_pack()
     {
         using TemporaryDirectory temp = new();
-        _ = temp.Write("packs/tools/pack.conf", "PACK_DESCRIPTION := Tools\n");
+        temp.Write("packs/tools/pack.conf", "PACK_DESCRIPTION := Tools\n");
         PackCatalogRepository repository = new(temp.Combine("packs"));
 
         repository.CopyPack("tools", "tools-copy");
@@ -55,7 +55,7 @@ public class PackCatalogRepositoryTests
     public void Seeds_the_catalogue_once()
     {
         using TemporaryDirectory temp = new();
-        _ = temp.Write("source/tools/pack.conf", "PACK_DESCRIPTION := Tools\n");
+        temp.Write("source/tools/pack.conf", "PACK_DESCRIPTION := Tools\n");
         PackCatalogRepository repository = new(temp.Combine("packs"));
 
         repository.SeedFrom(temp.Combine("source"));

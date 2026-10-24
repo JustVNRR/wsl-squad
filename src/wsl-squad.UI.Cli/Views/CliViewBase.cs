@@ -89,7 +89,7 @@ public abstract class CliViewBase : IPresenterViewBase
 
         foreach (T item in items)
         {
-            _ = menu.Add(new ConsoleMenuItem(label(item), item));
+            menu.Add(new ConsoleMenuItem(label(item), item));
         }
 
         IReadOnlyList<ConsoleMenuItem>? picked = menu.Prompt();
@@ -114,7 +114,7 @@ public abstract class CliViewBase : IPresenterViewBase
 
         foreach (T item in items)
         {
-            _ = menu.Add(new ConsoleMenuItem(label(item), item));
+            menu.Add(new ConsoleMenuItem(label(item), item));
         }
 
         foreach (int index in checkedIndexes)

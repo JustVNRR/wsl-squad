@@ -170,7 +170,7 @@ public sealed class ConsoleHost
                 {
                     if (text.Length > 0)
                     {
-                        _ = text.Remove(text.Length - 1, 1);
+                        text.Remove(text.Length - 1, 1);
                         Console.Write("\b \b");
                     }
 
@@ -179,7 +179,7 @@ public sealed class ConsoleHost
 
                 if (info.KeyChar != '\0' && !char.IsControl(info.KeyChar))
                 {
-                    _ = text.Append(info.KeyChar);
+                    text.Append(info.KeyChar);
                     Console.Write(info.KeyChar);
                 }
             }

@@ -13,6 +13,10 @@ indent_size = 2
 
 [*.cs]
 dotnet_analyzer_diagnostic.severity = warning
+# Ignored fluent results (StringBuilder, Spectre, FluentAssertions) are intentional;
+# CA1806 still flags results whose loss is a bug.
+dotnet_diagnostic.IDE0058.severity = none
+dotnet_diagnostic.CA1806.severity = warning
 # The product name contains an underscore (WslSquad): accepted convention.
 dotnet_diagnostic.CA1707.severity = none
 # Explicit constructors are preferred over dependency injection.
@@ -44,11 +48,3 @@ dotnet_naming_rule.types_and_methods_should_be_pascal_case.symbols = types_and_m
 dotnet_naming_rule.types_and_methods_should_be_pascal_case.style = pascal_case_style
 dotnet_naming_symbols.types_and_methods_symbols.applicable_kinds = class, struct, enum, property, method
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
-
-[tests/**/*.cs]
-# FluentAssertions assertions return fluent constraints; ignoring them is intentional.
-dotnet_diagnostic.IDE0058.severity = none
-
-[src/wsl-squad.UI.Cli/**/*.cs]
-# Spectre.Console builders return chainable objects whose value is ignored.
-dotnet_diagnostic.IDE0058.severity = none

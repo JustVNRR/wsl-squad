@@ -11,7 +11,7 @@ public partial class RemoveWindow : ChromeWindow
         DataContext = viewModel;
 
         viewModel.CloseRequested += (_, _) => DialogResult = true;
-        ContentRendered += (_, _) => _ = ChkArchive.Focus();
+        ContentRendered += (_, _) => ChkArchive.Focus();
     }
 
 }

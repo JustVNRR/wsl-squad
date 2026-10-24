@@ -74,7 +74,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
         ArgumentNullException.ThrowIfNull(theme);
 
         string folder = FragmentsFolder();
-        _ = Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(folder);
 
         JsonObject profile = new()
         {
@@ -417,7 +417,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
         {
             if (File.Exists(path))
             {
-                _ = found.Add(path);
+                found.Add(path);
             }
         }
 
@@ -427,7 +427,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
 
             if (File.Exists(defaults))
             {
-                _ = found.Add(defaults);
+                found.Add(defaults);
             }
         }
 
@@ -439,7 +439,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
 
                 if (File.Exists(defaults))
                 {
-                    _ = found.Add(defaults);
+                    found.Add(defaults);
                 }
             }
         }
@@ -475,7 +475,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
 
                     if (package?.GetValue("PackageRootFolder") is string root && Directory.Exists(root))
                     {
-                        _ = locations.Add(root);
+                        locations.Add(root);
                     }
                 }
             }
@@ -496,7 +496,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
 
                 foreach (string directory in Directory.EnumerateDirectories(apps, "Microsoft.WindowsTerminal*"))
                 {
-                    _ = locations.Add(directory);
+                    locations.Add(directory);
                 }
             }
             catch (Exception exception) when (
@@ -546,7 +546,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
             }
 
             string output = process.StandardOutput.ReadToEnd();
-            _ = process.WaitForExit(5000);
+            process.WaitForExit(5000);
 
             return
             [
@@ -592,7 +592,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
 
         using RegistryKey key = Registry.CurrentUser.CreateSubKey(
             @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts");
-        _ = Directory.CreateDirectory(userFontsDir);
+        Directory.CreateDirectory(userFontsDir);
         string temporary = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.ttf");
 
         try
