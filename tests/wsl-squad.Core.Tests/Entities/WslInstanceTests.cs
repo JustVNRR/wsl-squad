@@ -16,7 +16,6 @@ public class WslInstanceTests
         WslInstance instance = new() { Name = name };
 
         instance.Name.Should().Be(name);
-        instance.DefaultUser.Should().Be("root");
     }
 
     [Theory]

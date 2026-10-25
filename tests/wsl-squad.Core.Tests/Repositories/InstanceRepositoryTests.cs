@@ -18,7 +18,6 @@ public class InstanceRepositoryTests
         WslInstance instance = new()
         {
             Name = "alpha",
-            DefaultUser = "alice",
             Family = "debian",
             Theme = WslTheme.Default(),
         };
@@ -28,13 +27,10 @@ public class InstanceRepositoryTests
 
         WslInstance reloaded = repository.GetInstance("alpha");
         reloaded.Name.Should().Be("alpha");
-        reloaded.DefaultUser.Should().Be("alice");
         reloaded.Family.Should().Be("debian");
         reloaded.Theme!.FontName.Should().Be("MesloLGS NF");
         reloaded.Theme.Icon!.Text.Should().Be("AL");
         repository.GetSavedDocker("alpha").Should().Be("yes");
-        File.ReadAllText(temp.Combine("fleet", "alpha", "instance.json"))
-            .Should().Contain("\"DefaultUser\": \"alice\"");
         File.ReadAllText(temp.Combine("fleet", "alpha", "instance.json"))
             .Should().Contain("\"Family\": \"debian\"");
     }

@@ -310,27 +310,9 @@ public sealed class InstanceService : IInstanceService
         WslInstance instance = new()
         {
             Name = name,
-            DefaultUser = "root",
             Family = _wslRepository.GetFamily(name) ?? string.Empty,
             Theme = WslTheme.Default(),
         };
-
-        string imageUser = string.Empty;
-
-        foreach (string line in _wslRepository.GetInInstance(name, ["cat", "/etc/wsl.conf"]))
-        {
-            if (line.TrimStart().StartsWith("default", StringComparison.Ordinal))
-            {
-                int separator = line.IndexOf('=', StringComparison.Ordinal);
-
-                if (separator >= 0)
-                {
-                    imageUser = line[(separator + 1)..].Trim();
-                }
-            }
-        }
-
-        instance.DefaultUser = imageUser.Length == 0 ? "root" : imageUser;
 
         try
         {
@@ -797,7 +779,6 @@ public sealed class InstanceService : IInstanceService
             {
                 Name = archiveName,
                 IsArchive = true,
-                DefaultUser = stored.DefaultUser,
                 Family = stored.Family,
                 Theme = theme,
             };
@@ -882,7 +863,6 @@ public sealed class InstanceService : IInstanceService
         WslInstance instance = new()
         {
             Name = name,
-            DefaultUser = stored.DefaultUser,
             Family = stored.Family,
             Theme = theme,
         };
@@ -988,7 +968,6 @@ public sealed class InstanceService : IInstanceService
             WslInstance instance = new()
             {
                 Name = copy,
-                DefaultUser = stored.DefaultUser,
                 Family = stored.Family,
                 Theme = theme,
             };

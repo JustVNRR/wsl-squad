@@ -34,7 +34,6 @@ public class ArchiveRepositoryTests
         {
             Name = "alpha_archive",
             IsArchive = true,
-            DefaultUser = "alice",
             Theme = WslTheme.Default(),
         };
 
@@ -42,7 +41,6 @@ public class ArchiveRepositoryTests
 
         WslInstance loaded = repository.GetInstance("alpha_archive");
         loaded.IsArchive.Should().BeTrue();
-        loaded.DefaultUser.Should().Be("alice");
         repository.GetDocker("alpha_archive").Should().Be("yes");
     }
 
