@@ -257,7 +257,6 @@ public class PresenterTests
             {
                 Name = "default",
                 Path = "/catalog/default",
-                BaseName = "default",
             },
         ]);
         service.Setup(s => s.GetAll()).Returns([]);
@@ -292,7 +291,6 @@ public class PresenterTests
             {
                 Name = "default",
                 Path = "/catalog/default",
-                BaseName = "default",
             },
         ]);
         service.Setup(s => s.GetAll()).Returns([]);
@@ -681,8 +679,6 @@ public class PresenterTests
 
     private sealed class TestBuildView : IBuildView
     {
-        public List<string> Errors { get; } = [];
-
         public bool UseLocalImageAnswer { get; init; } = true;
 
         public bool OverwriteImageAnswer { get; init; } = true;
@@ -728,6 +724,6 @@ public class PresenterTests
 
         public void Show(BuildResponseDto response) { }
 
-        public void ShowError(string message) => Errors.Add(message);
+        public void ShowError(string message) { }
     }
 }

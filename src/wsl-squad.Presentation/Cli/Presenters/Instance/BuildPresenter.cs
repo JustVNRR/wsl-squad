@@ -122,7 +122,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         }
 
                         source = picked.Path;
-                        recipeName = picked.BaseName;
+                        recipeName = picked.Name;
                         useLocalImage = false;
                         hasLocalImage = _service.GetSavedRecipeImage(recipeName) is not null;
                         stack.Push(hasLocalImage ? "local" : "keep");
@@ -222,7 +222,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
     {
         return new BuildSourceChoice(
             source.Name ?? string.Empty,
-            source.Path ?? string.Empty,
-            source.BaseName ?? Path.GetFileName(source.Path ?? string.Empty));
+            source.Path ?? string.Empty);
     }
 }

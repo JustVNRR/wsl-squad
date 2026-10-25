@@ -36,8 +36,6 @@ public static class ErrorMessages
             WslSquadErrorCode.DockerSettingsUnreadable => Localizer.Instance["ErrorDockerSettingsUnreadable"],
             WslSquadErrorCode.DockerSettingsWriteFailed =>
                 Localizer.Instance.Format("ErrorDockerSettingsWriteFailed", target, detail),
-            WslSquadErrorCode.DockerRestartFailed =>
-                Localizer.Instance.Format("ErrorDockerRestartFailed", target),
             WslSquadErrorCode.InvalidBuildSource =>
                 Localizer.Instance.Format("ErrorInvalidBuildSource", target),
             WslSquadErrorCode.InstanceWriteFailed =>

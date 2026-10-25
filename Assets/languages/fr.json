@@ -186,7 +186,6 @@
     "ErrorDockerOperationFailed": "Docker a échoué : {0}",
     "ErrorDockerSettingsUnreadable": "Le fichier de paramètres de Docker Desktop n'a pas pu être lu.",
     "ErrorDockerSettingsWriteFailed": "Impossible d'appliquer '{0}' aux paramètres de Docker Desktop : {1}",
-    "ErrorDockerRestartFailed": "Docker Desktop n'a pas redémarré pour prendre en compte '{0}'.",
     "ErrorInvalidBuildSource": "La recette ne contient aucun Dockerfile : '{0}'.",
     "ErrorInstanceWriteFailed": "Impossible d'écrire le fichier de l'instance '{0}' : {1}",
     "ErrorRestartStopFailed": "L'arrêt ne s'est pas terminé - '{0}' est peut-être encore en cours d'exécution et n'a pas été redémarrée. {1}",

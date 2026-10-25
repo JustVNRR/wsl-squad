@@ -324,14 +324,6 @@ public sealed class WslRepository : IWslRepository
         ];
     }
 
-    public bool TestInInstance(string instanceName, IReadOnlyList<string> arguments)
-    {
-        List<string> wslArguments = ["-d", instanceName, "--"];
-        wslArguments.AddRange(arguments);
-
-        return NativeCommand.Test("wsl.exe", wslArguments);
-    }
-
     public string GetFamily(string instanceName)
     {
         IReadOnlyList<string> release = GetInInstance(instanceName, ["cat", "/etc/os-release"]);

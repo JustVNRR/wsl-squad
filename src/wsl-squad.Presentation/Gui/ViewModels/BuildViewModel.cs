@@ -150,7 +150,7 @@ public sealed partial class BuildViewModel : BaseViewModel
             return;
         }
 
-        string sourceName = source.BaseName ?? source.Name ?? string.Empty;
+        string sourceName = source.Name ?? string.Empty;
         string? chosen = _dialogs.ShowRecipeName(
             $"{sourceName}-copy",
             TakenRecipeNames(),
@@ -290,7 +290,8 @@ public sealed partial class BuildViewModel : BaseViewModel
             recipeName,
             recipe.Path ?? string.Empty,
             keepImage: !useSavedImage && SaveImage,
-            useSavedImage: useSavedImage);
+            useSavedImage: useSavedImage,
+            interactive: false);
 
         RequestClose();
     }
@@ -334,7 +335,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     private static string RecipeName(WslBuildSourceDto recipe)
     {
-        return recipe.BaseName ?? Path.GetFileName(recipe.Path ?? string.Empty);
+        return recipe.Name ?? Path.GetFileName(recipe.Path ?? string.Empty);
     }
 
     private void UpdateRecipeCommands()

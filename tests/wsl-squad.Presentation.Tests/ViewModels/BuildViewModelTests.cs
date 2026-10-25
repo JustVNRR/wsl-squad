@@ -23,7 +23,6 @@ public class BuildViewModelTests
             {
                 Name = "default",
                 Path = "/catalog/default",
-                BaseName = "default",
             },
         ]);
         _instance.Setup(service => service.GetAll()).Returns([]);
@@ -59,6 +58,7 @@ public class BuildViewModelTests
         viewModel.Result.Context.Should().Be("/catalog/default");
         viewModel.Result.KeepImage.Should().BeTrue();
         viewModel.Result.UseSavedImage.Should().BeFalse();
+        viewModel.Result.Interactive.Should().BeFalse();
     }
 
     [Fact]
@@ -184,7 +184,6 @@ public class BuildViewModelTests
             {
                 Name = "mine",
                 Path = "/recipes/mine",
-                BaseName = "mine",
             });
         BuildViewModel viewModel = Create();
 
@@ -206,7 +205,6 @@ public class BuildViewModelTests
             {
                 Name = "default-copy",
                 Path = "/catalog/default-copy",
-                BaseName = "default-copy",
             });
         BuildViewModel viewModel = Create();
 

@@ -71,8 +71,7 @@ public class InstanceServiceTests
 
         WslBuildSourceDto recipe = _service.GetRecipes().Should().ContainSingle().Subject;
 
-        recipe.Name.Should().StartWith("default");
-        recipe.BaseName.Should().Be("default");
+        recipe.Name.Should().Be("default");
         recipe.Path.Should().Be("/catalog/default");
     }
 
@@ -89,8 +88,7 @@ public class InstanceServiceTests
             NewName = "default-copy",
         });
 
-        recipe.Name.Should().StartWith("default-copy");
-        recipe.BaseName.Should().Be("default-copy");
+        recipe.Name.Should().Be("default-copy");
         recipe.Path.Should().Be("/catalog/default-copy");
     }
 
@@ -455,7 +453,6 @@ public class InstanceServiceTests
         string recipe = temp.Write("recipe/Dockerfile", "FROM scratch");
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
         _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
-        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
         _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
         _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
         _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));
@@ -595,7 +592,6 @@ public class InstanceServiceTests
         Directory.CreateDirectory(folder);
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
         _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
-        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
         _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
         _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
         _instances.Setup(instances => instances.SaveInstance(It.IsAny<WslInstance>(), It.IsAny<string>()))
@@ -625,7 +621,6 @@ public class InstanceServiceTests
         string tar = temp.Combine("alpha-rootfs.tar");
         string recipe = temp.Write("recipe/Dockerfile", "FROM scratch");
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
-        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
         _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
         _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
         _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));
@@ -656,7 +651,6 @@ public class InstanceServiceTests
     {
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
         _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
-        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
         _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
         _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
         _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));

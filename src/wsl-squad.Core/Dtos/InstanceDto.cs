@@ -54,8 +54,6 @@ public sealed record WslBuildSourceDto
     public string? Name { get; init; }
 
     public string? Path { get; init; }
-
-    public string? BaseName { get; init; }
 }
 
 public sealed record NewRecipeDto
@@ -133,7 +131,6 @@ public enum WslRecipeStatus
 {
     Ok,
     Warning,
-    Nok,
 }
 
 public enum BuildNoticeKind

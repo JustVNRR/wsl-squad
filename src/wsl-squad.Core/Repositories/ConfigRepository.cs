@@ -10,8 +10,6 @@ public sealed record SourceRow(string Name, string Path);
 
 public sealed class ConfigRepository : IConfigRepository
 {
-    private static readonly string[] _recipeKinds = ["recipes"];
-
     private readonly string _assetsDir;
 
     public ConfigRepository(string assetsDir)
@@ -112,10 +110,7 @@ public sealed class ConfigRepository : IConfigRepository
         string source = Path.GetFullPath(sourcePath);
         string target = RecipeSlot(name);
 
-        if (!Directory.Exists(source) ||
-            !source.StartsWith(
-                RecipesRoot().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
-                StringComparison.Ordinal))
+        if (!Directory.Exists(source) || !IsRecipePath(source))
         {
             throw new WslSquadException(WslSquadErrorCode.RecipeSlotNotFound, source);
         }
@@ -139,11 +134,7 @@ public sealed class ConfigRepository : IConfigRepository
             slot = Path.GetFullPath(Path.GetDirectoryName(path) ?? slot);
         }
 
-        bool under = _recipeKinds
-            .Select(kind => Path.GetFullPath(Path.Combine(_assetsDir, kind)))
-            .Any(root => slot.StartsWith(root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.Ordinal));
-
-        if (!under)
+        if (!IsRecipePath(slot))
         {
             throw new WslSquadException(WslSquadErrorCode.RecipeSlotNotFound, slot);
         }
@@ -312,6 +303,13 @@ public sealed class ConfigRepository : IConfigRepository
     private string RecipeSlot(string name)
     {
         return Path.Combine(RecipesRoot(), name);
+    }
+
+    private bool IsRecipePath(string path)
+    {
+        string root = RecipesRoot().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        return path.StartsWith(root, StringComparison.Ordinal);
     }
 
     private static void CopyTree(string source, string target)

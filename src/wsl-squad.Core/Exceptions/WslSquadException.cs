@@ -9,7 +9,6 @@ public enum WslSquadErrorCode
     DockerOperationFailed,
     DockerSettingsUnreadable,
     DockerSettingsWriteFailed,
-    DockerRestartFailed,
     InvalidBuildSource,
     InstanceWriteFailed,
     RestartStopFailed,

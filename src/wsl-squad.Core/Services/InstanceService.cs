@@ -1169,7 +1169,6 @@ public sealed class InstanceService : IInstanceService
             {
                 Name = row.Name,
                 Path = row.Path,
-                BaseName = row.Name,
             });
         }
 

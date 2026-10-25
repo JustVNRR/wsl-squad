@@ -186,7 +186,6 @@
     "ErrorDockerOperationFailed": "Docker failed: {0}",
     "ErrorDockerSettingsUnreadable": "Docker Desktop's settings file could not be read.",
     "ErrorDockerSettingsWriteFailed": "Docker Desktop's settings could not take '{0}': {1}",
-    "ErrorDockerRestartFailed": "Docker Desktop would not restart to pick '{0}' up.",
     "ErrorInvalidBuildSource": "The recipe carries no Dockerfile: '{0}'.",
     "ErrorInstanceWriteFailed": "The instance file could not be written for '{0}': {1}",
     "ErrorRestartStopFailed": "The stop did not complete - '{0}' may still be running, and was not started again. {1}",

@@ -2,7 +2,7 @@ using WslSquad.Core.Dtos;
 
 namespace WslSquad.Presentation.Cli.Ports;
 
-public sealed record BuildSourceChoice(string Name, string Path, string BaseName);
+public sealed record BuildSourceChoice(string Name, string Path);
 
 public interface IBuildView : IPresenterViewBase
 {

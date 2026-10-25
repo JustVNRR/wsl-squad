@@ -43,8 +43,5 @@ public interface IWslRepository
 
     IReadOnlyList<string> GetInInstance(string instanceName, IReadOnlyList<string> arguments);
 
-    bool TestInInstance(string instanceName, IReadOnlyList<string> arguments);
-
     string GetFamily(string instanceName);
-
 }
