@@ -422,10 +422,8 @@ public sealed class ConfigRepository : IConfigRepository
         return Path.Combine(_assetsDir, "config.json");
     }
 
-    private static string RootFile()
+    private string RootFile()
     {
-        string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-        return local.Length == 0 ? string.Empty : Path.Combine(local, "wsl-squad", "root.txt");
+        return Path.Combine(_assetsDir, "root.txt");
     }
 }

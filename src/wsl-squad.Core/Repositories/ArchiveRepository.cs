@@ -199,6 +199,19 @@ public sealed class ArchiveRepository : IArchiveRepository
         }
 
         CopyTree(ArchivesRoot, newArchives);
+
+        try
+        {
+            Directory.Delete(ArchivesRoot, recursive: true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            throw new WslSquadException(
+                WslSquadErrorCode.FileOperationFailed,
+                null,
+                exception.Message,
+                exception);
+        }
     }
 
     private static void CopyTree(string source, string target)

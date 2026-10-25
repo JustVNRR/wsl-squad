@@ -25,6 +25,18 @@ public class ConfigRepositoryTests
     }
 
     [Fact]
+    public void The_root_is_stored_under_the_assets_directory()
+    {
+        using TemporaryDirectory temp = new();
+        ConfigRepository repository = new(temp.Path);
+
+        repository.SaveRoot("C:\\fleet");
+
+        repository.GetSavedRoot().Should().Be("C:\\fleet");
+        File.Exists(temp.Combine("root.txt")).Should().BeTrue();
+    }
+
+    [Fact]
     public void The_language_preference_round_trips_and_keeps_other_settings()
     {
         using TemporaryDirectory temp = new();

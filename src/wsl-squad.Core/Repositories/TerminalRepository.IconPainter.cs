@@ -14,25 +14,13 @@ public sealed partial class TerminalRepository
     [SupportedOSPlatform("windows")]
     private static class IconPainter
     {
-        private static readonly (string Name, string Top, string Bottom, string Text)[] _iconPalette =
-        [
-            ("orange", "#CF7040", "#B95E30", "#FFFFFF"),
-            ("blue", "#3B82F6", "#2563EB", "#FFFFFF"),
-            ("green", "#2E8B57", "#1F5C3E", "#FFFFFF"),
-            ("purple", "#7C5CBF", "#5B3F9E", "#FFFFFF"),
-            ("red", "#C0453B", "#93291F", "#FFFFFF"),
-            ("teal", "#148F8A", "#0E6B67", "#FFFFFF"),
-            ("graphite", "#4B5563", "#374151", "#FFFFFF"),
-            ("sand", "#E3C567", "#C9A73F", "#2A2410"),
-        ];
-
         public static IconDrawing Draw(string instanceName, string outputPath, IconDrawing? drawing)
         {
-            (string _, string defaultTop, string defaultBottom, string defaultText) = _iconPalette[PaletteIndex(instanceName)];
+            IconPair pair = _palette[PaletteIndex(instanceName)];
             string text = drawing?.Text is { Length: > 0 } given ? given : Letters(instanceName);
-            string top = string.IsNullOrEmpty(drawing?.Top) ? defaultTop : drawing.Top;
-            string bottom = string.IsNullOrEmpty(drawing?.Bottom) ? defaultBottom : drawing.Bottom;
-            string textColor = string.IsNullOrEmpty(drawing?.TextColor) ? defaultText : drawing.TextColor;
+            string top = string.IsNullOrEmpty(drawing?.Top) ? pair.Top : drawing.Top;
+            string bottom = string.IsNullOrEmpty(drawing?.Bottom) ? pair.Bottom : drawing.Bottom;
+            string textColor = string.IsNullOrEmpty(drawing?.TextColor) ? pair.TextColor : drawing.TextColor;
 
             const int size = 256;
             using Bitmap bitmap = new(size, size, PixelFormat.Format32bppArgb);
@@ -151,7 +139,7 @@ public sealed partial class TerminalRepository
                 hash = ((hash * 31) + character) % 1000003;
             }
 
-            return (int)(hash % _iconPalette.Length);
+            return (int)(hash % _palette.Length);
         }
     }
 }

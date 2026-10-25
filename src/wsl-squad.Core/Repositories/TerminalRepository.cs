@@ -584,6 +584,18 @@ public sealed partial class TerminalRepository : ITerminalRepository
             throw new WslSquadException(WslSquadErrorCode.PlatformUnsupported, null, "Installing fonts is only supported on Windows.");
         }
 
+        string source = !string.IsNullOrEmpty(from) && File.Exists(from)
+            ? from
+            : FindBundledFont(faceName);
+
+        if (source.Length == 0)
+        {
+            throw new WslSquadException(
+                WslSquadErrorCode.NoUsableFont,
+                faceName,
+                $"No font file for '{faceName}' was found in the local font catalog.");
+        }
+
         string userFontsDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Microsoft",
@@ -594,42 +606,13 @@ public sealed partial class TerminalRepository : ITerminalRepository
         using RegistryKey key = Registry.CurrentUser.CreateSubKey(
             @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts");
         Directory.CreateDirectory(userFontsDir);
-        string temporary = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.ttf");
 
-        try
+        if (!File.Exists(destination))
         {
-            string source = !string.IsNullOrEmpty(from) && File.Exists(from)
-                ? from
-                : FindBundledFont(faceName);
-
-            if (source.Length == 0)
-            {
-                using HttpClient client = new();
-                byte[] bytes = client.GetByteArrayAsync(
-                    "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf")
-                    .GetAwaiter().GetResult();
-                File.WriteAllBytes(temporary, bytes);
-                source = temporary;
-            }
-
-            if (!File.Exists(destination))
-            {
-                File.Copy(source, destination, overwrite: true);
-            }
-
-            key.SetValue($"{faceName} (TrueType)", destination);
+            File.Copy(source, destination, overwrite: true);
         }
-        finally
-        {
-            try
-            {
-                File.Delete(temporary);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                Trace.TraceWarning($"[TerminalRepository] Could not delete temporary font '{temporary}': {ex.Message}");
-            }
-        }
+
+        key.SetValue($"{faceName} (TrueType)", destination);
     }
 
     public IReadOnlyList<TerminalFont> GetTerminalFonts()
@@ -928,12 +911,37 @@ public sealed partial class TerminalRepository : ITerminalRepository
             return string.Empty;
         }
 
-        return Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-            .FirstOrDefault(file =>
-                (Path.GetExtension(file).Equals(".ttf", StringComparison.OrdinalIgnoreCase) ||
-                 Path.GetExtension(file).Equals(".otf", StringComparison.OrdinalIgnoreCase)) &&
-                Path.GetFileName(file).StartsWith(faceName, StringComparison.OrdinalIgnoreCase))
-            ?? string.Empty;
+        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        {
+            string extension = Path.GetExtension(file);
+
+            if (!extension.Equals(".ttf", StringComparison.OrdinalIgnoreCase) &&
+                !extension.Equals(".otf", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (Path.GetFileName(file).StartsWith(faceName, StringComparison.OrdinalIgnoreCase))
+            {
+                return file;
+            }
+
+            try
+            {
+                string? family = FontNameReader.ReadFamily(File.ReadAllBytes(file));
+
+                if (string.Equals(family, faceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return file;
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Trace.TraceWarning($"[TerminalRepository] Could not inspect font '{file}': {exception.Message}");
+            }
+        }
+
+        return string.Empty;
     }
 
 

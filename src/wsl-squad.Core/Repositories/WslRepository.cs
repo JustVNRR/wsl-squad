@@ -188,7 +188,7 @@ public sealed class WslRepository : IWslRepository
     {
         Process.Start(new ProcessStartInfo("wsl.exe")
         {
-            Arguments = $"-d {instanceName} --cd ~",
+            ArgumentList = { "-d", instanceName, "--cd", "~" },
             UseShellExecute = true,
         });
     }
@@ -197,7 +197,7 @@ public sealed class WslRepository : IWslRepository
     {
         Process.Start(new ProcessStartInfo("wsl.exe")
         {
-            Arguments = $"-d {instanceName} -u root --cd ~",
+            ArgumentList = { "-d", instanceName, "-u", "root", "--cd", "~" },
             UseShellExecute = true,
         });
     }
@@ -280,7 +280,11 @@ public sealed class WslRepository : IWslRepository
 
         Process.Start(new ProcessStartInfo("wsl.exe")
         {
-            Arguments = $"-d {instanceName} -u root --cd /root -- /bin/sh /root/manage-packs-bootstrap.sh",
+            ArgumentList =
+            {
+                "-d", instanceName, "-u", "root", "--cd", "/root",
+                "--", "/bin/sh", "/root/manage-packs-bootstrap.sh",
+            },
             UseShellExecute = true,
         });
     }
