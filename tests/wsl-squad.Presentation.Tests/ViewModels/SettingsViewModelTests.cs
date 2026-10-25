@@ -78,7 +78,7 @@ public class SettingsViewModelTests
         viewModel.CloseCommand.Execute(null);
 
         viewModel.Result.Should().Be(new SettingsDto(
-            new SetAppearanceDto
+            new SettingsAppearanceDto
             {
                 Font = "Cascadia",
                 FontSize = 13,

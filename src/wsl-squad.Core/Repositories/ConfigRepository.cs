@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 

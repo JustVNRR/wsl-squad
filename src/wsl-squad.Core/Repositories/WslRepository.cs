@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Microsoft.Win32;
 
 using WslSquad.Core.Entities;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 

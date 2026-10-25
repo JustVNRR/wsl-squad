@@ -1,8 +1,8 @@
 using System.Windows.Input;
 
 using WslSquad.Core.Dtos;
-using WslSquad.Core.Services;
 using WslSquad.Presentation.Localization;
+using WslSquad.Core.Formatting;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -44,7 +44,7 @@ public sealed record InstanceRowViewModel(
 
         return new InstanceRowViewModel(
             row.Name ?? string.Empty,
-            ReferenceHelpers.FormatSize(row.Size),
+            SizeFormatter.Format(row.Size),
             row.IsArchive,
             row.Docker ?? string.Empty,
             commands);

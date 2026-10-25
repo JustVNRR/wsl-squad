@@ -1,7 +1,7 @@
-using WslSquad.Core.Services;
 using WslSquad.Presentation.Cli.Ports;
 using WslSquad.Presentation.Localization;
 using WslSquad.UI.Cli.Interaction;
+using WslSquad.Core.Formatting;
 
 namespace WslSquad.UI.Cli.Views;
 
@@ -146,6 +146,6 @@ public abstract class CliViewBase : IPresenterViewBase
 
     protected static string Size(long bytes)
     {
-        return ReferenceHelpers.FormatSize(bytes);
+        return SizeFormatter.Format(bytes);
     }
 }

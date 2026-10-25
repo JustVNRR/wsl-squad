@@ -390,7 +390,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public string DownloadName(WslCatalogSection kind)
     {
-        return SelectedRow(kind)?.SuggestedExportFileName ?? string.Empty;
+        return SelectedRow(kind)?.ExportFileName ?? string.Empty;
     }
 
     public void ExportRecipeTo(WslCatalogSection kind, string? target)

@@ -1,5 +1,6 @@
-using WslSquad.Core.Exceptions;
-namespace WslSquad.Core.Services;
+using WslSquad.Core.Validation;
+
+namespace WslSquad.Core.Exceptions;
 
 public sealed class FleetTargetException : WslSquadException
 {

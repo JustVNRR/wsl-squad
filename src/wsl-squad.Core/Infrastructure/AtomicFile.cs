@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace WslSquad.Core.Repositories;
+namespace WslSquad.Core.Infrastructure;
 
 internal static class AtomicFile
 {

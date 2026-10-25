@@ -74,6 +74,33 @@ public class InstanceServiceTests
         row.Name.Should().StartWith("alpha");
         row.Path.Should().Be("/assets/dockerimages/alpha/alpha.tar");
         row.Uploaded.Should().BeTrue();
+        row.ExportFileName.Should().Be("alpha.tar");
+    }
+
+    [Fact]
+    public void Uploaded_sources_expose_the_clean_export_name()
+    {
+        DateTime modified = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
+        _config.Setup(config => config.GetDockerfiles()).Returns(
+        [
+            new SourceRow(
+                "ubuntu-1a2b3c4d",
+                "/catalog/dockerfiles/ubuntu-1a2b3c4d/Dockerfile",
+                modified),
+        ]);
+        _config.Setup(config => config.GetOnboardings()).Returns(
+        [
+            new SourceRow(
+                "setup-1a2b3c4d",
+                "/catalog/onboardings/setup-1a2b3c4d/onboarding.sh",
+                modified),
+        ]);
+        _config.Setup(config => config.GetRecipes()).Returns([]);
+
+        GetBuildSourcesResponseDto sources = _service.GetBuildSources();
+
+        sources.Dockerfiles.Should().ContainSingle(row => row.ExportFileName == "ubuntu");
+        sources.Onboardings.Should().ContainSingle(row => row.ExportFileName == "setup.sh");
     }
 
     [Fact]

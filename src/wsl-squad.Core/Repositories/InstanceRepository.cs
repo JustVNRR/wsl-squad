@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 
 using WslSquad.Core.Entities;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 

@@ -4,6 +4,7 @@ using FluentAssertions;
 
 using WslSquad.Core.Repositories;
 using WslSquad.Core.Tests.Support;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Tests.Repositories;
 

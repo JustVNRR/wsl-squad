@@ -13,6 +13,7 @@ using Microsoft.Win32;
 
 using WslSquad.Core.Dtos;
 using WslSquad.Core.Entities;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 

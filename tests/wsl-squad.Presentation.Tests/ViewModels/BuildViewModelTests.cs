@@ -86,6 +86,7 @@ public class BuildViewModelTests
                     Name = "ubuntu (01/01 12:00)",
                     Path = "/catalog/ubuntu/Dockerfile",
                     Uploaded = true,
+                    ExportFileName = "ubuntu",
                 },
             ],
         });

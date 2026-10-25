@@ -326,7 +326,7 @@ public class MainWindowViewModelTests
     public async Task Settings_applies_the_outcome()
     {
         _dialogs.SettingsAnswer = new SettingsDto(
-            new SetAppearanceDto
+            new SettingsAppearanceDto
             {
                 Font = "Cascadia",
                 FontSize = 13,
@@ -346,7 +346,7 @@ public class MainWindowViewModelTests
     public async Task Settings_moves_the_fleet_when_a_new_root_is_given()
     {
         _dialogs.SettingsAnswer = new SettingsDto(
-            new SetAppearanceDto
+            new SettingsAppearanceDto
             {
                 Font = "Cascadia",
                 FontSize = 13,

@@ -1,7 +1,7 @@
 using WslSquad.Core.Exceptions;
 using System.Diagnostics;
 
-namespace WslSquad.Core.Repositories;
+namespace WslSquad.Core.Infrastructure;
 
 internal static class NativeCommand
 {

@@ -4,6 +4,7 @@ using System.Net;
 using System.Text.Json.Nodes;
 
 using WslSquad.Core.Dtos;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 

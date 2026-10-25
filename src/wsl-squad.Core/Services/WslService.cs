@@ -1,4 +1,4 @@
-using WslSquad.Core.Repositories;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Services;
 

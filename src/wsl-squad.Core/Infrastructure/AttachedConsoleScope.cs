@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace WslSquad.Core.Repositories;
+namespace WslSquad.Core.Infrastructure;
 
 internal sealed class AttachedConsoleScope : IDisposable
 {

@@ -530,7 +530,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
     private void Close()
     {
         Result = new SettingsDto(
-            new SetAppearanceDto
+            new SettingsAppearanceDto
             {
                 Font = SelectedFont,
                 FontSize = SelectedSize,

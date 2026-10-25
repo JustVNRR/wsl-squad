@@ -201,7 +201,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        SetAppearanceDto appearance = outcome.Appearance;
+        SettingsAppearanceDto appearance = outcome.Appearance;
         string fontFamily = appearance.Font ?? string.Empty;
         int fontSize = appearance.FontSize;
         string colourSet = appearance.ColourScheme ?? string.Empty;

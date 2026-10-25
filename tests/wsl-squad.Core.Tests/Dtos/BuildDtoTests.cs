@@ -7,6 +7,12 @@ namespace WslSquad.Core.Tests.Dtos;
 public class BuildDtoTests
 {
     [Fact]
+    public void Keep_image_defaults_to_false()
+    {
+        new BuildDto().KeepImage.Should().BeFalse();
+    }
+
+    [Fact]
     public void A_dockerfile_source_uses_its_folder_as_context()
     {
         BuildDto dto = BuildDto.FromSource(

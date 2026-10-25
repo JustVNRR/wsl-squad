@@ -6,6 +6,8 @@ using WslSquad.Core.Dtos;
 using WslSquad.Core.Entities;
 using WslSquad.Core.Mappers;
 using WslSquad.Core.Repositories;
+using WslSquad.Core.Infrastructure;
+using WslSquad.Core.Formatting;
 
 namespace WslSquad.Core.Services;
 
@@ -801,6 +803,7 @@ public sealed class InstanceService : IInstanceService
                 Name = $"{image.Name} ({image.Modified:dd'/'MM HH:mm})",
                 Path = image.Path,
                 Uploaded = true,
+                ExportFileName = $"{image.Name}{Path.GetExtension(image.Path)}",
             });
         }
 
@@ -839,7 +842,7 @@ public sealed class InstanceService : IInstanceService
             throw new WslSquadException(
                 WslSquadErrorCode.InsufficientDiskSpace,
                 drive,
-                $"needed {ReferenceHelpers.FormatSize(diskBytes)}, free {ReferenceHelpers.FormatSize(freeBytes)}");
+                $"needed {SizeFormatter.Format(diskBytes)}, free {SizeFormatter.Format(freeBytes)}");
         }
 
         bool stopped = false;
@@ -1033,7 +1036,7 @@ public sealed class InstanceService : IInstanceService
             throw new WslSquadException(
                 WslSquadErrorCode.InsufficientDiskSpace,
                 drive,
-                $"needed {ReferenceHelpers.FormatSize(needed)}, free {ReferenceHelpers.FormatSize(freeBytes)}");
+                $"needed {SizeFormatter.Format(needed)}, free {SizeFormatter.Format(freeBytes)}");
         }
 
         WslInstance stored = _instanceRepository.GetInstance(source);
@@ -1279,6 +1282,7 @@ public sealed class InstanceService : IInstanceService
                 Name = $"{name} ({row.Modified.ToString("dd'/'MM HH:mm", CultureInfo.InvariantCulture)})",
                 Path = row.Path,
                 Uploaded = uploaded,
+                ExportFileName = $"{name}{Path.GetExtension(row.Path)}",
             });
         }
 

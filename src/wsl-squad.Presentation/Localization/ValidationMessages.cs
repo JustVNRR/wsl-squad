@@ -1,4 +1,3 @@
-using WslSquad.Core.Services;
 using WslSquad.Core.Validation;
 
 namespace WslSquad.Presentation.Localization;

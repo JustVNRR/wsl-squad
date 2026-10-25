@@ -57,22 +57,7 @@ public sealed record WslBuildSourceDto
 
     public bool Uploaded { get; init; }
 
-    public string SuggestedExportFileName
-    {
-        get
-        {
-            string path = Path ?? string.Empty;
-            string baseName = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path) ?? string.Empty);
-            int fingerprint = baseName.LastIndexOf('-');
-
-            if (fingerprint >= 0 && baseName.Length - fingerprint - 1 == 8)
-            {
-                baseName = baseName[..fingerprint];
-            }
-
-            return baseName + System.IO.Path.GetExtension(path);
-        }
-    }
+    public string ExportFileName { get; init; } = string.Empty;
 }
 
 public sealed record GetBuildSourcesResponseDto
@@ -151,7 +136,7 @@ public sealed record BuildDto
 
     public WslIconDto? Icon { get; init; }
 
-    public bool KeepImage { get; init; } = true;
+    public bool KeepImage { get; init; }
 
     public bool RegisterDocker { get; init; }
 
@@ -277,18 +262,12 @@ public sealed record SetAppearanceDto
 
     public string? Font { get; init; }
 
-    public int FontSize { get; init; }
-
     public string? ColourScheme { get; init; }
-
-    public string? Variant { get; init; }
 
     public WslIconDto? Icon { get; init; }
 
     public string? IconImage { get; init; }
 }
-
-public sealed record SettingsDto(SetAppearanceDto Appearance, string? NewRoot);
 
 public sealed record AppearanceContextDto
 {

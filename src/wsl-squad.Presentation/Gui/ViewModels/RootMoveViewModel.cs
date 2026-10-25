@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using WslSquad.Core.Services;
 using WslSquad.Presentation.Localization;
+using WslSquad.Core.Validation;
 
 namespace WslSquad.Presentation.Gui.ViewModels;
 
@@ -39,7 +39,7 @@ public sealed partial class RootMoveViewModel : BaseViewModel
             return;
         }
 
-        FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(chosen);
+        FleetTargetProblem problem = FleetTargetRules.Test(chosen);
 
         if (problem != FleetTargetProblem.None)
         {

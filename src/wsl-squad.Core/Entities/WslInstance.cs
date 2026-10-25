@@ -36,17 +36,4 @@ public sealed class WslInstance
 
     public long Size { get; set; }
 
-    public override string ToString()
-    {
-        string theme = Theme is null ? "-" : Theme.ToString();
-        string packs = Packs.Count == 0 ? "none" : string.Join(", ", Packs.Select(pack => pack.Name));
-
-        return string.Join(
-            Environment.NewLine,
-            $"  * Distribution Name : {Name}",
-            $"  * Default User      : {DefaultUser}",
-            $"  * Look              : {theme}",
-            $"  * Packs             : {packs}");
-    }
-
 }

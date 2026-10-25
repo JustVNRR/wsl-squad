@@ -39,11 +39,6 @@ public sealed class WslTheme
         };
     }
 
-    public override string ToString()
-    {
-        return $"font '{FontName}', colours '{ColorScheme}'";
-    }
-
     private static bool IsColour(string value)
     {
         return value.Length == 7 && value[0] == '#' && value[1..].All(char.IsAsciiHexDigit);

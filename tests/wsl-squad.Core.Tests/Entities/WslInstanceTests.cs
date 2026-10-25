@@ -30,21 +30,4 @@ public class WslInstanceTests
 
         act.Should().Throw<ArgumentException>();
     }
-
-    [Fact]
-    public void ToString_lists_the_reference_fields()
-    {
-        WslInstance instance = new()
-        {
-            Name = "alpha",
-            DefaultUser = "alice",
-            Packs = [new WslPack { Name = "tools" }],
-        };
-
-        string text = instance.ToString();
-
-        text.Should().Contain("Distribution Name : alpha");
-        text.Should().Contain("Default User      : alice");
-        text.Should().Contain("Packs             : tools");
-    }
 }

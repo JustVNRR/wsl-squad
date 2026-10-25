@@ -1,6 +1,8 @@
 using WslSquad.Core.Dtos;
+using WslSquad.Core.Exceptions;
 using WslSquad.Core.Services;
 using WslSquad.Presentation.Localization;
+using WslSquad.Core.Validation;
 
 namespace WslSquad.Presentation.Workflows;
 
@@ -83,7 +85,7 @@ public sealed class FleetWorkflow : IFleetWorkflow
                     continue;
                 }
 
-                FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(candidate);
+                FleetTargetProblem problem = FleetTargetRules.Test(candidate);
 
                 if (problem != FleetTargetProblem.None)
                 {
@@ -99,7 +101,7 @@ public sealed class FleetWorkflow : IFleetWorkflow
         else
         {
             destination = Normalize(target);
-            FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(destination);
+            FleetTargetProblem problem = FleetTargetRules.Test(destination);
 
             if (problem != FleetTargetProblem.None)
             {

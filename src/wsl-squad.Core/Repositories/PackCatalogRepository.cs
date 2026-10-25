@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 
 using WslSquad.Core.Entities;
+using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 
@@ -110,7 +111,8 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
 
     private WslPack GetPack(string folder)
     {
-        WslPack pack = new WslPack().WithName(Path.GetFileName(folder));
+        WslPack pack = new();
+        pack.SetName(Path.GetFileName(folder));
 
         foreach (string line in File.ReadLines(Path.Combine(folder, "pack.conf"), Encoding.UTF8))
         {
@@ -118,20 +120,20 @@ public sealed class PackCatalogRepository : IPackCatalogRepository
 
             if (TryValue(text, "PACK_DESCRIPTION", out string description))
             {
-                pack.WithDescription(description);
+                pack.SetDescription(description);
             }
             else if (TryValue(text, "PACK_REQUIRES", out string requires))
             {
-                pack.WithRequires(
+                pack.SetRequires(
                     [.. requires.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)]);
             }
             else if (TryValue(text, "PACK_VISIBLE", out string visible))
             {
-                pack.WithOffered(!visible.Equals("no", StringComparison.OrdinalIgnoreCase));
+                pack.SetOffered(!visible.Equals("no", StringComparison.OrdinalIgnoreCase));
             }
             else if (TryValue(text, "PACK_FAMILY", out string family))
             {
-                pack.WithFamily(family.ToLowerInvariant());
+                pack.SetFamily(family.ToLowerInvariant());
             }
         }
 

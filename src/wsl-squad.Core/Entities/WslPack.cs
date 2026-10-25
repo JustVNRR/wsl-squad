@@ -68,53 +68,38 @@ public sealed class WslPack
         }
     }
 
-    public WslPack WithName(string? name)
+    public void SetName(string? name)
     {
         if (!string.IsNullOrEmpty(name))
         {
             Name = name;
         }
-
-        return this;
     }
 
-    public WslPack WithDescription(string? text)
+    public void SetDescription(string? text)
     {
         if (!string.IsNullOrEmpty(text))
         {
             Description = text;
         }
-
-        return this;
     }
 
-    public WslPack WithRequires(IReadOnlyList<string>? packs)
+    public void SetRequires(IReadOnlyList<string>? packs)
     {
         Requires = packs ?? [];
-
-        return this;
     }
 
-    public WslPack WithOffered(bool offered)
+    public void SetOffered(bool offered)
     {
         Offered = offered;
-
-        return this;
     }
 
-    public WslPack WithFamily(string? family)
+    public void SetFamily(string? family)
     {
         if (!string.IsNullOrEmpty(family))
         {
             Family = family;
         }
-
-        return this;
-    }
-
-    public override string ToString()
-    {
-        return $"pack '{Name}' ({Family}) - {Description}";
     }
 
     private static bool IsValidPackName(string value, bool allowTemplate)

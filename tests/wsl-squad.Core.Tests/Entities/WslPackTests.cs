@@ -49,7 +49,7 @@ public class WslPackTests
     }
 
     [Fact]
-    public void With_methods_only_replace_given_values()
+    public void Setters_only_replace_given_values()
     {
         WslPack pack = new()
         {
@@ -58,7 +58,9 @@ public class WslPackTests
             Family = "debian",
         };
 
-        pack.WithName("other").WithDescription("").WithFamily("");
+        pack.SetName("other");
+        pack.SetDescription("");
+        pack.SetFamily("");
 
         pack.Name.Should().Be("other");
         pack.Description.Should().Be("Tools");

@@ -1,6 +1,7 @@
 using WslSquad.Core.Exceptions;
 using WslSquad.Core.Dtos;
 using WslSquad.Core.Repositories;
+using WslSquad.Core.Validation;
 
 namespace WslSquad.Core.Services;
 
@@ -69,7 +70,7 @@ public sealed class FleetService : IFleetService
 
     public string SetRoot(string target)
     {
-        FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(target);
+        FleetTargetProblem problem = FleetTargetRules.Test(target);
 
         if (problem != FleetTargetProblem.None)
         {
@@ -135,7 +136,7 @@ public sealed class FleetService : IFleetService
 
     public MigrateResponseDto Migrate(string target)
     {
-        FleetTargetProblem problem = ReferenceHelpers.TestFleetTarget(target);
+        FleetTargetProblem problem = FleetTargetRules.Test(target);
 
         if (problem != FleetTargetProblem.None)
         {
