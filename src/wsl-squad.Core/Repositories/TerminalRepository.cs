@@ -90,7 +90,7 @@ public sealed partial class TerminalRepository : ITerminalRepository
         profile["font"] = new JsonObject { ["face"] = theme.FontName ?? string.Empty };
         profile["colorScheme"] = theme.ColorScheme ?? string.Empty;
         profile["suppressApplicationTitle"] = true;
-        profile["closeOnExit"] = "always";
+        profile["closeOnExit"] = "graceful";
 
         JsonObject fragment = new()
         {

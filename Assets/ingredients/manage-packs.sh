@@ -57,8 +57,8 @@ distro_family() {
     local id=""
     local like=""
     if [ -r /etc/os-release ]; then
-        id=$(sed -n 's/^ID=//p' /etc/os-release | head -n 1 | tr -d '"')
-        like=$(sed -n 's/^ID_LIKE=//p' /etc/os-release | head -n 1 | tr -d '"')
+        id=$(sed -n 's/^ID=//p' /etc/os-release | head -n 1 | tr -d '"' | tr -d '\r')
+        like=$(sed -n 's/^ID_LIKE=//p' /etc/os-release | head -n 1 | tr -d '"' | tr -d '\r')
     fi
     if [ "$id" = "debian" ] || printf '%s\n' "$like" | tr ' ' '\n' | grep -qx 'debian'; then
         echo debian
@@ -146,11 +146,11 @@ for conf in "$catalog"/*/pack.conf; do
     case "$name" in
         _*) continue ;;
     esac
-    desc[$name]=$(sed -n 's/^PACK_DESCRIPTION[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)
-    family_of[$name]=$(sed -n 's/^PACK_FAMILY[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)
+    desc[$name]=$(sed -n 's/^PACK_DESCRIPTION[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')
+    family_of[$name]=$(sed -n 's/^PACK_FAMILY[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')
     [ -n "${family_of[$name]}" ] || family_of[$name]=debian
-    requires[$name]=$(sed -n 's/^PACK_REQUIRES[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)
-    visible[$name]=$(sed -n 's/^PACK_VISIBLE[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)
+    requires[$name]=$(sed -n 's/^PACK_REQUIRES[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')
+    visible[$name]=$(sed -n 's/^PACK_VISIBLE[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')
     [ -n "${visible[$name]}" ] || visible[$name]=yes
 done
 
@@ -205,7 +205,7 @@ install_pack() {
     fi
 
     local welcome
-    welcome=$(sed -n 's/^PACK_WELCOME[[:space:]]*:=[[:space:]]*//p' "$target/pack.conf" | head -n 1)
+    welcome=$(sed -n 's/^PACK_WELCOME[[:space:]]*:=[[:space:]]*//p' "$target/pack.conf" | head -n 1 | tr -d '\r')
     if [ -n "$welcome" ]; then
         echo ""
         echo "${C_CYAN}$welcome${C_RESET}"

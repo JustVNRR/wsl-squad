@@ -1,6 +1,17 @@
 #!/bin/bash
 set -e
 
+on_exit() {
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        echo ""
+        echo "The onboarding failed (exit $status)."
+        echo "Press Enter to close..."
+        read -r _ || true
+    fi
+}
+trap on_exit EXIT
+
 C_RESET=''
 C_RED=''
 C_GREEN=''
@@ -159,8 +170,8 @@ distro_family() {
     local like=""
 
     if [ -r /etc/os-release ]; then
-        id=$(sed -n 's/^ID=//p' /etc/os-release | head -n 1 | tr -d '"')
-        like=$(sed -n 's/^ID_LIKE=//p' /etc/os-release | head -n 1 | tr -d '"')
+        id=$(sed -n 's/^ID=//p' /etc/os-release | head -n 1 | tr -d '"' | tr -d '\r')
+        like=$(sed -n 's/^ID_LIKE=//p' /etc/os-release | head -n 1 | tr -d '"' | tr -d '\r')
     fi
 
     if [ "$id" = "debian" ] || printf '%s\n' "$like" | tr ' ' '\n' | grep -qx 'debian'; then
@@ -178,11 +189,11 @@ if [ -d "$pack_catalog" ]; then
 
     for conf in "$pack_catalog"/*/pack.conf; do
         [ -f "$conf" ] || continue
-        visible=$(sed -n 's/^PACK_VISIBLE[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)
+        visible=$(sed -n 's/^PACK_VISIBLE[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')
         if [ "$visible" = "no" ]; then
             continue
         fi
-        family=$(sed -n 's/^PACK_FAMILY[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)
+        family=$(sed -n 's/^PACK_FAMILY[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')
         if [ -z "$family" ]; then
             family=debian
         fi
@@ -194,7 +205,7 @@ if [ -d "$pack_catalog" ]; then
             continue
         fi
         pack_names+=("$name")
-        pack_desc+=("$(sed -n 's/^PACK_DESCRIPTION[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)")
+        pack_desc+=("$(sed -n 's/^PACK_DESCRIPTION[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')")
     done
 
     if [ "${#pack_names[@]}" -gt 0 ]; then
@@ -256,7 +267,7 @@ if [ -d "$pack_catalog" ]; then
                 local conf="$pack_catalog/$name/pack.conf"
                 if [ -f "$conf" ]; then
                     local deps
-                    deps=$(sed -n 's/^PACK_REQUIRES[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1)
+                    deps=$(sed -n 's/^PACK_REQUIRES[[:space:]]*:=[[:space:]]*//p' "$conf" | head -n 1 | tr -d '\r')
                     for dep in $deps; do
                         add_pack "$dep"
                     done
@@ -316,7 +327,7 @@ if [ -d "$pack_catalog" ]; then
                     continue
                 fi
 
-                welcome=$(sed -n 's/^PACK_WELCOME[[:space:]]*:=[[:space:]]*//p' "$target_pack/pack.conf" | head -n 1)
+                welcome=$(sed -n 's/^PACK_WELCOME[[:space:]]*:=[[:space:]]*//p' "$target_pack/pack.conf" | head -n 1 | tr -d '\r')
                 if [ -n "$welcome" ]; then
                     echo ""
                     echo "${C_CYAN}$welcome${C_RESET}"
