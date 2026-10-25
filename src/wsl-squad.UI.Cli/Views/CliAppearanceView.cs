@@ -130,7 +130,12 @@ public sealed class CliAppearanceView : CliViewBase, IAppearanceView
     public void Show(SetAppearanceResponseDto response)
     {
         Write(string.Empty);
-        Write(Localizer.Instance.Format("CliThemeApplied", response.InstanceName, string.Join(", ", response.Changes)), ConsoleTone.Success);
+        Write(
+            Localizer.Instance.Format(
+                "CliThemeApplied",
+                response.InstanceName,
+                string.Join(", ", response.Changes.Select(change => change.ToMessage()))),
+            ConsoleTone.Success);
         Write(string.Empty);
     }
 

@@ -30,11 +30,12 @@ public sealed class CliServices
         Localizer.Instance.UsePreferences(new ConfigRepository(assets));
 
         ServiceFactory factory = new();
-        string root = factory.ResolveRoot(assets, assets);
+        IFleetService fleet = factory.CreateFleetService(assets);
+        fleet.GetRoot();
 
         return new CliServices(
-            factory.CreateInstanceService(root, assets, assets),
-            factory.CreateFleetService(root, assets, assets),
-            factory.CreatePackCatalogService(assets, assets));
+            factory.CreateInstanceService(assets),
+            fleet,
+            factory.CreatePackCatalogService(assets));
     }
 }

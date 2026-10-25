@@ -280,6 +280,62 @@ public class InstanceServiceTests
     }
 
     [Fact]
+    public void An_icon_image_alone_rewrites_the_profile_and_clears_the_text_icon()
+    {
+        WslTheme theme = WslTheme.Default();
+        theme.SetIcon(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
+        WslInstance model = new() { Name = "alpha", Theme = theme };
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(model);
+        _terminal.Setup(terminal => terminal.GetAppearance("alpha")).Returns(WslTheme.Default());
+        _instances.Setup(instances => instances.GetIconPath("alpha")).Returns("/fleet/alpha/terminal-icon.png");
+        _terminal.Setup(terminal => terminal.GetProfileGuid("alpha")).Returns("guid");
+
+        SetAppearanceResponseDto response = _service.SetAppearance(new SetAppearanceDto
+        {
+            InstanceName = "alpha",
+            IconImage = "/icons/alpha.png",
+        });
+
+        response.Changes.Should().ContainSingle()
+            .Which.Kind.Should().Be(AppearanceChangeKind.IconImage);
+        _instances.Verify(instances => instances.SaveIcon("alpha", "/icons/alpha.png"), Times.Once);
+        _terminal.Verify(
+            terminal => terminal.DrawIcon(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IconDrawing>()),
+            Times.Never);
+        _terminal.Verify(terminal => terminal.SaveFragment(
+            "alpha",
+            "guid",
+            It.Is<WslTheme>(theme =>
+                theme.Icon == null &&
+                theme.IconPath == "/fleet/alpha/terminal-icon.png")), Times.Once);
+        _instances.Verify(instances => instances.SaveInstance(
+            It.Is<WslInstance>(instance => instance.Theme != null && instance.Theme.Icon == null),
+            string.Empty), Times.Once);
+        _terminal.Verify(terminal => terminal.TouchSettings(), Times.Once);
+    }
+
+    [Fact]
+    public void A_font_change_keeps_the_existing_icon_image()
+    {
+        _instances.Setup(instances => instances.GetInstance("alpha")).Returns(new WslInstance { Name = "alpha" });
+        _terminal.Setup(terminal => terminal.GetAppearance("alpha")).Returns(WslTheme.Default());
+        _instances.Setup(instances => instances.HasIcon("alpha")).Returns(true);
+        _instances.Setup(instances => instances.GetIconPath("alpha")).Returns("/fleet/alpha/terminal-icon.png");
+        _terminal.Setup(terminal => terminal.GetProfileGuid("alpha")).Returns("guid");
+
+        _service.SetAppearance(new SetAppearanceDto
+        {
+            InstanceName = "alpha",
+            Font = "Consolas",
+        });
+
+        _terminal.Verify(terminal => terminal.SaveFragment(
+            "alpha",
+            "guid",
+            It.Is<WslTheme>(theme => theme.IconPath == "/fleet/alpha/terminal-icon.png")), Times.Once);
+    }
+
+    [Fact]
     public void Opens_the_pack_manager_from_the_catalog()
     {
         _packs.Setup(repository => repository.GetRoot()).Returns("/catalog/packs");

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -59,8 +60,24 @@ internal static class AtomicFile
 
         string temporary = path + ".tmp";
 
-        File.WriteAllText(temporary, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-        File.Move(temporary, path, overwrite: true);
+        try
+        {
+            File.WriteAllText(temporary, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            File.Move(temporary, path, overwrite: true);
+        }
+        catch
+        {
+            try
+            {
+                File.Delete(temporary);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Trace.TraceWarning($"[AtomicFile] Could not delete '{temporary}': {exception.Message}");
+            }
+
+            throw;
+        }
     }
 
     public static void WriteJson<T>(string path, T value)

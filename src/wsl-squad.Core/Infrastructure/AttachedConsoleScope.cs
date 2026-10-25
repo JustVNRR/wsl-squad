@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace WslSquad.Core.Infrastructure;
 
-internal sealed class AttachedConsoleScope : IDisposable
+internal sealed partial class AttachedConsoleScope : IDisposable
 {
     private readonly bool _allocated;
     private readonly TextWriter? _previousOutput;
@@ -54,14 +54,14 @@ internal sealed class AttachedConsoleScope : IDisposable
         FreeConsole();
     }
 
-    [DllImport("kernel32.dll")]
-    private static extern nint GetConsoleWindow();
+    [LibraryImport("kernel32.dll")]
+    private static partial nint GetConsoleWindow();
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool AllocConsole();
+    private static partial bool AllocConsole();
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool FreeConsole();
+    private static partial bool FreeConsole();
 }

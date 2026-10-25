@@ -57,7 +57,12 @@ public class PresenterTests
             .Returns((SetAppearanceDto dto) => new SetAppearanceResponseDto
             {
                 InstanceName = dto.InstanceName,
-                Changes = [dto.Font is not null ? "font" : "colours"],
+                Changes =
+                [
+                    dto.Font is not null
+                        ? new AppearanceChangeDto(AppearanceChangeKind.Font)
+                        : new AppearanceChangeDto(AppearanceChangeKind.ColourScheme),
+                ],
             });
         TestAppearanceView view = new();
         view.Themes.Enqueue("font");
@@ -72,7 +77,9 @@ public class PresenterTests
         service.Verify(s => s.SetAppearance(It.Is<SetAppearanceDto>(dto =>
             dto.Font == null && dto.ColourScheme == "ice")), Times.Once);
         view.Shown.Should().ContainSingle();
-        view.Shown[0].Changes.Should().Equal("font", "colours");
+        view.Shown[0].Changes.Select(change => change.Kind).Should().Equal(
+            AppearanceChangeKind.Font,
+            AppearanceChangeKind.ColourScheme);
     }
 
     [Fact]

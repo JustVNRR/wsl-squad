@@ -6,12 +6,9 @@ namespace WslSquad.Core.Services;
 
 public sealed class ServiceFactory : IServiceFactory
 {
-    public IInstanceService CreateInstanceService(
-        string root,
-        string assets,
-        string distroTree)
+    public IInstanceService CreateInstanceService(string assets)
     {
-        ConfigRepository config = new(assets, distroTree);
+        ConfigRepository config = new(assets, assets);
 
         return new InstanceService(
             new InstanceRepository(config),
@@ -36,19 +33,9 @@ public sealed class ServiceFactory : IServiceFactory
         return new LoggerService(Path.Combine(baseDirectory, "wsl-squad", "wsl-squad.log"));
     }
 
-    public string ResolveRoot(string assets, string distroTree)
+    public IFleetService CreateFleetService(string assets)
     {
-        IFleetService fleet = CreateFleetService(Path.GetTempPath(), assets, distroTree);
-
-        return fleet.GetRoot();
-    }
-
-    public IFleetService CreateFleetService(
-        string root,
-        string assets,
-        string distroTree)
-    {
-        ConfigRepository config = new(assets, distroTree);
+        ConfigRepository config = new(assets, assets);
         InstanceRepository instances = new(config);
         ArchiveRepository archives = new(config);
         WslRepository wsl = new();
@@ -65,15 +52,11 @@ public sealed class ServiceFactory : IServiceFactory
         return new FleetService(config, wsl, instances, archives, service);
     }
 
-    public IPackCatalogService CreatePackCatalogService(string assets, string distroTree)
+    public IPackCatalogService CreatePackCatalogService(string assets)
     {
-        PackCatalogRepository packs = new(Path.Combine(assets, "packs"));
-
-        if (!string.IsNullOrEmpty(distroTree))
-        {
-            packs.SeedFrom(Path.Combine(distroTree, "packs"));
-        }
-
-        return new PackCatalogService(new WslPackCatalog(), packs, new InstanceMapper());
+        return new PackCatalogService(
+            new WslPackCatalog(),
+            new PackCatalogRepository(Path.Combine(assets, "packs")),
+            new InstanceMapper());
     }
 }

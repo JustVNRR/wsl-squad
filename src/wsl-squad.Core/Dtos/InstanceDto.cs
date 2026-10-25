@@ -412,11 +412,21 @@ public sealed record OpenResponseDto
     public bool Profile { get; init; }
 }
 
+public enum AppearanceChangeKind
+{
+    Font,
+    ColourScheme,
+    Icon,
+    IconImage,
+}
+
+public sealed record AppearanceChangeDto(AppearanceChangeKind Kind, string? Value = null);
+
 public sealed record SetAppearanceResponseDto
 {
     public string? InstanceName { get; init; }
 
-    public List<string> Changes { get; init; } = [];
+    public List<AppearanceChangeDto> Changes { get; init; } = [];
 }
 
 public sealed record WslConfigResponseDto

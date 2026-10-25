@@ -704,37 +704,43 @@ public sealed class InstanceService : IInstanceService
             theme.SetIcon(storedIcon);
         }
 
-        List<string> changes = [];
+        if (_instanceRepository.HasIcon(name))
+        {
+            theme.IconPath = _instanceRepository.GetIconPath(name);
+        }
+
+        List<AppearanceChangeDto> changes = [];
         bool rewriteProfile = false;
 
         if (!string.IsNullOrEmpty(dto.Font))
         {
             theme.FontName = dto.Font;
-            changes.Add($"font '{dto.Font}'");
+            changes.Add(new AppearanceChangeDto(AppearanceChangeKind.Font, dto.Font));
             rewriteProfile = true;
         }
 
         if (!string.IsNullOrEmpty(dto.ColourScheme))
         {
             theme.ColorScheme = dto.ColourScheme;
-            changes.Add($"colours '{dto.ColourScheme}'");
-            rewriteProfile = true;
-        }
-
-        if (dto.Icon is not null)
-        {
-            string iconPath = _instanceRepository.GetIconPath(name);
-            theme.SetIcon(_terminalRepository.DrawIcon(name, iconPath, _instanceMapper.ToDrawing(dto.Icon)));
-            theme.IconPath = iconPath;
-            changes.Add("icon");
+            changes.Add(new AppearanceChangeDto(AppearanceChangeKind.ColourScheme, dto.ColourScheme));
             rewriteProfile = true;
         }
 
         if (!string.IsNullOrEmpty(dto.IconImage))
         {
             _instanceRepository.SaveIcon(name, dto.IconImage);
+            theme.SetIcon(null);
             theme.IconPath = _instanceRepository.GetIconPath(name);
-            changes.Add("icon image");
+            changes.Add(new AppearanceChangeDto(AppearanceChangeKind.IconImage));
+            rewriteProfile = true;
+        }
+        else if (dto.Icon is not null)
+        {
+            string iconPath = _instanceRepository.GetIconPath(name);
+            theme.SetIcon(_terminalRepository.DrawIcon(name, iconPath, _instanceMapper.ToDrawing(dto.Icon)));
+            theme.IconPath = iconPath;
+            changes.Add(new AppearanceChangeDto(AppearanceChangeKind.Icon));
+            rewriteProfile = true;
         }
 
         if (!rewriteProfile)
@@ -1129,7 +1135,7 @@ public sealed class InstanceService : IInstanceService
             {
                 _terminalRepository.InstallFont(theme.FontName ?? string.Empty, null);
             }
-            catch (Exception exception) when (exception is IOException or InvalidOperationException or PlatformNotSupportedException or HttpRequestException)
+            catch (Exception exception) when (exception is IOException or InvalidOperationException or PlatformNotSupportedException)
             {
                 warnings.Add(new BuildNoticeDto(BuildNoticeKind.FontInstallFailed, theme.FontName, exception.Message));
             }

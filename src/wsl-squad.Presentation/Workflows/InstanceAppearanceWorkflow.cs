@@ -54,7 +54,7 @@ public sealed class InstanceAppearanceWorkflow : WorkflowBase
 
         try
         {
-            List<string> changes = [];
+            List<AppearanceChangeDto> changes = [];
 
             foreach (SetAppearanceDto request in requests)
             {

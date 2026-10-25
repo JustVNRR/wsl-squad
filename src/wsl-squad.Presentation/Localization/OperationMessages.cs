@@ -28,6 +28,20 @@ public static class OperationMessages
         };
     }
 
+    public static string ToMessage(this AppearanceChangeDto change)
+    {
+        return change.Kind switch
+        {
+            AppearanceChangeKind.Font =>
+                Localizer.Instance.Format("AppearanceChangeFont", change.Value),
+            AppearanceChangeKind.ColourScheme =>
+                Localizer.Instance.Format("AppearanceChangeColours", change.Value),
+            AppearanceChangeKind.Icon => Localizer.Instance["AppearanceChangeIcon"],
+            AppearanceChangeKind.IconImage => Localizer.Instance["AppearanceChangeIconImage"],
+            _ => string.Empty,
+        };
+    }
+
     public static string ToMessage(this DockerRestartOutcome outcome)
     {
         return outcome switch

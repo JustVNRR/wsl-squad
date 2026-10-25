@@ -61,6 +61,6 @@ public sealed class LoggerService : ILoggerService
             }
         }
 
-        Console.WriteLine(line);
+        Trace.TraceInformation(line);
     }
 }

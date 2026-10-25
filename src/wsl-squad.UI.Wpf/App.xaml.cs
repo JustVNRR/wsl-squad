@@ -44,13 +44,14 @@ public partial class App : Application
         theme.ApplyFace();
 
         ServiceFactory factory = new();
-        string root = factory.ResolveRoot(assets, assets);
+        IFleetService fleet = factory.CreateFleetService(assets);
+        fleet.GetRoot();
 
         MainWindowViewModel viewModel = new(
-            factory.CreateInstanceService(root, assets, assets),
-            factory.CreateFleetService(root, assets, assets),
+            factory.CreateInstanceService(assets),
+            fleet,
             theme,
-            factory.CreatePackCatalogService(assets, assets),
+            factory.CreatePackCatalogService(assets),
             new WpfDialogs(),
             factory.CreateLoggerService());
 
