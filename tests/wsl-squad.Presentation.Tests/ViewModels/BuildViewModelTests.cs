@@ -3,6 +3,7 @@ using FluentAssertions;
 using Moq;
 
 using WslSquad.Core.Dtos;
+using WslSquad.Core.Exceptions;
 using WslSquad.Core.Services;
 using WslSquad.Presentation.Tests.Support;
 using WslSquad.Presentation.Gui.ViewModels;
@@ -22,6 +23,7 @@ public class BuildViewModelTests
             {
                 Name = "default (01/01 12:00)",
                 Path = "/catalog/default",
+                BaseName = "default",
             },
         ]);
         _instance.Setup(service => service.GetAll()).Returns([]);
@@ -35,7 +37,7 @@ public class BuildViewModelTests
         viewModel.RecipeNames.Should().ContainSingle().Which.Should().Be("default (01/01 12:00)");
         viewModel.RecipeIndex.Should().Be(0);
         viewModel.SaveImage.Should().BeTrue();
-        viewModel.CanDeleteRecipe.Should().BeFalse();
+        viewModel.CanDeleteRecipe.Should().BeTrue();
     }
 
     [Fact]
@@ -100,15 +102,52 @@ public class BuildViewModelTests
             {
                 Name = "mine (01/01 12:00)",
                 Path = "/recipes/mine",
-                Uploaded = true,
+                BaseName = "mine",
             });
         BuildViewModel viewModel = Create();
 
         viewModel.NewRecipe();
 
+        _dialogs.LastRecipeName!.Value.Taken.Should().Contain("default");
         viewModel.RecipeNames.Should().Contain("mine (01/01 12:00)");
         viewModel.RecipeIndex.Should().Be(1);
         viewModel.CanDeleteRecipe.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Duplicates_the_selected_recipe_with_a_copy_name()
+    {
+        _dialogs.RecipeNameAnswer = "default-copy";
+        _instance.Setup(service => service.DuplicateRecipe(It.Is<DuplicateRecipeDto>(dto =>
+                dto.SourcePath == "/catalog/default" && dto.NewName == "default-copy")))
+            .Returns(new WslBuildSourceDto
+            {
+                Name = "default-copy (01/01 12:00)",
+                Path = "/catalog/default-copy",
+                BaseName = "default-copy",
+            });
+        BuildViewModel viewModel = Create();
+
+        viewModel.DuplicateRecipe();
+
+        _dialogs.LastRecipeName!.Value.Suggested.Should().Be("default-copy");
+        _dialogs.LastRecipeName.Value.Source.Should().Be("default");
+        viewModel.RecipeNames.Should().Contain("default-copy (01/01 12:00)");
+        viewModel.RecipeIndex.Should().Be(1);
+    }
+
+    [Fact]
+    public void Reports_an_existing_recipe_name_from_the_service()
+    {
+        _dialogs.RecipeNameAnswer = "default-copy";
+        _instance.Setup(service => service.DuplicateRecipe(It.IsAny<DuplicateRecipeDto>()))
+            .Throws(new WslSquadException(WslSquadErrorCode.RecipeAlreadyExists, "default-copy"));
+        BuildViewModel viewModel = Create();
+
+        viewModel.DuplicateRecipe();
+
+        viewModel.RecipeError.Should().Contain("already exists");
+        viewModel.RecipeNames.Should().ContainSingle();
     }
 
     [Fact]
@@ -120,7 +159,6 @@ public class BuildViewModelTests
             {
                 Name = "mine (01/01 12:00)",
                 Path = "/recipes/mine",
-                Uploaded = true,
             },
         ]);
         _dialogs.ConfirmAnswer = true;
@@ -143,7 +181,6 @@ public class BuildViewModelTests
             {
                 Name = "mine (01/01 12:00)",
                 Path = "/recipes/mine",
-                Uploaded = true,
             },
         ]);
         _dialogs.ConfirmAnswer = false;

@@ -143,6 +143,21 @@ public sealed class InstanceService : IInstanceService
         return FormatSourceRows([row])[0];
     }
 
+    public WslBuildSourceDto DuplicateRecipe(DuplicateRecipeDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        string target = _configRepository.DuplicateRecipe(
+            dto.SourcePath ?? string.Empty,
+            (dto.NewName ?? string.Empty).Trim());
+        SourceRow row = new(
+            Path.GetFileName(target),
+            target,
+            Directory.GetLastWriteTime(target));
+
+        return FormatSourceRows([row])[0];
+    }
+
     public void OpenInEditor(string path)
     {
         try
@@ -1120,14 +1135,11 @@ public sealed class InstanceService : IInstanceService
 
         foreach (SourceRow row in rows.OrderBy(item => item.Name, StringComparer.Ordinal))
         {
-            bool uploaded = HasFingerprint(row.Name);
-            string name = uploaded ? row.Name[..^9] : row.Name;
-
             output.Add(new WslBuildSourceDto
             {
-                Name = $"{name} ({row.Modified.ToString("dd'/'MM HH:mm", CultureInfo.InvariantCulture)})",
+                Name = $"{row.Name} ({row.Modified.ToString("dd'/'MM HH:mm", CultureInfo.InvariantCulture)})",
                 Path = row.Path,
-                Uploaded = uploaded,
+                BaseName = row.Name,
             });
         }
 
@@ -1142,16 +1154,6 @@ public sealed class InstanceService : IInstanceService
         }
 
         return dockerNames.Contains(name) ? "yes" : "no";
-    }
-
-    private static bool HasFingerprint(string name)
-    {
-        if (name.Length < 9 || name[^9] != '-')
-        {
-            return false;
-        }
-
-        return name[^8..].All(char.IsAsciiHexDigitLower);
     }
 
     private static void TryDeleteFile(string path)

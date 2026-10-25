@@ -49,6 +49,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         SaveImage = true;
         CreateCommand = new RelayCommand(Create, () => _nameOk && RecipeIndex >= 0);
         NewRecipeCommand = new RelayCommand(NewRecipe);
+        DuplicateRecipeCommand = new RelayCommand(DuplicateRecipe, () => SelectedRecipe() is not null);
         EditRecipeCommand = new RelayCommand(EditRecipe, () => RecipeIndex >= 0);
         DeleteRecipeCommand = new RelayCommand(DeleteRecipe, () => CanDeleteRecipe);
 
@@ -82,6 +83,8 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public IRelayCommand NewRecipeCommand { get; }
 
+    public IRelayCommand DuplicateRecipeCommand { get; }
+
     public IRelayCommand EditRecipeCommand { get; }
 
     public IRelayCommand DeleteRecipeCommand { get; }
@@ -98,7 +101,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public void NewRecipe()
     {
-        string? chosen = _dialogs.ShowRecipeName();
+        string? chosen = _dialogs.ShowRecipeName(takenNames: TakenRecipeNames());
 
         if (chosen is null)
         {
@@ -113,7 +116,48 @@ public sealed partial class BuildViewModel : BaseViewModel
             SyncList();
             RecipeIndex = _recipes.Count - 1;
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex) when (
+            ex is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            RecipeError = ex.ToMessage();
+        }
+    }
+
+    public void DuplicateRecipe()
+    {
+        WslBuildSourceDto? source = SelectedRecipe();
+
+        if (source is null)
+        {
+            return;
+        }
+
+        string sourceName = source.BaseName ?? source.Name ?? string.Empty;
+        string? chosen = _dialogs.ShowRecipeName(
+            $"{sourceName}-copy",
+            TakenRecipeNames(),
+            sourceName);
+
+        if (chosen is null)
+        {
+            return;
+        }
+
+        try
+        {
+            WslBuildSourceDto row = _instance.DuplicateRecipe(new DuplicateRecipeDto
+            {
+                SourcePath = source.Path,
+                NewName = chosen,
+            });
+
+            _recipes.Add(row);
+            RecipeError = string.Empty;
+            SyncList();
+            RecipeIndex = _recipes.Count - 1;
+        }
+        catch (Exception ex) when (
+            ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
             RecipeError = ex.ToMessage();
         }
@@ -142,7 +186,7 @@ public sealed partial class BuildViewModel : BaseViewModel
     {
         WslBuildSourceDto? row = SelectedRecipe();
 
-        if (row is null || !row.Uploaded)
+        if (row is null)
         {
             return;
         }
@@ -219,10 +263,16 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     private void UpdateRecipeCommands()
     {
-        CanDeleteRecipe = SelectedRecipe()?.Uploaded == true;
+        CanDeleteRecipe = SelectedRecipe() is not null;
         CreateCommand.NotifyCanExecuteChanged();
+        DuplicateRecipeCommand.NotifyCanExecuteChanged();
         EditRecipeCommand.NotifyCanExecuteChanged();
         DeleteRecipeCommand.NotifyCanExecuteChanged();
+    }
+
+    private IReadOnlyList<string> TakenRecipeNames()
+    {
+        return [.. _recipes.Select(recipe => recipe.BaseName ?? recipe.Name ?? string.Empty)];
     }
 
     private WslBuildSourceDto? SelectedRecipe()

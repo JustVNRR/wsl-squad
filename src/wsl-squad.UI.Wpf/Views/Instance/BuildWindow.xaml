@@ -27,11 +27,13 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <ComboBox ItemsSource="{Binding RecipeNames}" SelectedIndex="{Binding RecipeIndex, Mode=TwoWay}" Grid.Column="0"/>
                     <Button Grid.Column="1" Content="&#xF067;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipCreateRecipe]}" Command="{Binding NewRecipeCommand}"/>
-                    <Button Grid.Column="2" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenRecipe]}" Command="{Binding EditRecipeCommand}"/>
-                    <Button Grid.Column="3" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeleteRecipe]}" Command="{Binding DeleteRecipeCommand}"/>
+                    <Button Grid.Column="2" Content="&#xF0C5;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDuplicateRecipe]}" Command="{Binding DuplicateRecipeCommand}"/>
+                    <Button Grid.Column="3" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenRecipe]}" Command="{Binding EditRecipeCommand}"/>
+                    <Button Grid.Column="4" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeleteRecipe]}" Command="{Binding DeleteRecipeCommand}"/>
                 </Grid>
                 <TextBlock Text="{Binding RecipeError}" Visibility="{Binding RecipeError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
                 <CheckBox Content="{Binding Source={x:Static loc:Localizer.Instance}, Path=[OptionSaveImage]}" IsChecked="{Binding SaveImage, Mode=TwoWay}" Margin="0,10,0,0"/>

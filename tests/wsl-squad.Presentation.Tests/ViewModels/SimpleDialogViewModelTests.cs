@@ -165,6 +165,26 @@ public class SimpleDialogViewModelTests
     }
 
     [Fact]
+    public void Recipe_duplicate_suggests_a_copy_and_rejects_taken_names()
+    {
+        RecipeNameViewModel viewModel = new("tools-copy", ["tools", "other"], "tools");
+
+        viewModel.Name.Should().Be("tools-copy");
+        viewModel.Lead.Should().Be("DUPLICATE 'TOOLS'");
+
+        viewModel.Name = "tools";
+        viewModel.ConfirmCommand.Execute(null);
+
+        viewModel.NameError.Should().Contain("already exists");
+        viewModel.Result.Should().BeNull();
+
+        viewModel.Name = "third";
+        viewModel.ConfirmCommand.Execute(null);
+
+        viewModel.Result.Should().Be("third");
+    }
+
+    [Fact]
     public void Pack_duplicate_rejects_taken_names_then_returns_the_answer()
     {
         PackDuplicateViewModel viewModel = new("tools", "Tools", ["tools", "other"]) { Name = "other" };

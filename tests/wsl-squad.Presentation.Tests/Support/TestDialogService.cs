@@ -20,6 +20,8 @@ public sealed class TestDialogService : IDialogService
 
     public string? RecipeNameAnswer { get; set; }
 
+    public (string? Suggested, IReadOnlyList<string>? Taken, string? Source)? LastRecipeName { get; private set; }
+
     public (string Name, string Description)? PackDuplicateAnswer { get; set; }
 
     public string? RootMoveAnswer { get; set; }
@@ -72,8 +74,13 @@ public sealed class TestDialogService : IDialogService
         Errors.Add(entry);
     }
 
-    public string? ShowRecipeName()
+    public string? ShowRecipeName(
+        string? suggestedName = null,
+        IReadOnlyList<string>? takenNames = null,
+        string? sourceName = null)
     {
+        LastRecipeName = (suggestedName, takenNames, sourceName);
+
         return RecipeNameAnswer;
     }
 

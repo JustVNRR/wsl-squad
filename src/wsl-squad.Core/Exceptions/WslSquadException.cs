@@ -28,6 +28,7 @@ public enum WslSquadErrorCode
     PackNotFound,
     PackAlreadyExists,
     RecipeSlotNotFound,
+    RecipeAlreadyExists,
     FileOperationFailed,
     ExternalToolFailed,
     WslImportFailed,

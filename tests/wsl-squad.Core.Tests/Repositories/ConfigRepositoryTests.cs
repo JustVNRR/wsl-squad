@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using FluentAssertions;
 
+using WslSquad.Core.Exceptions;
 using WslSquad.Core.Repositories;
 using WslSquad.Core.Tests.Support;
 using WslSquad.Core.Infrastructure;
@@ -85,6 +86,76 @@ public class ConfigRepositoryTests
 
         SourceRow row = repository.GetRecipes().Should().ContainSingle().Subject;
         row.Name.Should().Be("alpine");
+    }
+
+    [Fact]
+    public void Creates_a_recipe_with_its_exact_name()
+    {
+        using TemporaryDirectory temp = new();
+        ConfigRepository repository = new(temp.Path);
+
+        string target = repository.CreateRecipe("debian");
+
+        target.Should().Be(temp.Combine("recipes", "debian"));
+        Directory.Exists(target).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Duplicates_a_recipe_with_its_files()
+    {
+        using TemporaryDirectory temp = new();
+        string source = temp.Write("recipes/default/Dockerfile", "FROM alpine:3.20\n");
+        temp.Write("recipes/default/onboarding.sh", "#!/bin/sh\n");
+        ConfigRepository repository = new(temp.Path);
+
+        string target = repository.DuplicateRecipe(
+            Path.GetDirectoryName(source)!,
+            "default-copy");
+
+        target.Should().Be(temp.Combine("recipes", "default-copy"));
+        File.ReadAllText(Path.Combine(target, "Dockerfile")).Should().Be("FROM alpine:3.20\n");
+        File.Exists(Path.Combine(target, "onboarding.sh")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Refuses_to_create_a_recipe_that_already_exists()
+    {
+        using TemporaryDirectory temp = new();
+        temp.Write("recipes/default/Dockerfile", "FROM alpine:3.20\n");
+        ConfigRepository repository = new(temp.Path);
+
+        Action act = () => repository.CreateRecipe("default");
+
+        act.Should().Throw<WslSquadException>()
+            .Which.Code.Should().Be(WslSquadErrorCode.RecipeAlreadyExists);
+    }
+
+    [Fact]
+    public void Refuses_to_duplicate_a_recipe_onto_an_existing_folder()
+    {
+        using TemporaryDirectory temp = new();
+        string source = temp.Write("recipes/default/Dockerfile", "FROM alpine:3.20\n");
+        temp.Write("recipes/default-copy/Dockerfile", "FROM debian:12\n");
+        ConfigRepository repository = new(temp.Path);
+
+        Action act = () => repository.DuplicateRecipe(
+            Path.GetDirectoryName(source)!,
+            "default-copy");
+
+        act.Should().Throw<WslSquadException>()
+            .Which.Code.Should().Be(WslSquadErrorCode.RecipeAlreadyExists);
+    }
+
+    [Fact]
+    public void Refuses_to_duplicate_a_folder_outside_the_catalogue()
+    {
+        using TemporaryDirectory temp = new();
+        temp.Write("outside/Dockerfile", "FROM alpine:3.20\n");
+        ConfigRepository repository = new(temp.Path);
+
+        Action act = () => repository.DuplicateRecipe(temp.Combine("outside"), "copy");
+
+        act.Should().Throw<InvalidOperationException>();
     }
 
     [Fact]

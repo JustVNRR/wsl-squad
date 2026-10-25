@@ -10,6 +10,8 @@ public interface IConfigRepository
 
     string CreateRecipe(string name);
 
+    string DuplicateRecipe(string sourcePath, string name);
+
     void RemoveRecipe(string path);
 
     string GetSavedRoot();

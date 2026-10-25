@@ -74,6 +74,8 @@ public static class ErrorMessages
                 Localizer.Instance.Format("ErrorPackAlreadyExists", target),
             WslSquadErrorCode.RecipeSlotNotFound =>
                 Localizer.Instance.Format("ErrorRecipeSlotNotFound", target),
+            WslSquadErrorCode.RecipeAlreadyExists =>
+                Localizer.Instance.Format("ErrorRecipeDuplicateExists", target),
             WslSquadErrorCode.FileOperationFailed => detail,
             WslSquadErrorCode.ExternalToolFailed =>
                 string.IsNullOrEmpty(detail)

@@ -38,7 +38,7 @@ dialog and written to `%LOCALAPPDATA%\wsl-squad\wsl-squad.log`.
 The Add dialog asks for:
 
 - the instance name;
-- the recipe; recipes can be created, opened, or deleted;
+- the recipe; recipes can be created, duplicated, opened, or deleted;
 - whether to save the Docker image locally.
 
 **Create** starts the build. The recipe's Dockerfile owns the onboarding and

@@ -55,12 +55,19 @@ public sealed record WslBuildSourceDto
 
     public string? Path { get; init; }
 
-    public bool Uploaded { get; init; }
+    public string? BaseName { get; init; }
 }
 
 public sealed record NewRecipeDto
 {
     public string? Name { get; init; }
+}
+
+public sealed record DuplicateRecipeDto
+{
+    public string? SourcePath { get; init; }
+
+    public string? NewName { get; init; }
 }
 
 public sealed record MigrateResponseDto

@@ -13,7 +13,10 @@ public interface IDialogService
 
     void ShowError(LogEntryDto entry);
 
-    string? ShowRecipeName();
+    string? ShowRecipeName(
+        string? suggestedName = null,
+        IReadOnlyList<string>? takenNames = null,
+        string? sourceName = null);
 
     (string Name, string Description)? ShowPackDuplicate(string source, string blurb, IReadOnlyList<string> taken);
 

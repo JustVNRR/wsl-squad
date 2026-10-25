@@ -96,12 +96,39 @@ public sealed class ConfigRepository : IConfigRepository
 
     public string CreateRecipe(string name)
     {
-        string fingerprint = Guid.NewGuid().ToString("N")[..8];
-        string slot = Path.Combine(_assetsDir, "recipes", $"{name}-{fingerprint}");
+        string slot = RecipeSlot(name);
+
+        if (Directory.Exists(slot) || File.Exists(slot))
+        {
+            throw new WslSquadException(WslSquadErrorCode.RecipeAlreadyExists, name);
+        }
 
         Directory.CreateDirectory(slot);
 
         return slot;
+    }
+
+    public string DuplicateRecipe(string sourcePath, string name)
+    {
+        string source = Path.GetFullPath(sourcePath);
+        string target = RecipeSlot(name);
+
+        if (!Directory.Exists(source) ||
+            !source.StartsWith(
+                RecipesRoot().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
+                StringComparison.Ordinal))
+        {
+            throw new WslSquadException(WslSquadErrorCode.RecipeSlotNotFound, source);
+        }
+
+        if (Directory.Exists(target) || File.Exists(target))
+        {
+            throw new WslSquadException(WslSquadErrorCode.RecipeAlreadyExists, name);
+        }
+
+        CopyTree(source, target);
+
+        return target;
     }
 
     public void RemoveRecipe(string path)
@@ -277,6 +304,31 @@ public sealed class ConfigRepository : IConfigRepository
         AllowTrailingCommas = true,
         CommentHandling = JsonCommentHandling.Skip,
     };
+
+    private string RecipesRoot()
+    {
+        return Path.GetFullPath(Path.Combine(_assetsDir, "recipes"));
+    }
+
+    private string RecipeSlot(string name)
+    {
+        return Path.Combine(RecipesRoot(), name);
+    }
+
+    private static void CopyTree(string source, string target)
+    {
+        Directory.CreateDirectory(target);
+
+        foreach (string file in Directory.EnumerateFiles(source))
+        {
+            File.Copy(file, Path.Combine(target, Path.GetFileName(file)), overwrite: true);
+        }
+
+        foreach (string directory in Directory.EnumerateDirectories(source))
+        {
+            CopyTree(directory, Path.Combine(target, Path.GetFileName(directory)));
+        }
+    }
 
     private string ConfigFile()
     {

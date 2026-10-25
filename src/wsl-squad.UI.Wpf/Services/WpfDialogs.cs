@@ -77,9 +77,12 @@ public sealed class WpfDialogs : IDialogService
         ShowDialog(new ErrorWindow(viewModel));
     }
 
-    public string? ShowRecipeName()
+    public string? ShowRecipeName(
+        string? suggestedName = null,
+        IReadOnlyList<string>? takenNames = null,
+        string? sourceName = null)
     {
-        RecipeNameViewModel viewModel = new();
+        RecipeNameViewModel viewModel = new(suggestedName, takenNames, sourceName);
         ShowDialog(new RecipeNameWindow(viewModel));
 
         return viewModel.Result;

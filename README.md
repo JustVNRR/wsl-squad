@@ -15,7 +15,7 @@ Every action is available both as a GUI and as a CLI.
   first shell and offers the packs to install
 - **Manage the packs** of an instance, from the catalogue
 - **The recipes themselves** - Dockerfiles and onboarding scripts inside
-  recipe folders: created, edited, deleted
+  recipe folders: created, duplicated, edited, deleted
 - **Live with an instance** - restart it, open a shell, change the look (icon,
   font, colours), duplicate it, compact it, register it with Docker Desktop or
   take it out

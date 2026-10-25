@@ -67,14 +67,32 @@ public class InstanceServiceTests
         DateTime modified = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
         _config.Setup(config => config.GetRecipes()).Returns(
         [
-            new SourceRow("default-1a2b3c4d", "/catalog/default-1a2b3c4d", modified),
+            new SourceRow("default", "/catalog/default", modified),
         ]);
 
         WslBuildSourceDto recipe = _service.GetRecipes().Should().ContainSingle().Subject;
 
         recipe.Name.Should().StartWith("default");
-        recipe.Path.Should().Be("/catalog/default-1a2b3c4d");
-        recipe.Uploaded.Should().BeTrue();
+        recipe.BaseName.Should().Be("default");
+        recipe.Path.Should().Be("/catalog/default");
+    }
+
+    [Fact]
+    public void Duplicates_a_recipe()
+    {
+        _config.Setup(config => config.DuplicateRecipe("/catalog/default", "default-copy"))
+            .Returns("/catalog/default-copy");
+        _config.Setup(config => config.GetRecipes()).Returns([]);
+
+        WslBuildSourceDto recipe = _service.DuplicateRecipe(new DuplicateRecipeDto
+        {
+            SourcePath = "/catalog/default",
+            NewName = "default-copy",
+        });
+
+        recipe.Name.Should().StartWith("default-copy");
+        recipe.BaseName.Should().Be("default-copy");
+        recipe.Path.Should().Be("/catalog/default-copy");
     }
 
     [Fact]

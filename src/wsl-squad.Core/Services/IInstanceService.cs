@@ -14,6 +14,8 @@ public interface IInstanceService
 
     WslBuildSourceDto CreateRecipe(NewRecipeDto dto);
 
+    WslBuildSourceDto DuplicateRecipe(DuplicateRecipeDto dto);
+
     void OpenInEditor(string path);
 
     RegisterDockerResponseDto RegisterDocker(RegisterDockerDto dto);
