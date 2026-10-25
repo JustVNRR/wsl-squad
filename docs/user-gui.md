@@ -39,8 +39,9 @@ The Add dialog asks for:
 
 - the instance name;
 - the recipe; recipes can be created, duplicated, opened, or deleted;
-- whether to build from its saved image when one exists; otherwise, or when
-  unchecked, whether to save the Docker image locally.
+- whether to build from its saved image when one exists (checked by default);
+  when unchecked, whether to save the Docker image locally (checked by
+  default).
 
 When a saved image exists and is unchecked, the trash button next to it deletes
 the saved image after confirmation.
@@ -138,6 +139,8 @@ delete it. Deleting a pack lists the packs that depend on it first.
 ## Files
 
 - `%LOCALAPPDATA%\wsl-squad\config.json` - language and fleet root.
+- `%LOCALAPPDATA%\wsl-squad\dockerimages\<recipe>\<recipe>.tar` - saved recipe
+  images.
 - `<fleet root>\archives\` - named archives; the fleet root is shown in the
   main window.
 - `%LOCALAPPDATA%\wsl-squad\languages\*.json` - interface catalogs.

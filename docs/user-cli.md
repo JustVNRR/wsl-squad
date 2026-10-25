@@ -110,6 +110,8 @@ an archive cannot be undone.
 ## Files
 
 - `%LOCALAPPDATA%\wsl-squad\config.json` - selected language and fleet root.
+- `%LOCALAPPDATA%\wsl-squad\dockerimages\<recipe>\<recipe>.tar` - saved recipe
+  images.
 - `%LOCALAPPDATA%\wsl-squad\languages\*.json` - interface catalogs.
 - `<fleet root>\archives\` - named archives; the fleet root is stored in
   `config.json` and shown in the GUI header.
