@@ -13,14 +13,27 @@
             <TextBlock Text="{Binding Label}"/>
         </DataTemplate>
         <DataTemplate x:Key="LanguageLabelTemplate">
-            <TextBlock Text="{Binding DisplayName}"/>
+            <TextBlock Text="{Binding Label}"/>
         </DataTemplate>
     </views:ChromeWindow.Resources>
     <StackPanel Margin="18">
         <TextBlock Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[SettingsHeading]}" FontWeight="SemiBold"/>
         <Border BorderBrush="{DynamicResource AppDividerBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
         <TextBlock Margin="0,10,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[Language]}" FontWeight="SemiBold"/>
-        <ComboBox ItemsSource="{Binding Languages}" ItemTemplate="{StaticResource LanguageLabelTemplate}" SelectedIndex="{Binding LanguageIndex, Mode=TwoWay}" Margin="0,6,0,0"/>
+        <Grid Margin="0,6,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox ItemsSource="{Binding Languages}" ItemTemplate="{StaticResource LanguageLabelTemplate}" SelectedIndex="{Binding LanguageIndex, Mode=TwoWay}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanLanguage}" Command="{Binding OpenLanguageCommand}" CommandParameter="{Binding SelectedLanguageCode}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenLanguage]}"/>
+                <Button Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding UploadLanguageCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipUploadLanguage]}"/>
+                <Button Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanLanguage}" Command="{Binding ExportLanguageCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipSaveLanguage]}"/>
+                <Button Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanLanguage}" Command="{Binding DeleteLanguageCommand}" CommandParameter="{Binding SelectedLanguageCode}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeleteLanguage]}"/>
+            </StackPanel>
+        </Grid>
+        <TextBlock Text="{Binding LanguageError}" Visibility="{Binding LanguageError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
         <TextBlock Margin="0,12,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelRootFolder]}" FontWeight="SemiBold"/>
         <Grid Margin="0,6,0,0">
             <Grid.ColumnDefinitions>
@@ -58,13 +71,19 @@
             <ComboBox ItemsSource="{Binding Sizes}" ItemTemplate="{StaticResource ChoiceLabelTemplate}" SelectedIndex="{Binding SizeIndex, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" Margin="16,6,0,0"/>
         </Grid>
         <TextBlock Margin="0,10,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelTheme]}"/>
-        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+        <Grid Margin="0,6,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
             <ComboBox ItemsSource="{Binding Colours}" ItemTemplate="{StaticResource ChoiceLabelTemplate}" SelectedIndex="{Binding ColourIndex, Mode=TwoWay}"/>
-            <Button Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding OpenThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenTheme]}"/>
-            <Button Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding UploadThemeCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipUploadTheme]}"/>
-            <Button Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding ExportThemeCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipSaveTheme]}"/>
-            <Button Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding DeleteThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeleteTheme]}"/>
-        </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="&#xF044;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding OpenThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipOpenTheme]}"/>
+                <Button Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" Command="{Binding UploadThemeCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipUploadTheme]}"/>
+                <Button Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding ExportThemeCommand}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipSaveTheme]}"/>
+                <Button Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTheme}" Command="{Binding DeleteThemeCommand}" CommandParameter="{Binding SelectedColour}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeleteTheme]}"/>
+            </StackPanel>
+        </Grid>
         <TextBlock Text="{Binding ThemeError}" Visibility="{Binding ThemeError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
         <TextBlock Margin="0,12,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelPacksCatalog]}" FontWeight="SemiBold"/>
         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">

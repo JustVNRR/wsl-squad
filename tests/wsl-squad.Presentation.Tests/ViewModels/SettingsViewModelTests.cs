@@ -5,11 +5,13 @@ using Moq;
 using WslSquad.Core.Dtos;
 using WslSquad.Core.Services;
 using WslSquad.Presentation.Gui.Ports;
+using WslSquad.Presentation.Localization;
 using WslSquad.Presentation.Tests.Support;
 using WslSquad.Presentation.Gui.ViewModels;
 
 namespace WslSquad.Presentation.Tests.ViewModels;
 
+[Collection("Localizer state")]
 public class SettingsViewModelTests
 {
     private readonly TestThemeService _ui = new()
@@ -27,6 +29,7 @@ public class SettingsViewModelTests
 
     private readonly Mock<IPackCatalogService> _catalogue = new();
     private readonly Mock<IFleetService> _fleet = new();
+    private readonly TestLanguageService _languages = new();
     private readonly TestDialogService _dialogs = new();
 
     public SettingsViewModelTests()
@@ -99,7 +102,8 @@ public class SettingsViewModelTests
         string? family = viewModel.UploadFont("/tmp/font.ttf");
 
         family.Should().Be("Cascadia Mono");
-        viewModel.Fonts.Select(row => row.Label).Should().Contain("Cascadia Mono  (just uploaded)");
+        viewModel.Fonts.Select(row => row.Label).Should()
+            .Contain($"Cascadia Mono{Localizer.Instance["JustUploadedSuffix"]}");
         viewModel.SelectedFont.Should().Be("Cascadia Mono");
         changed.Should().Contain(nameof(SettingsViewModel.Fonts));
     }
@@ -256,7 +260,8 @@ public class SettingsViewModelTests
 
         viewModel.UploadTheme("/tmp/theme.xaml");
 
-        viewModel.Colours.Select(row => row.Label).Should().Contain("mine  (just uploaded)");
+        viewModel.Colours.Select(row => row.Label).Should()
+            .Contain($"mine{Localizer.Instance["JustUploadedSuffix"]}");
         viewModel.SelectedColour.Should().Be("mine");
     }
 
@@ -270,11 +275,126 @@ public class SettingsViewModelTests
 
         _dialogs.LastConfirm!.Value.Title.Should().Be("Replace theme");
         _dialogs.LastConfirm.Value.Question.Should().Contain("amber");
-        viewModel.Colours.Select(row => row.Label).Should().NotContain("mine  (just uploaded)");
+        viewModel.Colours.Select(row => row.Label).Should()
+            .NotContain($"mine{Localizer.Instance["JustUploadedSuffix"]}");
+    }
+
+    [Fact]
+    public void Uploading_a_language_through_the_file_dialog_reloads_it()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.OpenFileAnswer = "/tmp/english.json";
+        _dialogs.ConfirmAnswer = true;
+        _languages.Code = "en";
+        _languages.UploadedCode = "en";
+
+        viewModel.UploadLanguageCommand.Execute(null);
+
+        _dialogs.LastOpenFile!.Value.Filter.Should().Contain("*.json");
+        _dialogs.LastConfirm!.Value.Title.Should().Be("Replace language");
+        _languages.Uploaded.Should().Contain("/tmp/english.json");
+        viewModel.SelectedLanguageCode.Should().Be("en");
+        viewModel.Languages.Should().Contain(row =>
+            row.Label == $"English{Localizer.Instance["JustUploadedSuffix"]}");
+    }
+
+    [Fact]
+    public void Uploading_an_invalid_language_reports_the_error()
+    {
+        SettingsViewModel viewModel = Create();
+        _languages.Code = null;
+
+        viewModel.UploadLanguage("/tmp/bad.json");
+
+        viewModel.LanguageError.Should().Be("The chosen file is not a language catalog.");
+        _languages.Uploaded.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Replacing_an_existing_language_asks_first()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.ConfirmAnswer = false;
+        _languages.Code = "en";
+
+        viewModel.UploadLanguage("/tmp/english.json");
+
+        _dialogs.LastConfirm!.Value.Title.Should().Be("Replace language");
+        _dialogs.LastConfirm.Value.Question.Should().Contain("en");
+        _languages.Uploaded.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Deleting_a_language_asks_first_and_calls_the_service()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.ConfirmAnswer = true;
+
+        viewModel.DeleteLanguage("fr");
+
+        _dialogs.LastConfirm!.Value.Title.Should().Be("Delete language");
+        _dialogs.LastConfirm.Value.Question.Should().Contain("'fr'");
+        _languages.Deleted.Should().Contain("fr");
+    }
+
+    [Fact]
+    public void Deleting_a_language_removes_it_from_the_list()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.ConfirmAnswer = true;
+
+        viewModel.DeleteLanguage("fr");
+
+        _languages.Deleted.Should().Contain("fr");
+        viewModel.Languages.Should().NotContain(row => row.Code == "fr");
+        viewModel.SelectedLanguageCode.Should().Be("en");
+    }
+
+    [Fact]
+    public void Deleting_english_switches_to_the_next_language()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.ConfirmAnswer = true;
+
+        try
+        {
+            viewModel.DeleteLanguage("en");
+
+            viewModel.Languages.Should().NotContain(row => row.Code == "en");
+            viewModel.SelectedLanguageCode.Should().Be("fr");
+            viewModel.LanguageIndex.Should().Be(0);
+            Localizer.Instance.CurrentLanguage.Should().Be("fr");
+        }
+        finally
+        {
+            Localizer.Instance.SetLanguage(Localizer.English);
+        }
+    }
+
+    [Fact]
+    public void Exporting_a_language_uses_the_save_dialog()
+    {
+        SettingsViewModel viewModel = Create();
+        _dialogs.SaveFileAnswer = "/tmp/en.json";
+
+        viewModel.ExportLanguageCommand.Execute(null);
+
+        _dialogs.LastSaveFile!.Value.DefaultFileName.Should().Be("en.json");
+        _languages.Exported.Should().Contain(("en", "/tmp/en.json"));
+    }
+
+    [Fact]
+    public void Opening_a_language_calls_the_service()
+    {
+        SettingsViewModel viewModel = Create();
+
+        viewModel.OpenLanguage("en");
+
+        _languages.Opened.Should().Contain("en");
     }
 
     private SettingsViewModel Create()
     {
-        return new SettingsViewModel(_ui, _catalogue.Object, _fleet.Object, _dialogs);
+        return new SettingsViewModel(_ui, _languages, _catalogue.Object, _fleet.Object, _dialogs);
     }
 }

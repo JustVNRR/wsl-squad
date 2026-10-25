@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -13,6 +11,8 @@ namespace WslSquad.Presentation.Gui.ViewModels;
 
 public sealed record SettingsRow(string Name, string Label);
 
+public sealed record SettingsLanguageRow(string Code, string Label);
+
 public sealed record SettingsPackRow(
     string Name,
     string Family,
@@ -23,6 +23,7 @@ public sealed record SettingsPackRow(
 public sealed partial class SettingsViewModel : BaseViewModel
 {
     private readonly IUiThemeService _ui;
+    private readonly IUiLanguageService _languages;
     private readonly IPackCatalogService _catalogue;
     private readonly FleetWorkflow _fleetWorkflow;
     private readonly IDialogService _dialogs;
@@ -42,7 +43,14 @@ public sealed partial class SettingsViewModel : BaseViewModel
     public partial int PackIndex { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedLanguageCode))]
     public partial int LanguageIndex { get; set; }
+
+    [ObservableProperty]
+    public partial string LanguageError { get; set; }
+
+    [ObservableProperty]
+    public partial bool CanLanguage { get; set; }
 
     [ObservableProperty]
     public partial string Root { get; set; }
@@ -70,17 +78,20 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     public SettingsViewModel(
         IUiThemeService ui,
+        IUiLanguageService languages,
         IPackCatalogService catalogue,
         IFleetService fleet,
         IDialogService dialogs)
     {
         _ui = ui;
+        _languages = languages;
         _catalogue = catalogue;
         _fleetWorkflow = new FleetWorkflow(fleet);
         _dialogs = dialogs;
         ThemeError = string.Empty;
         CatalogueError = string.Empty;
         ConfigError = string.Empty;
+        LanguageError = string.Empty;
 
         UiThemeSettings theme = ui.GetTheme();
         string variant = string.IsNullOrEmpty(theme.ColourVariant) ? "Dark" : theme.ColourVariant;
@@ -148,6 +159,10 @@ public sealed partial class SettingsViewModel : BaseViewModel
         Packs = PackRowsOf(packs);
         int packIndex = Packs.Count > 0 ? 0 : -1;
 
+        Languages = LanguageRowsOf(Localizer.Instance.Languages, null);
+        int languageIndex = Math.Max(0, Languages.FindIndex(
+            language => string.Equals(language.Code, Localizer.Instance.CurrentLanguage, StringComparison.OrdinalIgnoreCase)));
+
         CloseCommand = new RelayCommand(Close);
         EditRootCommand = new RelayCommand(EditRoot);
         WslConfigCommand = new RelayCommand(WslConfig);
@@ -159,23 +174,25 @@ public sealed partial class SettingsViewModel : BaseViewModel
         ExportThemeCommand = new RelayCommand(PickExportTheme);
         DeleteThemeCommand = new RelayCommand<string>(DeleteTheme);
         OpenThemeCommand = new RelayCommand<string>(OpenTheme);
+        UploadLanguageCommand = new RelayCommand(PickUploadLanguage);
+        ExportLanguageCommand = new RelayCommand(PickExportLanguage);
+        DeleteLanguageCommand = new RelayCommand<string>(DeleteLanguage);
+        OpenLanguageCommand = new RelayCommand<string>(OpenLanguage);
 
         Variant = variant;
         FontIndex = fontIndex;
         SizeIndex = sizeIndex;
         ColourIndex = colourIndex;
         PackIndex = packIndex;
-        LanguageIndex = Math.Max(0, Languages.ToList().FindIndex(
-            language => string.Equals(language.Code, Localizer.Instance.CurrentLanguage, StringComparison.OrdinalIgnoreCase)));
+        LanguageIndex = languageIndex;
         CanPack = PackIndex >= 0;
         CanTheme = HasRealTheme();
+        CanLanguage = Languages.Count > 0;
     }
 
     public string WslConfigPath { get; }
 
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound as an instance property by WPF.")]
-    [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
-    public IReadOnlyList<UiLanguage> Languages => Localizer.Instance.Languages;
+    public List<SettingsLanguageRow> Languages { get; private set; }
 
     public List<SettingsRow> Fonts { get; private set; }
 
@@ -208,6 +225,17 @@ public sealed partial class SettingsViewModel : BaseViewModel
     public IRelayCommand<string> DeleteThemeCommand { get; }
 
     public IRelayCommand<string> OpenThemeCommand { get; }
+
+    public IRelayCommand UploadLanguageCommand { get; }
+
+    public IRelayCommand ExportLanguageCommand { get; }
+
+    public IRelayCommand<string> DeleteLanguageCommand { get; }
+
+    public IRelayCommand<string> OpenLanguageCommand { get; }
+
+    public string SelectedLanguageCode =>
+        Languages.Count == 0 ? string.Empty : Languages[Math.Clamp(LanguageIndex, 0, Languages.Count - 1)].Code;
 
     public string SelectedFont => Fonts.Count == 0 ? string.Empty : Fonts[Math.Clamp(FontIndex, 0, Fonts.Count - 1)].Name;
 
@@ -244,6 +272,8 @@ public sealed partial class SettingsViewModel : BaseViewModel
 
     partial void OnLanguageIndexChanged(int value)
     {
+        CanLanguage = value >= 0 && value < Languages.Count;
+
         if (value >= 0 && value < Languages.Count)
         {
             Localizer.Instance.SetLanguage(Languages[value].Code);
@@ -403,6 +433,194 @@ public sealed partial class SettingsViewModel : BaseViewModel
         }
     }
 
+    private void PickUploadLanguage()
+    {
+        string? source = _dialogs.PickOpenFile(
+            Localizer.Instance["FileDialogLanguage"],
+            Localizer.Instance["FileFilterLanguages"]);
+
+        if (source is not null)
+        {
+            UploadLanguage(source);
+        }
+    }
+
+    public void UploadLanguage(string? source)
+    {
+        if (string.IsNullOrEmpty(source))
+        {
+            return;
+        }
+
+        LanguageError = string.Empty;
+        string? code = _languages.LanguageCodeFor(source);
+
+        if (code is null)
+        {
+            LanguageError = Localizer.Instance["ErrorNotALanguage"];
+
+            return;
+        }
+
+        if (HasLanguage(code) &&
+            !_dialogs.Confirm(
+                Localizer.Instance["ReplaceLanguageTitle"],
+                Localizer.Instance.Format("ConfirmReplaceLanguage", code)))
+        {
+            return;
+        }
+
+        try
+        {
+            string uploaded = _languages.UploadLanguage(source);
+            RefreshLanguages(uploaded);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            LanguageError = Localizer.Instance.Format("LanguageUploadFailed", exception.ToMessage());
+        }
+    }
+
+    private void PickExportLanguage()
+    {
+        string code = SelectedLanguageCode;
+
+        if (code.Length == 0)
+        {
+            return;
+        }
+
+        string proposed = _languages.LanguageFileFor(code);
+        string? target = _dialogs.PickSaveFile(
+            Localizer.Instance.Format("FileDialogSave", proposed),
+            proposed);
+
+        if (target is null)
+        {
+            return;
+        }
+
+        LanguageError = string.Empty;
+
+        try
+        {
+            _languages.ExportLanguage(code, target);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            LanguageError = Localizer.Instance.Format("LanguageExportFailed", exception.ToMessage());
+        }
+    }
+
+    public void DeleteLanguage(string? code)
+    {
+        if (string.IsNullOrEmpty(code) ||
+            !_dialogs.Confirm(
+                Localizer.Instance["DeleteLanguageTitle"],
+                Localizer.Instance.Format("ConfirmDeleteLanguage", code)))
+        {
+            return;
+        }
+
+        LanguageError = string.Empty;
+        bool wasCurrent = string.Equals(
+            code,
+            Localizer.Instance.CurrentLanguage,
+            StringComparison.OrdinalIgnoreCase);
+
+        try
+        {
+            _languages.DeleteLanguage(code);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            LanguageError = Localizer.Instance.Format("LanguageDeleteFailed", exception.ToMessage());
+
+            return;
+        }
+
+        Languages = [.. Languages.Where(row =>
+            !string.Equals(row.Code, code, StringComparison.OrdinalIgnoreCase))];
+        OnPropertyChanged(nameof(Languages));
+
+        if (wasCurrent &&
+            string.Equals(code, Localizer.Instance.CurrentLanguage, StringComparison.OrdinalIgnoreCase))
+        {
+            Localizer.Instance.SetLanguage(
+                Languages.Count > 0 ? Languages[0].Code : Localizer.English);
+        }
+
+        int index = Languages.FindIndex(row =>
+            string.Equals(row.Code, Localizer.Instance.CurrentLanguage, StringComparison.OrdinalIgnoreCase));
+
+        LanguageIndex = index;
+        OnPropertyChanged(nameof(SelectedLanguageCode));
+        CanLanguage = index >= 0;
+    }
+
+    public void OpenLanguage(string? code)
+    {
+        if (string.IsNullOrEmpty(code))
+        {
+            return;
+        }
+
+        LanguageError = string.Empty;
+
+        try
+        {
+            _languages.OpenLanguage(code);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            LanguageError = Localizer.Instance.Format("FileDidNotOpen", exception.ToMessage());
+        }
+    }
+
+    public bool HasLanguage(string code)
+    {
+        return Languages.Exists(row => string.Equals(row.Code, code, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void RefreshLanguages(string? uploadedCode)
+    {
+        Languages = LanguageRowsOf(Localizer.Instance.Languages, uploadedCode);
+        OnPropertyChanged(nameof(Languages));
+
+        int index = uploadedCode is null
+            ? -1
+            : Languages.FindIndex(row =>
+                string.Equals(row.Code, uploadedCode, StringComparison.OrdinalIgnoreCase));
+
+        if (index < 0)
+        {
+            index = Languages.FindIndex(row =>
+                string.Equals(row.Code, Localizer.Instance.CurrentLanguage, StringComparison.OrdinalIgnoreCase));
+        }
+
+        LanguageIndex = Math.Max(0, index);
+        OnPropertyChanged(nameof(SelectedLanguageCode));
+        CanLanguage = Languages.Count > 0;
+    }
+
+    private static List<SettingsLanguageRow> LanguageRowsOf(
+        IReadOnlyList<UiLanguage> languages,
+        string? uploadedCode)
+    {
+        return
+        [
+            .. languages.Select(language => new SettingsLanguageRow(
+                language.Code,
+                string.Equals(language.Code, uploadedCode, StringComparison.OrdinalIgnoreCase)
+                    ? $"{language.DisplayName}{Localizer.Instance["JustUploadedSuffix"]}"
+                    : language.DisplayName)),
+        ];
+    }
+
     public void OpenPack()
     {
         SettingsPackRow? row = SelectedPack();
@@ -552,7 +770,11 @@ public sealed partial class SettingsViewModel : BaseViewModel
             return;
         }
 
-        List<SettingsRow> rows = [.. Colours, new SettingsRow(name, $"{name}  (just uploaded)")];
+        List<SettingsRow> rows =
+        [
+            .. Colours,
+            new SettingsRow(name, $"{name}{Localizer.Instance["JustUploadedSuffix"]}"),
+        ];
         Colours = rows;
         OnPropertyChanged(nameof(Colours));
         ColourIndex = rows.Count - 1;

@@ -18,6 +18,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
     private readonly IInstanceService _instance;
     private readonly IFleetService _fleet;
     private readonly IUiThemeService _ui;
+    private readonly IUiLanguageService _languages;
     private readonly IPackCatalogService _catalogue;
     private readonly IDialogService _dialogs;
     private readonly InstanceWorkflow _workflow;
@@ -43,6 +44,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         IInstanceService instance,
         IFleetService fleet,
         IUiThemeService ui,
+        IUiLanguageService languages,
         IPackCatalogService catalogue,
         IDialogService dialogs,
         ILoggerService logger)
@@ -50,6 +52,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _instance = instance;
         _fleet = fleet;
         _ui = ui;
+        _languages = languages;
         _catalogue = catalogue;
         _dialogs = dialogs;
         DialogInstanceInteraction interaction = new(dialogs);
@@ -193,7 +196,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             return;
         }
 
-        SettingsViewModel viewModel = new(_ui, _catalogue, _fleet, _dialogs);
+        SettingsViewModel viewModel = new(_ui, _languages, _catalogue, _fleet, _dialogs);
         SettingsDto? outcome = _dialogs.ShowSettings(viewModel);
 
         if (outcome is null)

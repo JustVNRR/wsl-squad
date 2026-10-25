@@ -135,6 +135,87 @@ public class LocalizerTests
     }
 
     [Fact]
+    public void An_external_language_disappears_when_its_file_is_removed()
+    {
+        using TemporaryDirectory temp = new();
+        string path = temp.Write("languages/de.json", """
+            {
+              "code": "de",
+              "displayName": "Deutsch",
+              "strings": {
+                "Language": "Sprache"
+              }
+            }
+            """);
+        string directory = temp.Combine("languages");
+        Localizer localizer = new();
+        localizer.LoadLanguages(directory);
+        localizer.SetLanguage("de");
+
+        File.Delete(path);
+        localizer.LoadLanguages(directory);
+
+        localizer.Languages.Should().NotContain(language => language.Code == "de");
+        localizer.CurrentLanguage.Should().Be(Localizer.English);
+    }
+
+    [Fact]
+    public void Removing_an_external_override_restores_the_bundled_catalog()
+    {
+        using TemporaryDirectory temp = new();
+        string path = temp.Write("languages/fr.json", """
+            {
+              "code": "fr",
+              "displayName": "Français",
+              "strings": {
+                "Language": "Langue client"
+              }
+            }
+            """);
+        Localizer localizer = new();
+        localizer.LoadLanguages(temp.Combine("languages"));
+        localizer.SetLanguage("fr");
+        localizer["Language"].Should().Be("Langue client");
+
+        File.Delete(path);
+        localizer.LoadLanguages(temp.Combine("languages"));
+
+        localizer.CurrentLanguage.Should().Be("fr");
+        localizer["Language"].Should().Be("Langue");
+        localizer["SettingsTitle"].Should().Be("Paramètres");
+    }
+
+    [Fact]
+    public void A_language_file_is_inspected_only_when_its_code_is_usable()
+    {
+        using TemporaryDirectory temp = new();
+        string good = temp.Write("languages/de.json", """
+            {
+              "code": "de",
+              "displayName": "Deutsch",
+              "strings": {
+                "Language": "Sprache"
+              }
+            }
+            """);
+        string badCode = temp.Write("languages/bad.json", """
+            {
+              "code": "bad code",
+              "strings": {}
+            }
+            """);
+        string noStrings = temp.Write("languages/empty.json", """
+            {
+              "code": "es"
+            }
+            """);
+
+        Localizer.InspectLanguageFile(good).Should().Be(new UiLanguage("de", "Deutsch"));
+        Localizer.InspectLanguageFile(badCode).Should().BeNull();
+        Localizer.InspectLanguageFile(noStrings).Should().BeNull();
+    }
+
+    [Fact]
     public void The_selected_language_is_saved_and_restored()
     {
         using TemporaryDirectory temp = new();

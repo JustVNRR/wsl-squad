@@ -40,6 +40,7 @@ public partial class App : Application
         FontFaceResolver.LoadCatalog(assets);
 
         WpfThemeService theme = new(assets);
+        WpfLanguageService languages = new(assets);
         theme.ApplyPalette();
         theme.ApplyFace();
 
@@ -51,6 +52,7 @@ public partial class App : Application
             factory.CreateInstanceService(assets),
             fleet,
             theme,
+            languages,
             factory.CreatePackCatalogService(assets),
             new WpfDialogs(),
             factory.CreateLoggerService());

@@ -17,23 +17,30 @@ public sealed class Localizer : INotifyPropertyChanged
     private readonly Dictionary<string, string> _displayNames =
         new(StringComparer.OrdinalIgnoreCase);
 
+    private readonly Dictionary<string, IReadOnlyDictionary<string, string>> _bundledCatalogs =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Dictionary<string, string> _bundledDisplayNames =
+        new(StringComparer.OrdinalIgnoreCase);
+
     private IReadOnlyDictionary<string, string> _strings = EnglishStrings.All;
     private IConfigRepository? _preferences;
 
     public Localizer()
     {
-        _catalogs[English] = _strings;
-        _displayNames[English] = "English";
         CurrentLanguage = English;
+        AddBundled(new UiLanguage(English, "English"), _strings);
 
         foreach (LanguageFile file in LanguageFile.ReadEmbeddedLanguages())
         {
             if (file.Code is not null && file.Strings is not null)
             {
-                RegisterLanguage(
+                string code = file.Code.Trim();
+
+                AddBundled(
                     new UiLanguage(
-                        file.Code.Trim(),
-                        file.DisplayName?.Trim() is { Length: > 0 } name ? name : file.Code.Trim()),
+                        code,
+                        file.DisplayName?.Trim() is { Length: > 0 } name ? name : code),
                     file.Strings);
             }
         }
@@ -91,47 +98,107 @@ public sealed class Localizer : INotifyPropertyChanged
         }
     }
 
+    public static UiLanguage? InspectLanguageFile(string path)
+    {
+        LanguageFile? file = LanguageFile.Read(path);
+        string? code = file?.Code?.Trim();
+
+        if (file is null || code is null || file.Strings is null || !IsUsableCode(code))
+        {
+            return null;
+        }
+
+        return new UiLanguage(
+            code,
+            file.DisplayName?.Trim() is { Length: > 0 } name ? name : code);
+    }
+
     public void LoadLanguages(string directory)
     {
-        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+        Dictionary<string, IReadOnlyDictionary<string, string>> catalogs =
+            new(_bundledCatalogs, StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, string> displayNames =
+            new(_bundledDisplayNames, StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory))
         {
-            return;
+            foreach (string path in Directory.EnumerateFiles(directory)
+                         .Where(file => Path.GetExtension(file).Equals(".json", StringComparison.OrdinalIgnoreCase))
+                         .Order(StringComparer.Ordinal))
+            {
+                LanguageFile? file = LanguageFile.Read(path);
+
+                if (file?.Code is null)
+                {
+                    continue;
+                }
+
+                string code = file.Code.Trim();
+
+                if (!IsUsableCode(code))
+                {
+                    continue;
+                }
+
+                Dictionary<string, string> strings = new(StringComparer.Ordinal);
+
+                if (catalogs.TryGetValue(code, out IReadOnlyDictionary<string, string>? bundled))
+                {
+                    foreach (KeyValuePair<string, string> entry in bundled)
+                    {
+                        strings[entry.Key] = entry.Value;
+                    }
+                }
+
+                if (file.Strings is not null)
+                {
+                    foreach (KeyValuePair<string, string> entry in file.Strings)
+                    {
+                        strings[entry.Key] = entry.Value;
+                    }
+                }
+
+                catalogs[code] = strings;
+                displayNames[code] = file.DisplayName?.Trim() is { Length: > 0 } name ? name : code;
+            }
         }
 
-        foreach (string path in Directory.EnumerateFiles(directory)
-                     .Where(file => Path.GetExtension(file).Equals(".json", StringComparison.OrdinalIgnoreCase))
-                     .Order(StringComparer.Ordinal))
+        _catalogs.Clear();
+        _displayNames.Clear();
+
+        foreach (KeyValuePair<string, IReadOnlyDictionary<string, string>> entry in catalogs)
         {
-            LanguageFile? file = LanguageFile.Read(path);
-
-            if (file?.Code is null)
-            {
-                continue;
-            }
-
-            string code = file.Code.Trim();
-            Dictionary<string, string> strings = new(StringComparer.Ordinal);
-
-            if (_catalogs.TryGetValue(code, out IReadOnlyDictionary<string, string>? bundled))
-            {
-                foreach (KeyValuePair<string, string> entry in bundled)
-                {
-                    strings[entry.Key] = entry.Value;
-                }
-            }
-
-            if (file.Strings is not null)
-            {
-                foreach (KeyValuePair<string, string> entry in file.Strings)
-                {
-                    strings[entry.Key] = entry.Value;
-                }
-            }
-
-            RegisterLanguage(
-                new UiLanguage(code, file.DisplayName?.Trim() is { Length: > 0 } name ? name : code),
-                strings);
+            _catalogs[entry.Key] = entry.Value;
         }
+
+        foreach (KeyValuePair<string, string> entry in displayNames)
+        {
+            _displayNames[entry.Key] = entry.Value;
+        }
+
+        bool switched = !_catalogs.ContainsKey(CurrentLanguage);
+
+        if (switched)
+        {
+            CurrentLanguage = English;
+            _preferences?.SaveLanguage(CurrentLanguage);
+        }
+
+        _strings = _catalogs[CurrentLanguage];
+        RaiseTextChanged();
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Languages)));
+
+        if (switched)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLanguage)));
+        }
+    }
+
+    public IReadOnlyDictionary<string, string>? GetStrings(string code)
+    {
+        return _catalogs.TryGetValue(code, out IReadOnlyDictionary<string, string>? strings)
+            ? strings
+            : null;
     }
 
     public void UsePreferences(IConfigRepository preferences)
@@ -144,6 +211,20 @@ public sealed class Localizer : INotifyPropertyChanged
         {
             SwitchLanguage(saved.Trim(), save: false);
         }
+    }
+
+    private static bool IsUsableCode(string code)
+    {
+        return code.Length is >= 2 and <= 16 &&
+               code.All(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_');
+    }
+
+    private void AddBundled(UiLanguage language, IReadOnlyDictionary<string, string> strings)
+    {
+        _bundledCatalogs[language.Code] = strings;
+        _bundledDisplayNames[language.Code] = language.DisplayName;
+        _catalogs[language.Code] = strings;
+        _displayNames[language.Code] = language.DisplayName;
     }
 
     public void RegisterLanguage(UiLanguage language, IReadOnlyDictionary<string, string> strings)

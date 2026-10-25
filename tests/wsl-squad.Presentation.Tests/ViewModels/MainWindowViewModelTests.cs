@@ -16,6 +16,7 @@ public class MainWindowViewModelTests
     private readonly Mock<IFleetService> _fleet = new();
     private readonly Mock<IPackCatalogService> _catalogue = new();
     private readonly TestThemeService _ui = new();
+    private readonly TestLanguageService _languages = new();
     private readonly TestDialogService _dialogs = new();
     private readonly RecordingLogger _logger = new();
     private readonly MainWindowViewModel _viewModel;
@@ -42,6 +43,7 @@ public class MainWindowViewModelTests
             _instance.Object,
             _fleet.Object,
             _ui,
+            _languages,
             _catalogue.Object,
             _dialogs,
             _logger);
