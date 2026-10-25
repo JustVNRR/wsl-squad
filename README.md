@@ -40,13 +40,16 @@ Every action is available both as a GUI and as a CLI.
 Make sure Docker Desktop is running before you start.
 
 1. Download the installer:
-   [wsl-squad-setup.exe](TODO_INSTALLER_URL)
+   [wsl-squad-setup.exe](https://github.com/JustVNRR/wsl-squad/releases/latest/download/wsl-squad-setup.exe)
 
 2. Or download the portable version:
-   [wsl-squad-portable.zip](TODO_PORTABLE_URL)
+   [wsl-squad-portable.zip](https://github.com/JustVNRR/wsl-squad/releases/latest/download/wsl-squad-portable.zip)
 
-3. All releases:
-   [Releases](TODO_RELEASES_URL)
+3. Verify the download:
+   [SHA256SUMS.txt](https://github.com/JustVNRR/wsl-squad/releases/latest/download/SHA256SUMS.txt)
+
+4. All releases:
+   [Releases](https://github.com/JustVNRR/wsl-squad/releases)
 
 Without a code-signing certificate, Windows SmartScreen may warn, and Smart
 App Control may block the build. Check `SHA256SUMS.txt` in the release to
