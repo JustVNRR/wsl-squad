@@ -9,17 +9,9 @@ public class ConsoleMenuTests
     [Fact]
     public void Formats_the_current_row_with_a_marker()
     {
-        string row = ConsoleMenu.FormatRow(1, 1, ["first", "second"], null);
+        string row = ConsoleMenu.FormatRow(1, 1, ["first", "second"]);
 
         row.Should().Be("  > second");
-    }
-
-    [Fact]
-    public void Formats_a_checkbox_row()
-    {
-        string row = ConsoleMenu.FormatRow(0, 1, ["first"], [true]);
-
-        row.Should().Be("    [x] first");
     }
 
     [Fact]

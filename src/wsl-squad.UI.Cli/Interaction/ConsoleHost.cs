@@ -14,12 +14,12 @@ namespace WslSquad.UI.Cli.Interaction;
     Justification = "Instance methods keep the console injectable and mirror the reference.")]
 public sealed class ConsoleHost
 {
-    private readonly ConsoleTheme _theme;
-
     public ConsoleHost(ConsoleTheme theme)
     {
-        _theme = theme;
+        Theme = theme;
     }
+
+    public ConsoleTheme Theme { get; }
 
     public bool HasKeyboard()
     {
@@ -90,18 +90,24 @@ public sealed class ConsoleHost
         }
     }
 
+    public static bool IsPlainOutput()
+    {
+        return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR")) ||
+               string.Equals(Environment.GetEnvironmentVariable("TERM"), "dumb", StringComparison.OrdinalIgnoreCase) ||
+               Console.IsOutputRedirected;
+    }
+
     public void Line(string text, ConsoleTone? tone = null)
     {
-        bool plain = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR")) ||
-                     string.Equals(Environment.GetEnvironmentVariable("TERM"), "dumb", StringComparison.OrdinalIgnoreCase);
+        bool plain = IsPlainOutput();
 
-        if (tone is not null && !plain && !Console.IsOutputRedirected)
+        if (tone is not null && !plain)
         {
             ConsoleColor previous = Console.ForegroundColor;
 
             try
             {
-                Console.ForegroundColor = _theme.GetColor(tone.Value);
+                Console.ForegroundColor = Theme.GetColor(tone.Value);
                 Console.WriteLine(text);
             }
             finally

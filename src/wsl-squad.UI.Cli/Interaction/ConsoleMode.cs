@@ -4,7 +4,7 @@ using System.Runtime.Versioning;
 
 namespace WslSquad.UI.Cli.Interaction;
 
-internal static class ConsoleMode
+internal static partial class ConsoleMode
 {
     private const int _standardOutputHandle = -11;
     private const uint _enableVirtualTerminalProcessing = 0x0004;
@@ -63,14 +63,14 @@ internal static class ConsoleMode
                SetConsoleMode(handle, mode | _enableVirtualTerminalProcessing);
     }
 
-#pragma warning disable SYSLIB1054
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GetStdHandle(int handle);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    private static partial IntPtr GetStdHandle(int handle);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool GetConsoleMode(IntPtr handle, out uint mode);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetConsoleMode(IntPtr handle, out uint mode);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool SetConsoleMode(IntPtr handle, uint mode);
-#pragma warning restore SYSLIB1054
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetConsoleMode(IntPtr handle, uint mode);
 }

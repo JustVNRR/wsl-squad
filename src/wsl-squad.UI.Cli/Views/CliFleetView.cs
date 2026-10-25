@@ -8,6 +8,11 @@ namespace WslSquad.UI.Cli.Views;
 
 public sealed class CliFleetView : CliViewBase, IFleetView
 {
+    public CliFleetView(ConsoleHost host)
+        : base(host)
+    {
+    }
+
     public void Clear()
     {
         Host.Clear();
@@ -30,6 +35,9 @@ public sealed class CliFleetView : CliViewBase, IFleetView
         IReadOnlyList<string> running)
     {
         ShowOrphans(orphans);
+        int stateWidth = Math.Max(
+            Localizer.Instance["CliRunning"].Length,
+            Localizer.Instance["CliStopped"].Length) + 2;
 
         WslIndexDto? picked = Pick(
             Localizer.Instance["CliOurInstances"],
@@ -40,7 +48,7 @@ public sealed class CliFleetView : CliViewBase, IFleetView
                     ? Localizer.Instance["CliRunning"]
                     : Localizer.Instance["CliStopped"];
 
-                return $"{row.Name,-30} {state,-8} {Size(row.Size),10}";
+                return $"{row.Name,-30} {state.PadRight(stateWidth)} {Size(row.Size),10}";
             });
 
         return picked?.Name;
@@ -101,7 +109,7 @@ public sealed class CliFleetView : CliViewBase, IFleetView
             new("duplicate", Localizer.Instance["CliPackActionDuplicate"], Localizer.Instance["CliPackDuplicate"]),
             new("delete", Localizer.Instance["CliPackActionDelete"], Localizer.Instance["CliPackDelete"]),
         ];
-        ConsoleMenu menu = new(Localizer.Instance.Format("CliPackOf", packName), new ConsoleHost(Theme));
+        ConsoleMenu menu = new(Localizer.Instance.Format("CliPackOf", packName), Host);
 
         foreach (ConsoleMenuItem item in items)
         {

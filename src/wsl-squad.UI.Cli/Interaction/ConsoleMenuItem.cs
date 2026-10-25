@@ -34,8 +34,6 @@ public sealed class ConsoleMenuItem
 
     public object? Value { get; }
 
-    public bool Checked { get; set; }
-
     public void SetKeyWidth(int width)
     {
         int size = width < 1 ? 1 : width;

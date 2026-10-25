@@ -7,6 +7,11 @@ namespace WslSquad.UI.Cli.Views;
 
 public sealed class CliBuildView : CliViewBase, IBuildView
 {
+    public CliBuildView(ConsoleHost host)
+        : base(host)
+    {
+    }
+
     public void ShowNameProblem(string message)
     {
         Write($"  {message}", ConsoleTone.Warning);
@@ -43,11 +48,12 @@ public sealed class CliBuildView : CliViewBase, IBuildView
     public void ShowAbort(IReadOnlyList<string> lines)
     {
         Write(string.Empty);
+        string abortPrefix = Localizer.Instance["CliAbortPrefix"];
 
         for (int index = 0; index < lines.Count; index++)
         {
             ConsoleTone tone = index == 0 ? ConsoleTone.Error : ConsoleTone.Hint;
-            string prefix = index == 0 ? Localizer.Instance["CliAbortPrefix"] : "        ";
+            string prefix = index == 0 ? abortPrefix : new string(' ', abortPrefix.Length);
             Write(prefix + lines[index], tone);
         }
     }

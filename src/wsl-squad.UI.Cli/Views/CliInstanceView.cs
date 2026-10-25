@@ -9,6 +9,11 @@ namespace WslSquad.UI.Cli.Views;
 
 public sealed class CliInstanceView : CliViewBase, IInstanceView
 {
+    public CliInstanceView(ConsoleHost host)
+        : base(host)
+    {
+    }
+
     public void ShowNoInstances()
     {
         Write(string.Empty);

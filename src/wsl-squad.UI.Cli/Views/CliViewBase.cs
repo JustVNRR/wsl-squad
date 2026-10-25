@@ -7,10 +7,11 @@ namespace WslSquad.UI.Cli.Views;
 
 public abstract class CliViewBase : IPresenterViewBase
 {
-    protected CliViewBase()
+    protected CliViewBase(ConsoleHost host)
     {
-        Theme = new ConsoleTheme();
-        Host = new ConsoleHost(Theme);
+        ArgumentNullException.ThrowIfNull(host);
+        Host = host;
+        Theme = host.Theme;
     }
 
     protected ConsoleHost Host { get; }
@@ -64,18 +65,23 @@ public abstract class CliViewBase : IPresenterViewBase
                 return !defaultNo;
             }
 
-            if (trimmed.Equals("y", StringComparison.OrdinalIgnoreCase))
+            if (Matches(trimmed, "y", Localizer.Instance["CliYesShort"], Localizer.Instance["CliYesLong"]))
             {
                 return true;
             }
 
-            if (trimmed.Equals("n", StringComparison.OrdinalIgnoreCase))
+            if (Matches(trimmed, "n", Localizer.Instance["CliNoShort"], Localizer.Instance["CliNoLong"]))
             {
                 return false;
             }
 
             Write(Localizer.Instance["CliAnswerYesNo"], ConsoleTone.Hint);
         }
+    }
+
+    private static bool Matches(string answer, params string[] accepted)
+    {
+        return accepted.Any(candidate => answer.Equals(candidate, StringComparison.OrdinalIgnoreCase));
     }
 
     protected T? Pick<T>(string title, IReadOnlyList<T> items, Func<T, string> label, string note = "")
@@ -98,41 +104,6 @@ public abstract class CliViewBase : IPresenterViewBase
         return picked is { Count: > 0 } && picked[0].Value is T value ? value : null;
     }
 
-    protected IReadOnlyList<T>? Checklist<T>(
-        string title,
-        IReadOnlyList<T> items,
-        Func<T, string> label,
-        IReadOnlyList<int> checkedIndexes,
-        string note = "")
-        where T : class
-    {
-        if (items.Count == 0)
-        {
-            return [];
-        }
-
-        ConsoleMenu menu = new(title, Host) { Multi = true, Note = note };
-
-        foreach (T item in items)
-        {
-            menu.Add(new ConsoleMenuItem(label(item), item));
-        }
-
-        foreach (int index in checkedIndexes)
-        {
-            if (index >= 0 && index < menu.Items.Count)
-            {
-                menu.Items[index].Checked = true;
-            }
-        }
-
-        IReadOnlyList<ConsoleMenuItem>? picked = menu.Prompt();
-
-        return picked is null
-            ? null
-            : [.. picked.Select(item => item.Value).OfType<T>()];
-    }
-
     protected void Cancelled(string what)
     {
         Write(string.Empty);
@@ -141,16 +112,25 @@ public abstract class CliViewBase : IPresenterViewBase
 
     protected void Banner(string message)
     {
-        (ConsoleColor box, ConsoleColor ink) = Theme.GetBannerColors();
-        ConsoleColor priorForeground = Console.ForegroundColor;
-        ConsoleColor priorBackground = Console.BackgroundColor;
-
         int inner = Math.Clamp(message.Length + 4, 24, 56);
         string text = message.Length <= inner ? message.PadRight(inner) : message[..inner];
         string rule = new('=', inner + 2);
 
+        if (ConsoleHost.IsPlainOutput())
+        {
+            Write($"+{rule}+");
+            Write($"| {text} |");
+            Write($"+{rule}+");
+
+            return;
+        }
+
+        ConsoleColor priorForeground = Console.ForegroundColor;
+        ConsoleColor priorBackground = Console.BackgroundColor;
+
         try
         {
+            (ConsoleColor box, ConsoleColor ink) = Theme.GetBannerColors();
             Console.ForegroundColor = ink;
             Console.BackgroundColor = box;
             Write($"+{rule}+");

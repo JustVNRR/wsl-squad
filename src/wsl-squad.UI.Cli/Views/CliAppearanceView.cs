@@ -7,6 +7,11 @@ namespace WslSquad.UI.Cli.Views;
 
 public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 {
+    public CliAppearanceView(ConsoleHost host)
+        : base(host)
+    {
+    }
+
     public void Clear()
     {
         Host.Clear();
@@ -31,14 +36,18 @@ public sealed class CliAppearanceView : CliViewBase, IAppearanceView
 
     public string? AskTheme(string name)
     {
+        List<Choice> choices =
+        [
+            new Choice("icon", Localizer.Instance["CliTile"], Localizer.Instance["CliChoiceIcon"]),
+            new Choice("font", Localizer.Instance["CliWholeTerminal"], Localizer.Instance["CliChoiceFont"]),
+            new Choice("color", Localizer.Instance["CliBackground"], Localizer.Instance["CliChoiceColor"]),
+        ];
+        int labelWidth = choices.Max(choice => choice.Name.Length);
+
         return Pick(
             Localizer.Instance.Format("CliThemeOf", name),
-            [
-                new Choice("icon", Localizer.Instance["CliTile"], Localizer.Instance["CliChoiceIcon"]),
-                new Choice("font", Localizer.Instance["CliWholeTerminal"], Localizer.Instance["CliChoiceFont"]),
-                new Choice("color", Localizer.Instance["CliBackground"], Localizer.Instance["CliChoiceColor"]),
-            ],
-            choice => $"{choice.Label,-6} {choice.About}")?.What;
+            choices,
+            choice => $"{choice.Name.PadRight(labelWidth)} {choice.Description}")?.What;
     }
 
     public string? AskFont(string name, IReadOnlyList<string> fonts, string current)
@@ -72,7 +81,7 @@ public sealed class CliAppearanceView : CliViewBase, IAppearanceView
                 new Choice("colours", Localizer.Instance["CliColors"]),
                 new Choice("image", Localizer.Instance["CliLocalFile"]),
             ],
-            choice => choice.About)?.What;
+            choice => choice.Description)?.What;
     }
 
     public string? AskLetters(string question)
@@ -125,5 +134,8 @@ public sealed class CliAppearanceView : CliViewBase, IAppearanceView
         Write(string.Empty);
     }
 
-    private sealed record Choice(string What, string About, string? Label = null);
+    private sealed record Choice(string What, string Description, string? Label = null)
+    {
+        public string Name => Label ?? What;
+    }
 }

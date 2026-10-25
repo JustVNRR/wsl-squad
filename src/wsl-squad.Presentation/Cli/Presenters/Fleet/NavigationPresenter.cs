@@ -95,7 +95,7 @@ public sealed class NavigationPresenter
                         return Pop(_settings, "Settings");
                     }
 
-                    if (item.Key == "availables packs")
+                    if (item.Key == "available_packs")
                     {
                         _stack.Push(new NavigationState("packs"));
                         return null;

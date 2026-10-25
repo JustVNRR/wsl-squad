@@ -29,6 +29,7 @@ public sealed class CliComposition
     private readonly MigratePresenter _migrate;
     private readonly WslConfigPresenter _wslConfig;
     private readonly DeleteArchivePresenter _deleteArchive;
+    private readonly LanguagePresenter _language;
     private readonly NavigationPresenter _navigation;
 
     public CliComposition()
@@ -39,10 +40,10 @@ public sealed class CliComposition
         IPackCatalogService catalogue = services.Catalogue;
 
         _host = new ConsoleHost(_theme);
-        CliFleetView fleetView = new();
-        CliInstanceView instanceView = new();
-        CliBuildView buildView = new();
-        CliAppearanceView appearanceView = new();
+        CliFleetView fleetView = new(_host);
+        CliInstanceView instanceView = new(_host);
+        CliBuildView buildView = new(_host);
+        CliAppearanceView appearanceView = new(_host);
 
         _build = new BuildPresenter(instance, buildView);
         _open = new OpenPresenter(instance, instanceView);
@@ -72,11 +73,11 @@ public sealed class CliComposition
         PresenterAction unregister = new("unregister_docker", "CliActionUnregisterDocker", name => _unregisterDocker.Run(name), "CliCommandUnregisterDocker");
         PresenterAction restore = new("restore", "CliActionRestore", name => _restore.Run(name), "CliCommandRestore");
         PresenterAction deleteArchive = new("delete_archive", "CliActionDeleteArchive", name => _deleteArchive.Run(name), "CliCommandDeleteArchive");
-        LanguagePresenter language = new(fleetView);
-        PresenterAction languageAction = new("language", "CliActionLanguage", _ => language.Run(), "CliCommandLanguage");
+        _language = new LanguagePresenter(fleetView);
+        PresenterAction languageAction = new("language", "CliActionLanguage", _ => _language.Run(), "CliCommandLanguage");
         PresenterAction migrate = new("migrate", "CliActionMigrate", _ => _migrate.Run(null), "CliCommandMigrate");
         PresenterAction wslConfig = new("wslconfig", "CliActionWslConfig", _ => _wslConfig.Run(), "CliCommandWslConfig");
-        PresenterAction packs = new("availables packs", "CliActionPacks", _ => WorkflowResults.Cancelled("Settings"), "CliCommandPacks");
+        PresenterAction packs = new("available_packs", "CliActionPacks", _ => WorkflowResults.Cancelled("Settings"), "CliCommandPacks");
 
         Dictionary<WslCommandKind, PresenterAction> actions = new()
         {
@@ -146,18 +147,25 @@ public sealed class CliComposition
 
                 _host.Clear();
 
+                IWorkflowResult result;
+
                 try
                 {
-                    RunGesture(picked[0].Key, string.Empty);
+                    result = RunGesture(picked[0].Key, string.Empty);
                 }
                 catch (ConsoleQuitException)
                 {
                     return 130;
                 }
 
+                if (result.Status == WorkflowStatus.Cancelled)
+                {
+                    continue;
+                }
+
                 _host.Line(string.Empty);
                 _host.Line(Localizer.Instance["CliPressEnterMenu"], ConsoleTone.Muted);
-                Console.ReadLine();
+                _host.ReadLine(string.Empty);
             }
         }
         finally
@@ -176,6 +184,7 @@ public sealed class CliComposition
         return command switch
         {
             "build" => _build.Run(),
+            "language" => _language.Run(),
             "settings" => _navigation.Run("settings"),
             "instances" => _navigation.Run("instances"),
             "archives" => _navigation.Run("archives"),

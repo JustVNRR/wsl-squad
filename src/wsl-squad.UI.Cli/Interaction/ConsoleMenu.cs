@@ -17,8 +17,6 @@ public sealed class ConsoleMenu
 
     public string Note { get; set; } = string.Empty;
 
-    public bool Multi { get; set; }
-
     public int Current { get; set; }
 
     public IReadOnlyList<ConsoleMenuItem> Items => _items;
@@ -26,19 +24,11 @@ public sealed class ConsoleMenu
     public static string FormatRow(
         int index,
         int current,
-        IReadOnlyList<string> labels,
-        IReadOnlyList<bool>? checkedFlags)
+        IReadOnlyList<string> labels)
     {
         string marker = index == current ? "  > " : "    ";
 
-        if (checkedFlags is null)
-        {
-            return marker + labels[index];
-        }
-
-        string box = checkedFlags[index] ? "[x] " : "[ ] ";
-
-        return marker + box + labels[index];
+        return marker + labels[index];
     }
 
     public static IReadOnlyList<string> Fit(IReadOnlyList<string> labels, int width, int prefix)
@@ -115,15 +105,17 @@ public sealed class ConsoleMenu
         }
     }
 
-    private IReadOnlyList<bool>? Flags()
-    {
-        return Multi ? [.. _items.Select(item => item.Checked)] : null;
-    }
-
-    private void DrawRow(int index, IReadOnlyList<string> texts)
+    private void DrawRow(int index, IReadOnlyList<string> texts, int width)
     {
         ConsoleTone? tone = index == Current ? ConsoleTone.Info : null;
-        _console.Line(FormatRow(index, Current, texts, Flags()), tone);
+        string line = FormatRow(index, Current, texts);
+
+        if (width > 0)
+        {
+            line = line.PadRight(Math.Max(0, width - 1));
+        }
+
+        _console.Line(line, tone);
     }
 
     private IReadOnlyList<ConsoleMenuItem>? PromptArrows()
@@ -136,12 +128,10 @@ public sealed class ConsoleMenu
         }
 
         IReadOnlyList<string> texts = [.. _items.Select(item => item.Text)];
-        string hint = Multi
-            ? Localizer.Instance["CliMenuHintMulti"]
-            : Localizer.Instance["CliMenuHintSingle"];
+        string hint = Localizer.Instance["CliMenuHintSingle"];
         (int width, int height) = _console.Size();
         int extra = string.IsNullOrEmpty(Note) ? 0 : 1;
-        IReadOnlyList<string> shown = Fit(texts, width, Multi ? 8 : 4);
+        IReadOnlyList<string> shown = Fit(texts, width, 4);
         string shownTitle = Fit([Title], width, 0)[0];
         string shownHint = Fit([hint], width, 0)[0];
         string shownNote = Fit([Note], width, 0)[0];
@@ -156,7 +146,7 @@ public sealed class ConsoleMenu
 
         for (int row = 0; row < visible; row++)
         {
-            DrawRow(first + row, shown);
+            DrawRow(first + row, shown, width);
         }
 
         _console.Line(shownHint, ConsoleTone.Muted);
@@ -186,15 +176,11 @@ public sealed class ConsoleMenu
                 {
                     Current = Current == last ? 0 : Current + 1;
                 }
-                else if (key == ConsoleKey.Spacebar && Multi)
-                {
-                    _items[Current].Checked = !_items[Current].Checked;
-                }
                 else if (key == ConsoleKey.Enter)
                 {
                     ReturnToBottom(canPaint, top, visible, extra);
 
-                    return Multi ? Checked() : [_items[Current]];
+                    return [_items[Current]];
                 }
                 else if (key == ConsoleKey.Escape)
                 {
@@ -206,16 +192,9 @@ public sealed class ConsoleMenu
                 {
                     if (wanted < count)
                     {
-                        if (Multi)
-                        {
-                            _items[wanted].Checked = !_items[wanted].Checked;
-                        }
-                        else
-                        {
-                            ReturnToBottom(canPaint, top, visible, extra);
+                        ReturnToBottom(canPaint, top, visible, extra);
 
-                            return [_items[wanted]];
-                        }
+                        return [_items[wanted]];
                     }
                 }
                 else
@@ -249,14 +228,14 @@ public sealed class ConsoleMenu
                         break;
                     }
 
-                    DrawRow(first + row, shown);
+                    DrawRow(first + row, shown, width);
                 }
 
                 if (!placed)
                 {
                     for (int row = 0; row < visible; row++)
                     {
-                        DrawRow(first + row, shown);
+                        DrawRow(first + row, shown, width);
                     }
                 }
             }
@@ -295,53 +274,8 @@ public sealed class ConsoleMenu
     {
         int count = _items.Count;
         IReadOnlyList<string> texts = [.. _items.Select(item => item.Text)];
-
-        if (Multi)
-        {
-            while (true)
-            {
-                _console.Line(string.Empty);
-                if (!string.IsNullOrEmpty(Title))
-                {
-                    _console.Line(Title, ConsoleTone.Info);
-                }
-
-                for (int index = 0; index < count; index++)
-                {
-                    string box = _items[index].Checked ? "[x]" : "[ ]";
-                    _console.Line($"  {index + 1,2}.  {box} {texts[index]}");
-                }
-
-                _console.Line(Localizer.Instance["CliMenuCancel"]);
-                if (!string.IsNullOrEmpty(Note))
-                {
-                    _console.Line($"  {Note}", ConsoleTone.Muted);
-                }
-
-                string? answer = _console.Prompt(Localizer.Instance["CliMenuNumberHint"]);
-
-                if (string.IsNullOrWhiteSpace(answer) || answer.Trim() == "0")
-                {
-                    return null;
-                }
-
-                if (answer.Trim() is "v" or "V")
-                {
-                    return Checked();
-                }
-
-                if (int.TryParse(answer.Trim(), out int number) && number >= 1 && number <= count)
-                {
-                    _items[number - 1].Checked = !_items[number - 1].Checked;
-
-                    continue;
-                }
-
-                _console.Line(Localizer.Instance.Format("CliMenuNotANumber", answer), ConsoleTone.Warning);
-            }
-        }
-
         _console.Line(string.Empty);
+
         if (!string.IsNullOrEmpty(Title))
         {
             _console.Line(Title, ConsoleTone.Info);
@@ -353,6 +287,7 @@ public sealed class ConsoleMenu
         }
 
         _console.Line(Localizer.Instance["CliMenuCancel"]);
+
         if (!string.IsNullOrEmpty(Note))
         {
             _console.Line($"  {Note}", ConsoleTone.Muted);
@@ -382,11 +317,6 @@ public sealed class ConsoleMenu
 
             _console.Line(Localizer.Instance.Format("CliMenuNotANumber", answer), ConsoleTone.Warning);
         }
-    }
-
-    private IReadOnlyList<ConsoleMenuItem> Checked()
-    {
-        return [.. _items.Where(item => item.Checked)];
     }
 
     private void ReturnToBottom(bool canPaint, int top, int visible, int extra)
