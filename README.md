@@ -48,6 +48,10 @@ Make sure Docker Desktop is running before you start.
 3. All releases:
    [Releases](TODO_RELEASES_URL)
 
+Without a code-signing certificate, Windows SmartScreen may warn, and Smart
+App Control may block the build. Check `SHA256SUMS.txt` in the release to
+verify the downloaded files.
+
 ---
 
 ## Optional Tooling (Packs)

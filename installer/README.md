@@ -235,12 +235,41 @@ The uninstaller does not delete this folder. It contains the application's packs
 
 ## Signing
 
-Sign the setup before distribution:
+Releases are unsigned by default. Windows SmartScreen may warn, and Smart App
+Control may block unsigned installers. Signing is optional and requires a code
+signing certificate.
+
+The release workflow signs automatically when these repository secrets exist:
+
+- `SIGNING_CERTIFICATE` - base64 of the `.pfx`;
+- `SIGNING_PASSWORD` - its password.
+
+It signs `wsl-squad.gui.exe` and `wsl-squad.cli.exe` before building the
+installer, then signs `wsl-squad-setup.exe`. Without the secrets, those steps
+are skipped.
+
+To produce the base64 value:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes(".\wsl-squad.pfx"))
+```
+
+To sign a local build with a certificate installed in the Windows store, sign
+the published binaries before building the installer, then sign the setup:
 
 ```powershell
 signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a `
+  artifacts\publish\framework-dependent\gui\wsl-squad.gui.exe `
+  artifacts\publish\framework-dependent\cli\wsl-squad.cli.exe
+
+.\scripts\build-installer.ps1
+
+signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a `
   artifacts\dist\wsl-squad-setup.exe
 ```
+
+A self-signed certificate is suitable only for local testing: it does not
+remove warnings for other users.
 
 ## Ignored files
 

@@ -57,6 +57,84 @@ jobs:
         shell: pwsh
         run: ./scripts/publish-framework-dependent.ps1
 
+      - name: Prepare signing
+        id: signing
+        shell: pwsh
+        env:
+          SIGNING_CERTIFICATE: ${{ secrets.SIGNING_CERTIFICATE }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_CERTIFICATE)) {
+            "enabled=false" >> $env:GITHUB_OUTPUT
+            Write-Host "No signing certificate configured; artifacts will be unsigned."
+            exit 0
+          }
+
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_PASSWORD)) {
+            throw "SIGNING_PASSWORD is required when SIGNING_CERTIFICATE is set."
+          }
+
+          $pfx = Join-Path $env:RUNNER_TEMP "wsl-squad-signing.pfx"
+          [IO.File]::WriteAllBytes(
+            $pfx,
+            [Convert]::FromBase64String($env:SIGNING_CERTIFICATE))
+
+          $command = Get-Command signtool.exe -ErrorAction SilentlyContinue
+          $signtool = if ($command) { $command.Source } else { $null }
+
+          if (-not $signtool) {
+            $roots = @(
+              "${env:ProgramFiles(x86)}\Windows Kits\10\bin",
+              "${env:ProgramFiles}\Windows Kits\10\bin"
+            ) | Where-Object { $_ -and (Test-Path $_) }
+
+            if ($roots) {
+              $signtool = Get-ChildItem -Path $roots -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match '\\x64\\signtool\.exe$' } |
+                Sort-Object FullName -Descending |
+                Select-Object -First 1 -ExpandProperty FullName
+            }
+          }
+
+          if (-not $signtool) {
+            throw "signtool.exe was not found."
+          }
+
+          "enabled=true" >> $env:GITHUB_OUTPUT
+          "pfx=$pfx" >> $env:GITHUB_OUTPUT
+          "signtool=$signtool" >> $env:GITHUB_OUTPUT
+
+      - name: Sign application binaries
+        if: steps.signing.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          PFX_PATH: ${{ steps.signing.outputs.pfx }}
+          SIGNTOOL_PATH: ${{ steps.signing.outputs.signtool }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          $arguments = @(
+            "sign",
+            "/fd", "SHA256",
+            "/tr", "http://timestamp.digicert.com",
+            "/td", "SHA256",
+            "/f", $env:PFX_PATH
+          )
+
+          if (-not [string]::IsNullOrEmpty($env:SIGNING_PASSWORD)) {
+            $arguments += @("/p", $env:SIGNING_PASSWORD)
+          }
+
+          $arguments += @(
+            "artifacts\publish\framework-dependent\gui\wsl-squad.gui.exe",
+            "artifacts\publish\framework-dependent\cli\wsl-squad.cli.exe"
+          )
+
+          & $env:SIGNTOOL_PATH @arguments
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Signing the application binaries failed with exit code $LASTEXITCODE."
+          }
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --no-progress -y
@@ -78,6 +156,34 @@ jobs:
             throw "Inno Setup compilation failed with exit code $LASTEXITCODE."
           }
 
+      - name: Sign installer
+        if: steps.signing.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          PFX_PATH: ${{ steps.signing.outputs.pfx }}
+          SIGNTOOL_PATH: ${{ steps.signing.outputs.signtool }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          $arguments = @(
+            "sign",
+            "/fd", "SHA256",
+            "/tr", "http://timestamp.digicert.com",
+            "/td", "SHA256",
+            "/f", $env:PFX_PATH
+          )
+
+          if (-not [string]::IsNullOrEmpty($env:SIGNING_PASSWORD)) {
+            $arguments += @("/p", $env:SIGNING_PASSWORD)
+          }
+
+          $arguments += @("artifacts\dist\wsl-squad-setup.exe")
+
+          & $env:SIGNTOOL_PATH @arguments
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Signing the installer failed with exit code $LASTEXITCODE."
+          }
+
       - name: Create portable ZIP
         shell: pwsh
         run: |
@@ -87,9 +193,11 @@ jobs:
       - name: Generate checksums
         shell: pwsh
         run: |
-          Get-ChildItem artifacts/dist/*.exe, artifacts/dist/*.zip |
-            Get-FileHash -Algorithm SHA256 |
-            ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } |
+          Get-ChildItem -Path artifacts/dist/*.exe, artifacts/dist/*.zip |
+            ForEach-Object {
+              $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+              "$hash  $($_.Name)"
+            } |
             Set-Content artifacts/dist/SHA256SUMS.txt
 
       - name: Upload build artifacts
