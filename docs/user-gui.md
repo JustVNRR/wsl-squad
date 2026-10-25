@@ -17,7 +17,7 @@ Each live instance has action buttons on its row:
 
 | Action | What it does |
 | :--- | :--- |
-| Shell | Open the instance. A pending onboarding opens a root shell; afterwards the Windows Terminal profile is used when present. |
+| Shell | Open the instance. A pending recipe onboarding opens a root shell; afterwards the Windows Terminal profile is used when present. |
 | Restart | Stop and start the instance. |
 | Edit | Open the pack manager inside the instance. |
 | Appearance | Change the tab icon, font, and colours. |

@@ -164,7 +164,7 @@
     "NoticeNoIcon": "aucune icône ({0})",
     "NoticeGhostsNotPruned": "entrées fantômes NON supprimées dans {0} (JSON illisible - un commentaire // casse l'analyse ; retirez-les à la main)",
     "NoticeNoWslFragment": "aucun fragment WSL pour '{0}' - le profil n'a pas été appliqué",
-    "NoticeShellOpenFailed": "le premier terminal ne s'est pas ouvert, donc l'onboarding n'a pas été exécuté : {0}",
+    "NoticeShellOpenFailed": "le premier terminal ne s'est pas ouvert, donc l'onboarding de la recette n'a pas été exécuté : {0}",
     "AppearanceChangeFont": "police '{0}'",
     "AppearanceChangeColours": "couleurs '{0}'",
     "AppearanceChangeIcon": "icône",

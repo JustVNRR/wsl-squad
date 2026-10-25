@@ -11,8 +11,8 @@ Every action is available both as a GUI and as a CLI.
 
 ## Features
 
-- **Build an instance** - from a recipe, with an onboarding script that runs on
-  the first shell and offers the packs to install
+- **Build an instance** - from a recipe; its onboarding script runs on the
+  first shell and offers the packs to install
 - **Manage the packs** of an instance, from the catalogue
 - **The recipes themselves** - Dockerfiles and onboarding scripts inside
   recipe folders: created, edited, deleted
@@ -121,7 +121,7 @@ deleting the distro deletes all of it.
                              # tools (python), the claude launcher (claude)
 ~/.local/share/uv/           # the Python builds it downloaded, and their environments
 ~/.config/gcloud/            # The two GCP logins (gcp_auth_cli, gcp_auth_libs)
-/etc/wsl.conf                # Default user, automount, interop (onboarding.sh; reopened by gmake wsl_config)
+/etc/wsl.conf                # Default user, automount, interop (recipe onboarding.sh; reopened by gmake wsl_config)
 /etc/resolv.conf             # Name servers (WSL's, or yours; reopened by gmake dns_resolve)
 /etc/fstab                   # Mounts to apply at start (reopened by gmake fstab_config)
 ```

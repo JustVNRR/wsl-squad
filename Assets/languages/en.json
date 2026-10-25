@@ -164,7 +164,7 @@
     "NoticeNoIcon": "no icon ({0})",
     "NoticeGhostsNotPruned": "ghost entries NOT pruned in {0} (unreadable JSON - a // comment breaks parsing; remove them by hand)",
     "NoticeNoWslFragment": "no WSL fragment for '{0}' - the profile was not applied",
-    "NoticeShellOpenFailed": "the first shell did not open, so the onboarding did not run: {0}",
+    "NoticeShellOpenFailed": "the first shell did not open, so the recipe's onboarding did not run: {0}",
     "AppearanceChangeFont": "font '{0}'",
     "AppearanceChangeColours": "colours '{0}'",
     "AppearanceChangeIcon": "icon",

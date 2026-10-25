@@ -35,9 +35,9 @@ return to the menu.
 
 ### Instance actions
 
-- **Shell** - open the instance. The onboarding runs in a root shell until it
-  has completed; afterwards the Windows Terminal profile is used when it
-  exists.
+- **Shell** - open the instance. The recipe's onboarding runs in a root shell
+  until it has completed; afterwards the Windows Terminal profile is used when
+  it exists.
 - **Restart** - stop and start the instance.
 - **Manage packs** - open the pack manager inside the instance.
 - **Theme** - change the tab icon, the terminal font, or the colour scheme.
