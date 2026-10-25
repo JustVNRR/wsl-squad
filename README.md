@@ -66,27 +66,6 @@ Make sure Docker Desktop is running before you start.
 
 ---
 
-## Languages
-
-English and French are built in. At startup the app seeds the bundled
-`Assets/languages/*.json` files into `%LOCALAPPDATA%\wsl-squad\languages\`. To add another
-language without rebuilding, drop a JSON file in that folder:
-
-```json
-{
-  "code": "de",
-  "displayName": "Deutsch",
-  "strings": {
-    "SettingsTitle": "Einstellungen",
-    "ActionCancel": "Abbrechen"
-  }
-}
-```
-
-The keys are listed in the seeded `languages\en.json`. Missing keys fall back to English. The language
-chosen in the GUI or CLI Settings is saved in `%LOCALAPPDATA%\wsl-squad\config.json` and restored
-at the next start.
-
 ## Repo Structure
 
 ### Instance Manager Structure
