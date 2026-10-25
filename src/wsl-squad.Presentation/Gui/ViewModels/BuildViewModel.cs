@@ -37,6 +37,14 @@ public sealed partial class BuildViewModel : BaseViewModel
     public partial bool SaveImage { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSaveImage))]
+    public partial bool HasSavedImage { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSaveImage))]
+    public partial bool UseLocalImage { get; set; }
+
+    [ObservableProperty]
     public partial bool CanDeleteRecipe { get; set; }
 
     public BuildViewModel(IInstanceService instance, IDialogService dialogs)
@@ -77,6 +85,8 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public ObservableCollection<string> RecipeNames { get; } = [];
 
+    public bool ShowSaveImage => !HasSavedImage || !UseLocalImage;
+
     public BuildDto? Result { get; private set; }
 
     public IRelayCommand CreateCommand { get; }
@@ -97,6 +107,7 @@ public sealed partial class BuildViewModel : BaseViewModel
     partial void OnRecipeIndexChanged(int value)
     {
         UpdateRecipeCommands();
+        RefreshSavedImage();
     }
 
     public void NewRecipe()
@@ -228,10 +239,15 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
 
         WslBuildSourceDto recipe = _recipes[RecipeIndex];
+        string recipeName = RecipeName(recipe);
+        bool useSavedImage = HasSavedImage && UseLocalImage;
+
         Result = BuildDto.FromRecipe(
             Name.Trim(),
+            recipeName,
             recipe.Path ?? string.Empty,
-            SaveImage);
+            keepImage: !useSavedImage && SaveImage,
+            useSavedImage: useSavedImage);
 
         RequestClose();
     }
@@ -259,6 +275,23 @@ public sealed partial class BuildViewModel : BaseViewModel
         int selected = index >= 0 && index < _recipes.Count ? index : 0;
         RecipeIndex = _recipes.Count > 0 ? selected : -1;
         UpdateRecipeCommands();
+        RefreshSavedImage();
+    }
+
+    private void RefreshSavedImage()
+    {
+        string recipeName = SelectedRecipe() is { } recipe ? RecipeName(recipe) : string.Empty;
+        bool exists = recipeName.Length > 0 &&
+            _instance.GetSavedRecipeImage(recipeName) is not null;
+
+        HasSavedImage = exists;
+        UseLocalImage = exists;
+        SaveImage = true;
+    }
+
+    private static string RecipeName(WslBuildSourceDto recipe)
+    {
+        return recipe.BaseName ?? Path.GetFileName(recipe.Path ?? string.Empty);
     }
 
     private void UpdateRecipeCommands()
@@ -272,7 +305,7 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     private IReadOnlyList<string> TakenRecipeNames()
     {
-        return [.. _recipes.Select(recipe => recipe.BaseName ?? recipe.Name ?? string.Empty)];
+        return [.. _recipes.Select(RecipeName)];
     }
 
     private WslBuildSourceDto? SelectedRecipe()

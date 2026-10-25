@@ -493,36 +493,90 @@ public class InstanceServiceTests
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("alpha");
         string recipe = temp.Write("recipe/Dockerfile", "FROM scratch");
-        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
-        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
-        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
-        _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
-        _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
-        _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));
-        _docker.Setup(docker => docker.TestRunning()).Returns(true);
-        _docker.Setup(docker => docker.GetSavedImagePath("alpha")).Returns("/images/alpha.tar");
-        _docker.Setup(docker => docker.SaveImage("wsl-squad:alpha", "/images/alpha.tar")).Returns(true);
-        _terminal.Setup(terminal => terminal.IsFontInstalled(It.IsAny<string>())).Returns(true);
-        _terminal.Setup(terminal => terminal.DrawIcon("alpha", It.IsAny<string>(), null))
-            .Returns(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
-        _terminal.Setup(terminal => terminal.GetWslGuids("alpha")).Returns(new WslGuids([], "guid"));
-        _terminal.Setup(terminal => terminal.PruneGhostEntries("alpha", It.IsAny<IReadOnlyList<string>>()))
-            .Returns(new PruneReport(0, []));
-        _terminal.Setup(terminal => terminal.RemoveStaleFragments(It.IsAny<IReadOnlyList<string>>()))
-            .Returns([]);
+        SetupBuildTarget(folder);
+        _docker.Setup(docker => docker.GetSavedImagePath("base")).Returns("/images/base.tar");
+        _docker.Setup(docker => docker.SaveImage("wsl-squad:alpha", "/images/base.tar")).Returns(true);
 
         _service.Build(new BuildDto
         {
             Name = "alpha",
+            RecipeName = "base",
             BuildPath = recipe,
             Context = Path.GetDirectoryName(recipe),
             KeepImage = true,
         });
 
         _docker.Verify(
-            docker => docker.SaveImage("wsl-squad:alpha", "/images/alpha.tar"),
+            docker => docker.SaveImage("wsl-squad:alpha", "/images/base.tar"),
             Times.Once);
         _docker.Verify(docker => docker.RemoveImage("wsl-squad:alpha"), Times.Once);
+    }
+
+    [Fact]
+    public void Build_reuses_the_saved_recipe_image()
+    {
+        using TemporaryDirectory temp = new();
+        string folder = temp.Combine("alpha");
+        string saved = temp.Write("images/base.tar", "image");
+        SetupBuildTarget(folder);
+        _docker.Setup(docker => docker.GetSavedImagePath("base")).Returns(saved);
+        _docker.Setup(docker => docker.Load(saved, true)).Returns("ubuntu:24.04");
+
+        _service.Build(new BuildDto
+        {
+            Name = "alpha",
+            RecipeName = "base",
+            UseSavedImage = true,
+            Interactive = true,
+        });
+
+        _docker.Verify(docker => docker.Load(saved, true), Times.Once);
+        _docker.Verify(docker => docker.Build(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>()), Times.Never);
+        _docker.Verify(docker => docker.ExportRootfs("ubuntu:24.04", It.IsAny<string>(), true), Times.Once);
+        _docker.Verify(docker => docker.SaveImage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        _docker.Verify(docker => docker.RemoveImage(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Build_refuses_a_missing_saved_recipe_image()
+    {
+        using TemporaryDirectory temp = new();
+        string saved = temp.Combine("images/base.tar");
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
+        _docker.Setup(docker => docker.TestRunning()).Returns(true);
+        _docker.Setup(docker => docker.GetSavedImagePath("base")).Returns(saved);
+
+        Action act = () => _service.Build(new BuildDto
+        {
+            Name = "alpha",
+            RecipeName = "base",
+            UseSavedImage = true,
+        });
+
+        act.Should().Throw<WslSquadException>()
+            .Which.Code.Should().Be(WslSquadErrorCode.InvalidBuildSource);
+        _docker.Verify(docker => docker.Build(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public void Reports_whether_a_recipe_image_is_saved()
+    {
+        using TemporaryDirectory temp = new();
+        string saved = temp.Write("images/base.tar", "image");
+        _docker.Setup(docker => docker.GetSavedImagePath("base")).Returns(saved);
+        _docker.Setup(docker => docker.GetSavedImagePath("missing")).Returns(temp.Combine("images/missing.tar"));
+
+        _service.GetSavedRecipeImage("base").Should().Be(saved);
+        _service.GetSavedRecipeImage("missing").Should().BeNull();
     }
 
     [Fact]
@@ -589,5 +643,24 @@ public class InstanceServiceTests
         });
 
         act.Should().NotThrow();
+    }
+
+    private void SetupBuildTarget(string folder)
+    {
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
+        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
+        _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
+        _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));
+        _docker.Setup(docker => docker.TestRunning()).Returns(true);
+        _terminal.Setup(terminal => terminal.IsFontInstalled(It.IsAny<string>())).Returns(true);
+        _terminal.Setup(terminal => terminal.DrawIcon("alpha", It.IsAny<string>(), null))
+            .Returns(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
+        _terminal.Setup(terminal => terminal.GetWslGuids("alpha")).Returns(new WslGuids([], "guid"));
+        _terminal.Setup(terminal => terminal.PruneGhostEntries("alpha", It.IsAny<IReadOnlyList<string>>()))
+            .Returns(new PruneReport(0, []));
+        _terminal.Setup(terminal => terminal.RemoveStaleFragments(It.IsAny<IReadOnlyList<string>>()))
+            .Returns([]);
     }
 }

@@ -51,7 +51,10 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
         string name = string.Empty;
         string source = string.Empty;
+        string recipeName = string.Empty;
         bool keep = false;
+        bool useLocalImage = false;
+        bool hasLocalImage = false;
         bool done = false;
 
         Stack<string> stack = new();
@@ -119,14 +122,42 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         }
 
                         source = picked.Path;
-                        stack.Push("keep");
+                        recipeName = picked.BaseName;
+                        useLocalImage = false;
+                        hasLocalImage = _service.GetSavedRecipeImage(recipeName) is not null;
+                        stack.Push(hasLocalImage ? "local" : "keep");
+
+                        break;
+                    }
+
+                case "local":
+                    {
+                        bool? answer = View.AskUseLocalImage(recipeName);
+
+                        if (answer is null)
+                        {
+                            stack.Pop();
+                        }
+                        else if (answer.Value)
+                        {
+                            useLocalImage = true;
+                            done = true;
+                            stack.Clear();
+                        }
+                        else
+                        {
+                            useLocalImage = false;
+                            stack.Push("keep");
+                        }
 
                         break;
                     }
 
                 case "keep":
                     {
-                        bool? answer = View.AskKeepImage();
+                        bool? answer = hasLocalImage
+                            ? View.AskOverwriteImage(recipeName)
+                            : View.AskKeepImage();
 
                         if (answer is null)
                         {
@@ -155,7 +186,13 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             return WorkflowResults.Cancelled(Localizer.Instance["OperationBuild"]);
         }
 
-        BuildDto dto = BuildDto.FromRecipe(name, source, keep, interactive: true);
+        BuildDto dto = BuildDto.FromRecipe(
+            name,
+            recipeName,
+            source,
+            keepImage: keep,
+            useSavedImage: useLocalImage,
+            interactive: true);
 
         try
         {
@@ -185,6 +222,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
     {
         return new BuildSourceChoice(
             source.Name ?? string.Empty,
-            source.Path ?? string.Empty);
+            source.Path ?? string.Empty,
+            source.BaseName ?? Path.GetFileName(source.Path ?? string.Empty));
     }
 }

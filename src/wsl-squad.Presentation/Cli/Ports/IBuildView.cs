@@ -2,7 +2,7 @@ using WslSquad.Core.Dtos;
 
 namespace WslSquad.Presentation.Cli.Ports;
 
-public sealed record BuildSourceChoice(string Name, string Path);
+public sealed record BuildSourceChoice(string Name, string Path, string BaseName);
 
 public interface IBuildView : IPresenterViewBase
 {
@@ -15,6 +15,10 @@ public interface IBuildView : IPresenterViewBase
     BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows);
 
     bool? AskKeepImage();
+
+    bool? AskUseLocalImage(string recipeName);
+
+    bool? AskOverwriteImage(string recipeName);
 
     void Show(BuildResponseDto response);
 }

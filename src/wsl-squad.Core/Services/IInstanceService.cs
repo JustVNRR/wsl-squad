@@ -12,6 +12,8 @@ public interface IInstanceService
 
     IReadOnlyList<WslBuildSourceDto> GetRecipes();
 
+    string? GetSavedRecipeImage(string recipeName);
+
     WslBuildSourceDto CreateRecipe(NewRecipeDto dto);
 
     WslBuildSourceDto DuplicateRecipe(DuplicateRecipeDto dto);

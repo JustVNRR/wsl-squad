@@ -28,6 +28,38 @@ public sealed class DockerRepository : IDockerRepository
         }
     }
 
+    public string Load(string tarPath, bool interactive = false)
+    {
+        (int code, string output) = interactive
+            ? NativeCommand.RunInteractive("docker", ["load", "-i", tarPath])
+            : NativeCommand.Run("docker", ["load", "-i", tarPath]);
+
+        if (code != 0)
+        {
+            throw new WslSquadException(WslSquadErrorCode.DockerOperationFailed, "load", output);
+        }
+
+        foreach (string line in output.Split('\n'))
+        {
+            string text = line.Trim();
+
+            if (text.StartsWith("Loaded image ID: ", StringComparison.Ordinal))
+            {
+                return text["Loaded image ID: ".Length..].Trim();
+            }
+
+            if (text.StartsWith("Loaded image: ", StringComparison.Ordinal))
+            {
+                return text["Loaded image: ".Length..].Trim();
+            }
+        }
+
+        throw new WslSquadException(
+            WslSquadErrorCode.DockerOperationFailed,
+            tarPath,
+            "docker load told nothing usable about the image");
+    }
+
     public void ExportRootfs(string imageName, string outputPath, bool interactive = false)
     {
         string container = $"wsl-temp-export-{Guid.NewGuid().ToString()[..8]}";

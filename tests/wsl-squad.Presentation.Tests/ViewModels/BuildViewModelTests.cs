@@ -37,6 +37,9 @@ public class BuildViewModelTests
         viewModel.RecipeNames.Should().ContainSingle().Which.Should().Be("default (01/01 12:00)");
         viewModel.RecipeIndex.Should().Be(0);
         viewModel.SaveImage.Should().BeTrue();
+        viewModel.HasSavedImage.Should().BeFalse();
+        viewModel.UseLocalImage.Should().BeFalse();
+        viewModel.ShowSaveImage.Should().BeTrue();
         viewModel.CanDeleteRecipe.Should().BeTrue();
     }
 
@@ -50,9 +53,11 @@ public class BuildViewModelTests
 
         viewModel.Result.Should().NotBeNull();
         viewModel.Result!.Name.Should().Be("alpha");
+        viewModel.Result.RecipeName.Should().Be("default");
         viewModel.Result.BuildPath.Should().Be(Path.Combine("/catalog/default", "Dockerfile"));
         viewModel.Result.Context.Should().Be("/catalog/default");
         viewModel.Result.KeepImage.Should().BeTrue();
+        viewModel.Result.UseSavedImage.Should().BeFalse();
     }
 
     [Fact]
@@ -65,6 +70,43 @@ public class BuildViewModelTests
         viewModel.CreateCommand.Execute(null);
 
         viewModel.Result!.KeepImage.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Uses_the_saved_recipe_image_by_default()
+    {
+        _instance.Setup(service => service.GetSavedRecipeImage("default"))
+            .Returns("/images/default.tar");
+        BuildViewModel viewModel = Create();
+        viewModel.Name = "alpha";
+
+        viewModel.HasSavedImage.Should().BeTrue();
+        viewModel.UseLocalImage.Should().BeTrue();
+        viewModel.ShowSaveImage.Should().BeFalse();
+
+        viewModel.CreateCommand.Execute(null);
+
+        viewModel.Result!.RecipeName.Should().Be("default");
+        viewModel.Result.UseSavedImage.Should().BeTrue();
+        viewModel.Result.KeepImage.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Unchecking_the_local_image_offers_to_save_a_new_one()
+    {
+        _instance.Setup(service => service.GetSavedRecipeImage("default"))
+            .Returns("/images/default.tar");
+        BuildViewModel viewModel = Create();
+        viewModel.Name = "alpha";
+        viewModel.UseLocalImage = false;
+
+        viewModel.ShowSaveImage.Should().BeTrue();
+        viewModel.SaveImage.Should().BeTrue();
+
+        viewModel.CreateCommand.Execute(null);
+
+        viewModel.Result!.UseSavedImage.Should().BeFalse();
+        viewModel.Result.KeepImage.Should().BeTrue();
     }
 
     [Fact]

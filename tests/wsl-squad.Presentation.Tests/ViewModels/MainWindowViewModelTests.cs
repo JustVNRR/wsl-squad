@@ -134,7 +134,7 @@ public class MainWindowViewModelTests
     public async Task A_busy_window_ignores_add()
     {
         _viewModel.Busy = true;
-        _dialogs.BuildAnswer = BuildDto.FromRecipe("beta", "/x");
+        _dialogs.BuildAnswer = BuildDto.FromRecipe("beta", "default", "/x");
 
         await _viewModel.AddCommand.ExecuteAsync(null);
 
@@ -167,7 +167,7 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Add_runs_the_build_through_the_workflow()
     {
-        BuildDto request = BuildDto.FromRecipe("beta", "/x");
+        BuildDto request = BuildDto.FromRecipe("beta", "default", "/x");
         _dialogs.BuildAnswer = request;
         _instance.Setup(service => service.Build(request))
             .Returns(new BuildResponseDto { InstanceName = "beta" });
@@ -180,7 +180,7 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Add_surfaces_the_build_notices()
     {
-        BuildDto request = BuildDto.FromRecipe("beta", "/x");
+        BuildDto request = BuildDto.FromRecipe("beta", "default", "/x");
         _dialogs.BuildAnswer = request;
         _instance.Setup(service => service.Build(request)).Returns(new BuildResponseDto
         {

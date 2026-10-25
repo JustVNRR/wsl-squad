@@ -130,6 +130,13 @@ public sealed class InstanceService : IInstanceService
         return [.. FormatSourceRows(_configRepository.GetRecipes())];
     }
 
+    public string? GetSavedRecipeImage(string recipeName)
+    {
+        string path = _dockerRepository.GetSavedImagePath(recipeName);
+
+        return File.Exists(path) ? path : null;
+    }
+
     public WslBuildSourceDto CreateRecipe(NewRecipeDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
@@ -281,16 +288,33 @@ public sealed class InstanceService : IInstanceService
         }
 
         string tag = $"wsl-squad:{name}";
-        string imageRef = dto.BuildPath ?? string.Empty;
+        string recipeName = dto.RecipeName ?? string.Empty;
+        string imageRef;
         using AttachedConsoleScope console = new(dto.Interactive);
 
-        if (!File.Exists(imageRef))
+        if (dto.UseSavedImage)
         {
-            throw new WslSquadException(WslSquadErrorCode.InvalidBuildSource, dto.Context);
-        }
+            string savedPath = _dockerRepository.GetSavedImagePath(recipeName);
 
-        _dockerRepository.Build(tag, imageRef, dto.Context ?? string.Empty, dto.Interactive);
-        imageRef = tag;
+            if (!File.Exists(savedPath))
+            {
+                throw new WslSquadException(WslSquadErrorCode.InvalidBuildSource, savedPath);
+            }
+
+            imageRef = _dockerRepository.Load(savedPath, dto.Interactive);
+        }
+        else
+        {
+            string dockerfile = dto.BuildPath ?? string.Empty;
+
+            if (!File.Exists(dockerfile))
+            {
+                throw new WslSquadException(WslSquadErrorCode.InvalidBuildSource, dto.Context);
+            }
+
+            _dockerRepository.Build(tag, dockerfile, dto.Context ?? string.Empty, dto.Interactive);
+            imageRef = tag;
+        }
 
         string installPath = _instanceRepository.GetFolder(name);
         string tarPath = Path.Combine(Path.GetDirectoryName(installPath) ?? string.Empty, $"{name}-rootfs.tar");
@@ -375,17 +399,20 @@ public sealed class InstanceService : IInstanceService
             warnings.Add(new BuildNoticeDto(BuildNoticeKind.LookFailed, name, exception.Message));
         }
 
-        if (dto.KeepImage)
+        if (!dto.UseSavedImage)
         {
-            string savePath = _dockerRepository.GetSavedImagePath(name);
-
-            if (!_dockerRepository.SaveImage(tag, savePath))
+            if (dto.KeepImage)
             {
-                warnings.Add(new BuildNoticeDto(BuildNoticeKind.ImageSaveFailed, savePath));
-            }
-        }
+                string savePath = _dockerRepository.GetSavedImagePath(recipeName);
 
-        _dockerRepository.RemoveImage(tag);
+                if (!_dockerRepository.SaveImage(tag, savePath))
+                {
+                    warnings.Add(new BuildNoticeDto(BuildNoticeKind.ImageSaveFailed, savePath));
+                }
+            }
+
+            _dockerRepository.RemoveImage(tag);
+        }
 
         WslRecipeStatus status = WslRecipeStatus.Ok;
 

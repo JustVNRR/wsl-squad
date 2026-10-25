@@ -39,7 +39,8 @@ The Add dialog asks for:
 
 - the instance name;
 - the recipe; recipes can be created, duplicated, opened, or deleted;
-- whether to save the Docker image locally.
+- whether to build from its saved image when one exists; otherwise, or when
+  unchecked, whether to save the Docker image locally.
 
 **Create** starts the build. The recipe's Dockerfile owns the onboarding and
 the default account.

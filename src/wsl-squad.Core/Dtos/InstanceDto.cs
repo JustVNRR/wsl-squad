@@ -92,29 +92,38 @@ public sealed record BuildDto
 {
     public string? Name { get; init; }
 
+    public string? RecipeName { get; init; }
+
     public string? BuildPath { get; init; }
 
     public string? Context { get; init; }
 
     public bool KeepImage { get; init; }
 
+    public bool UseSavedImage { get; init; }
+
     public bool Interactive { get; init; }
 
     public static BuildDto FromRecipe(
         string name,
+        string recipeName,
         string recipePath,
         bool keepImage = false,
+        bool useSavedImage = false,
         bool interactive = true)
     {
         ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(recipeName);
         ArgumentNullException.ThrowIfNull(recipePath);
 
         return new BuildDto
         {
             Name = name,
+            RecipeName = recipeName,
             BuildPath = Path.Combine(recipePath, "Dockerfile"),
             Context = recipePath,
             KeepImage = keepImage,
+            UseSavedImage = useSavedImage,
             Interactive = interactive,
         };
     }

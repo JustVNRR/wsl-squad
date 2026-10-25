@@ -239,10 +239,83 @@ public class PresenterTests
         result.Subject.Should().Be("alpha");
         service.Verify(s => s.Build(It.Is<BuildDto>(dto =>
             dto.Name == "alpha" &&
+            dto.RecipeName == "default" &&
             dto.BuildPath == Path.Combine("/catalog/default", "Dockerfile") &&
             dto.Context == "/catalog/default" &&
             dto.KeepImage &&
+            !dto.UseSavedImage &&
             dto.Interactive)), Times.Once);
+    }
+
+    [Fact]
+    public void Build_presenter_reuses_a_saved_recipe_image()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.GetRecipes()).Returns(
+        [
+            new WslBuildSourceDto
+            {
+                Name = "default",
+                Path = "/catalog/default",
+                BaseName = "default",
+            },
+        ]);
+        service.Setup(s => s.GetAll()).Returns([]);
+        service.Setup(s => s.GetSavedRecipeImage("default")).Returns("/images/default.tar");
+        service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
+        {
+            InstanceName = "alpha",
+            Status = WslRecipeStatus.Ok,
+        });
+        service.Setup(s => s.Open("alpha")).Returns(new OpenResponseDto { InstanceName = "alpha" });
+        TestBuildView view = new();
+
+        IWorkflowResult result = new BuildPresenter(service.Object, view).Run();
+
+        result.Status.Should().Be(WorkflowStatus.Success);
+        view.UseLocalImageCalls.Should().Be(1);
+        view.KeepImageCalls.Should().Be(0);
+        service.Verify(s => s.Build(It.Is<BuildDto>(dto =>
+            dto.Name == "alpha" &&
+            dto.RecipeName == "default" &&
+            dto.UseSavedImage &&
+            !dto.KeepImage)), Times.Once);
+    }
+
+    [Fact]
+    public void Build_presenter_rebuilds_and_overwrites_a_refused_saved_image()
+    {
+        Mock<IInstanceService> service = new();
+        service.Setup(s => s.GetRecipes()).Returns(
+        [
+            new WslBuildSourceDto
+            {
+                Name = "default",
+                Path = "/catalog/default",
+                BaseName = "default",
+            },
+        ]);
+        service.Setup(s => s.GetAll()).Returns([]);
+        service.Setup(s => s.GetSavedRecipeImage("default")).Returns("/images/default.tar");
+        service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
+        {
+            InstanceName = "alpha",
+            Status = WslRecipeStatus.Ok,
+        });
+        service.Setup(s => s.Open("alpha")).Returns(new OpenResponseDto { InstanceName = "alpha" });
+        TestBuildView view = new() { UseLocalImageAnswer = false, OverwriteImageAnswer = true };
+
+        IWorkflowResult result = new BuildPresenter(service.Object, view).Run();
+
+        result.Status.Should().Be(WorkflowStatus.Success);
+        view.UseLocalImageCalls.Should().Be(1);
+        view.OverwriteImageCalls.Should().Be(1);
+        view.KeepImageCalls.Should().Be(0);
+        service.Verify(s => s.Build(It.Is<BuildDto>(dto =>
+            dto.Name == "alpha" &&
+            dto.RecipeName == "default" &&
+            !dto.UseSavedImage &&
+            dto.KeepImage)), Times.Once);
     }
 
     [Fact]
@@ -610,11 +683,40 @@ public class PresenterTests
     {
         public List<string> Errors { get; } = [];
 
+        public bool UseLocalImageAnswer { get; init; } = true;
+
+        public bool OverwriteImageAnswer { get; init; } = true;
+
+        public int UseLocalImageCalls { get; private set; }
+
+        public int OverwriteImageCalls { get; private set; }
+
+        public int KeepImageCalls { get; private set; }
+
         public string? AskInstanceName(string prompt) => "alpha";
 
         public BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows) => rows.FirstOrDefault();
 
-        public bool? AskKeepImage() => true;
+        public bool? AskKeepImage()
+        {
+            KeepImageCalls++;
+
+            return true;
+        }
+
+        public bool? AskUseLocalImage(string recipeName)
+        {
+            UseLocalImageCalls++;
+
+            return UseLocalImageAnswer;
+        }
+
+        public bool? AskOverwriteImage(string recipeName)
+        {
+            OverwriteImageCalls++;
+
+            return OverwriteImageAnswer;
+        }
 
         public void ShowNameProblem(string message) { }
 

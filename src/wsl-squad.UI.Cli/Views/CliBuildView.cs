@@ -47,6 +47,24 @@ public sealed class CliBuildView : CliViewBase, IBuildView
         return AskConfirmation(Localizer.Instance["CliKeepImage"], defaultNo: false);
     }
 
+    public bool? AskUseLocalImage(string recipeName)
+    {
+        Write(string.Empty);
+
+        return AskConfirmation(
+            Localizer.Instance.Format("CliUseLocalImage", recipeName),
+            defaultNo: false);
+    }
+
+    public bool? AskOverwriteImage(string recipeName)
+    {
+        Write(string.Empty);
+
+        return AskConfirmation(
+            Localizer.Instance.Format("CliOverwriteImage", recipeName),
+            defaultNo: false);
+    }
+
     public void Show(BuildResponseDto response)
     {
         foreach (BuildNoticeDto notice in response.Notices)
