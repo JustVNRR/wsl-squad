@@ -390,7 +390,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
                 Localizer.Instance["OperationRegisterDocker"],
                 name,
                 () => _workflow.RegisterDockerAsync(name),
-                reload: false);
+                reload: true);
 
             return;
         }
@@ -399,7 +399,7 @@ public sealed partial class MainWindowViewModel : BaseViewModel
             Localizer.Instance["OperationUnregisterDocker"],
             name,
             () => _workflow.UnregisterDockerAsync(name),
-            reload: false);
+            reload: true);
     }
 
     private async Task RestoreAsync(string? name)

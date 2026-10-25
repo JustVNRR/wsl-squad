@@ -209,6 +209,88 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task Docker_registration_reloads_the_row_actions()
+    {
+        bool registered = false;
+        _instance.Setup(service => service.GetAll()).Returns(() =>
+        [
+            new WslIndexDto
+            {
+                Name = "alpha",
+                Docker = registered ? "yes" : "no",
+                Commands =
+                [
+                    new WslCommandDto
+                    {
+                        Kind = registered ? WslCommandKind.UnregisterDocker : WslCommandKind.RegisterDocker,
+                    },
+                ],
+            },
+        ]);
+        _instance.Setup(service => service.RegisterDocker(It.IsAny<RegisterDockerDto>()))
+            .Returns(() =>
+            {
+                registered = true;
+
+                return new RegisterDockerResponseDto
+                {
+                    InstanceName = "alpha",
+                    Restart = DockerRestartOutcome.NotRequested,
+                };
+            });
+        _dialogs.DockerRegisterAnswer = true;
+        await _viewModel.RefreshCommand.ExecuteAsync(null);
+
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.RegisterDocker));
+
+        _viewModel.Rows[0].Commands.Select(item => item.Kind).Should()
+            .Contain(WslCommandKind.UnregisterDocker)
+            .And.NotContain(WslCommandKind.RegisterDocker);
+    }
+
+    [Fact]
+    public async Task Docker_unregistration_reloads_the_row_actions()
+    {
+        bool registered = true;
+        _instance.Setup(service => service.GetAll()).Returns(() =>
+        [
+            new WslIndexDto
+            {
+                Name = "alpha",
+                Docker = registered ? "yes" : "no",
+                Commands =
+                [
+                    new WslCommandDto
+                    {
+                        Kind = registered ? WslCommandKind.UnregisterDocker : WslCommandKind.RegisterDocker,
+                    },
+                ],
+            },
+        ]);
+        _instance.Setup(service => service.UnregisterDocker(It.IsAny<UnregisterDockerDto>()))
+            .Returns(() =>
+            {
+                registered = false;
+
+                return new UnregisterDockerResponseDto
+                {
+                    InstanceName = "alpha",
+                    Restart = DockerRestartOutcome.NotRequested,
+                };
+            });
+        _dialogs.DockerRegisterAnswer = true;
+        await _viewModel.RefreshCommand.ExecuteAsync(null);
+
+        await _viewModel.RunRowCommand.ExecuteAsync(
+            new InstanceCommandParameter("alpha", WslCommandKind.UnregisterDocker));
+
+        _viewModel.Rows[0].Commands.Select(item => item.Kind).Should()
+            .Contain(WslCommandKind.RegisterDocker)
+            .And.NotContain(WslCommandKind.UnregisterDocker);
+    }
+
+    [Fact]
     public async Task Editing_packs_opens_the_distro_manager()
     {
         await _viewModel.RunRowCommand.ExecuteAsync(
