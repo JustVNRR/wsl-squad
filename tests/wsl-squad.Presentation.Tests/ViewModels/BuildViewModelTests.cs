@@ -18,14 +18,6 @@ public class BuildViewModelTests
     {
         _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
-            Dockerfiles =
-            [
-                new WslBuildSourceDto
-                {
-                    Name = "ubuntu (01/01 12:00)",
-                    Path = "/catalog/ubuntu/Dockerfile",
-                },
-            ],
             Onboardings =
             [
                 new WslBuildSourceDto
@@ -45,76 +37,10 @@ public class BuildViewModelTests
     {
         BuildViewModel viewModel = Create();
 
-        viewModel.DockerfileNames.Should().ContainSingle();
         viewModel.OnboardingNames.Should().ContainSingle();
         viewModel.ImageNames.Should().BeEmpty();
         viewModel.RecipeNames.Should().BeEmpty();
-        viewModel.CanTrashDockerfile.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Uploading_a_dockerfile_through_the_file_dialog_adds_it()
-    {
-        _instance.Setup(service => service.UploadRecipe(
-                It.Is<UploadRecipeDto>(dto => dto.Kind == "dockerfiles" && dto.Source == "/tmp/Dockerfile")))
-            .Returns(new WslBuildSourceDto
-            {
-                Name = "uploaded (01/01 12:00)",
-                Path = "/catalog/dockerfiles/uploaded/Dockerfile",
-                Uploaded = true,
-            });
-        _dialogs.OpenFileAnswer = "/tmp/Dockerfile";
-        BuildViewModel viewModel = Create();
-
-        viewModel.UploadDockerfileCommand.Execute(null);
-
-        viewModel.DockerfileNames.Should().Contain("uploaded (01/01 12:00)");
-        _dialogs.LastOpenFile!.Value.Filter.Should().Contain("Dockerfile");
-    }
-
-    [Fact]
-    public void Downloading_a_dockerfile_uses_the_save_dialog()
-    {
-        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
-        {
-            Dockerfiles =
-            [
-                new WslBuildSourceDto
-                {
-                    Name = "ubuntu (01/01 12:00)",
-                    Path = "/catalog/ubuntu/Dockerfile",
-                    Uploaded = true,
-                    ExportFileName = "ubuntu",
-                },
-            ],
-        });
-        _dialogs.SaveFileAnswer = "/tmp/out";
-        BuildViewModel viewModel = Create();
-
-        viewModel.DownloadDockerfileCommand.Execute(null);
-
-        _dialogs.LastSaveFile!.Value.DefaultFileName.Should().Be("ubuntu");
-        _instance.Verify(service => service.ExportRecipe(It.Is<ExportRecipeDto>(dto =>
-            dto.Path == "/catalog/ubuntu/Dockerfile" && dto.Target == "/tmp/out")), Times.Once);
-    }
-
-    [Fact]
-    public void Creates_a_dockerfile_build_request()
-    {
-        BuildViewModel viewModel = Create();
-        viewModel.Name = "alpha";
-        viewModel.User = "alice";
-
-        viewModel.CreateCommand.Execute(null);
-
-        viewModel.Result.Should().NotBeNull();
-        viewModel.Result!.Name.Should().Be("alpha");
-        viewModel.Result.User.Should().Be("alice");
-        viewModel.Result.BuildType.Should().Be(WslBuildType.Dockerfile);
-        viewModel.Result.BuildPath.Should().Be("/catalog/ubuntu/Dockerfile");
-        viewModel.Result.Context.Should().Be(Path.GetDirectoryName(viewModel.Result.BuildPath));
-        viewModel.Result.Onboarding.Should().Be("/catalog/setup/onboarding.sh");
-        viewModel.Result.RegisterDocker.Should().BeTrue();
+        viewModel.CanTrashOnboarding.Should().BeFalse();
     }
 
     [Fact]
@@ -122,7 +48,6 @@ public class BuildViewModelTests
     {
         _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
-            Dockerfiles = [],
             Onboardings = [],
             Recipes =
             [
@@ -135,7 +60,7 @@ public class BuildViewModelTests
         });
         BuildViewModel viewModel = Create();
         viewModel.Name = "alpha";
-        viewModel.RoadIndex = 2;
+        viewModel.RoadIndex = 1;
         viewModel.SaveImage = true;
         viewModel.RegisterDocker = true;
         viewModel.RunOnboarding = true;
@@ -156,19 +81,14 @@ public class BuildViewModelTests
     {
         BuildViewModel viewModel = Create();
 
-        viewModel.RoadIndex = 2;
+        viewModel.RoadIndex = 1;
 
         viewModel.ShowSaveImage.Should().BeTrue();
         viewModel.SaveImage.Should().BeTrue();
 
-        viewModel.RoadIndex = 1;
-
-        viewModel.ShowSaveImage.Should().BeFalse();
-        viewModel.SaveImage.Should().BeFalse();
-
         viewModel.RoadIndex = 0;
 
-        viewModel.ShowSaveImage.Should().BeTrue();
+        viewModel.ShowSaveImage.Should().BeFalse();
         viewModel.SaveImage.Should().BeFalse();
     }
 
@@ -188,29 +108,11 @@ public class BuildViewModelTests
     }
 
     [Fact]
-    public void Dockerfile_road_needs_a_dockerfile()
-    {
-        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
-        {
-            Dockerfiles = [],
-            Onboardings = [],
-            Recipes = [],
-        });
-        BuildViewModel viewModel = Create();
-        viewModel.Name = "alpha";
-
-        viewModel.CreateCommand.Execute(null);
-
-        viewModel.DockerfileError.Should().Contain("Upload a Dockerfile");
-        viewModel.Result.Should().BeNull();
-    }
-
-    [Fact]
     public void Image_road_needs_an_uploaded_image()
     {
         BuildViewModel viewModel = Create();
         viewModel.Name = "alpha";
-        viewModel.RoadIndex = 1;
+        viewModel.RoadIndex = 0;
 
         viewModel.CreateCommand.Execute(null);
 
@@ -273,7 +175,6 @@ public class BuildViewModelTests
     }
 
     [Theory]
-    [InlineData(WslCatalogSection.Dockerfiles, "Delete Dockerfile", "ubuntu (01/01 12:00)")]
     [InlineData(WslCatalogSection.Onboardings, "Delete onboarding shell", "setup (01/01 12:00)")]
     [InlineData(WslCatalogSection.DockerImages, "Delete Docker image", "base.tar")]
     [InlineData(WslCatalogSection.Recipes, "Delete recipe", "mine (01/01 12:00)")]
@@ -284,15 +185,6 @@ public class BuildViewModelTests
     {
         _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
-            Dockerfiles =
-            [
-                new WslBuildSourceDto
-                {
-                    Name = "ubuntu (01/01 12:00)",
-                    Path = "/catalog/ubuntu/Dockerfile",
-                    Uploaded = true,
-                },
-            ],
             Onboardings =
             [
                 new WslBuildSourceDto
@@ -341,7 +233,6 @@ public class BuildViewModelTests
 
         BuildViewModel viewModel = new(instance.Object, dialogs);
 
-        viewModel.DockerfileNames.Should().BeEmpty();
         viewModel.OnboardingNames.Should().BeEmpty();
         viewModel.ImageNames.Should().BeEmpty();
         viewModel.RecipeNames.Should().BeEmpty();
@@ -367,7 +258,7 @@ public class BuildViewModelTests
             .Throws(new InvalidOperationException("editor failed"));
         BuildViewModel viewModel = Create();
 
-        Action act = () => viewModel.EditSource(WslCatalogSection.Dockerfiles);
+        Action act = () => viewModel.EditSource(WslCatalogSection.Onboardings);
 
         act.Should().NotThrow();
     }
@@ -379,7 +270,7 @@ public class BuildViewModelTests
             .Throws(new InvalidOperationException("export failed"));
         BuildViewModel viewModel = Create();
 
-        Action act = () => viewModel.ExportRecipeTo(WslCatalogSection.Dockerfiles, "/tmp/out");
+        Action act = () => viewModel.ExportRecipeTo(WslCatalogSection.Onboardings, "/tmp/out");
 
         act.Should().NotThrow();
     }
@@ -420,19 +311,6 @@ public class BuildViewModelTests
     }
 
     [Fact]
-    public void AddDockerfile_survives_an_upload_failure()
-    {
-        _instance.Setup(service => service.UploadRecipe(It.IsAny<UploadRecipeDto>()))
-            .Throws(new InvalidOperationException("upload failed"));
-        BuildViewModel viewModel = Create();
-
-        Action act = () => viewModel.AddDockerfile("/tmp/Dockerfile");
-
-        act.Should().NotThrow();
-        viewModel.DockerfileNames.Should().ContainSingle();
-    }
-
-    [Fact]
     public void ExportRecipeTo_reports_an_onboarding_export_failure()
     {
         _instance.Setup(service => service.ExportRecipe(It.IsAny<ExportRecipeDto>()))
@@ -458,7 +336,6 @@ public class BuildViewModelTests
                     Uploaded = true,
                 },
             ],
-            Dockerfiles = [],
             Recipes = [],
         });
         _instance.Setup(service => service.DeleteRecipe(It.IsAny<string>()))
@@ -476,16 +353,15 @@ public class BuildViewModelTests
     {
         _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
-            Dockerfiles =
+            Onboardings =
             [
                 new WslBuildSourceDto
                 {
-                    Name = "ubuntu (01/01 12:00)",
-                    Path = "/catalog/ubuntu/Dockerfile",
+                    Name = "setup (01/01 12:00)",
+                    Path = "/catalog/setup/onboarding.sh",
                     Uploaded = true,
                 },
             ],
-            Onboardings = [],
             Recipes = [],
         });
         _instance.Setup(service => service.DeleteRecipe(It.IsAny<string>()))
@@ -493,10 +369,10 @@ public class BuildViewModelTests
         _dialogs.ConfirmAnswer = true;
         BuildViewModel viewModel = Create();
 
-        Action act = () => viewModel.DeleteSelected(WslCatalogSection.Dockerfiles);
+        Action act = () => viewModel.DeleteSelected(WslCatalogSection.Onboardings);
 
         act.Should().NotThrow();
-        viewModel.DockerfileNames.Should().ContainSingle();
+        viewModel.OnboardingNames.Should().ContainSingle();
     }
 
     private static List<string> RecordChanges(BuildViewModel viewModel)

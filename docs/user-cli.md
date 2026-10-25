@@ -94,7 +94,6 @@ wsl-squad migrate D:\WSL
 
 Build asks for the name, optional user and onboarding, and the source:
 
-- a Dockerfile from the catalog;
 - a saved Docker image;
 - a recipe.
 

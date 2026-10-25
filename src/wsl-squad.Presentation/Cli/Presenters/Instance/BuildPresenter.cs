@@ -118,7 +118,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                             image.Name ?? string.Empty,
                             image.Path ?? string.Empty))],
                             WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
-                            WslBuildType.Dockerfile => [.. sources.Dockerfiles.Select(ToChoice)],
                             _ => [],
                         };
 
@@ -130,7 +129,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                             {
                                 WslBuildType.Image => Localizer.Instance["CliBuildNoImage"],
                                 WslBuildType.Recipe => Localizer.Instance["CliBuildNoRecipe"],
-                                WslBuildType.Dockerfile => Localizer.Instance["CliBuildNoDockerfile"],
                                 _ => Localizer.Instance["CliBuildNoSource"],
                             });
                         }
@@ -148,7 +146,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                             image.Name ?? string.Empty,
                             image.Path ?? string.Empty))],
                             WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
-                            WslBuildType.Dockerfile => [.. sources.Dockerfiles.Select(ToChoice)],
                             _ => [],
                         };
                         BuildSourceChoice? picked = View.AskSource(road.Label, rows);
@@ -351,7 +348,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
     private static string NextAfterOnboarding(BuildRoad road)
     {
-        return road.Type is WslBuildType.Dockerfile or WslBuildType.Recipe ? "keep" : "register";
+        return road.Type == WslBuildType.Recipe ? "keep" : "register";
     }
 
     private static BuildSourceChoice ToChoice(WslBuildSourceDto source)
@@ -377,18 +374,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                 Localizer.Instance["CliAbortCreateRecipe"],
                 Localizer.Instance["CliAbortNothingModified"],
             ],
-            WslBuildType.Dockerfile =>
-            [
-                Localizer.Instance["CliAbortNoDockerfile"],
-                Localizer.Instance["CliAbortUploadOrDeleteFolder"],
-                Localizer.Instance["CliAbortNothingModified"],
-            ],
-            _ =>
-            [
-                Localizer.Instance["CliAbortNoDockerfile"],
-                Localizer.Instance["CliAbortUploadOrDeleteFolder"],
-                Localizer.Instance["CliAbortNothingModified"],
-            ],
+            _ => [],
         };
     }
 

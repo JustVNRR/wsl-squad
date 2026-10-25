@@ -81,13 +81,6 @@ public class InstanceServiceTests
     public void Uploaded_sources_expose_the_clean_export_name()
     {
         DateTime modified = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
-        _config.Setup(config => config.GetDockerfiles()).Returns(
-        [
-            new SourceRow(
-                "ubuntu-1a2b3c4d",
-                "/catalog/dockerfiles/ubuntu-1a2b3c4d/Dockerfile",
-                modified),
-        ]);
         _config.Setup(config => config.GetOnboardings()).Returns(
         [
             new SourceRow(
@@ -99,7 +92,6 @@ public class InstanceServiceTests
 
         GetBuildSourcesResponseDto sources = _service.GetBuildSources();
 
-        sources.Dockerfiles.Should().ContainSingle(row => row.ExportFileName == "ubuntu");
         sources.Onboardings.Should().ContainSingle(row => row.ExportFileName == "setup.sh");
     }
 
@@ -461,6 +453,7 @@ public class InstanceServiceTests
     {
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("alpha");
+        string recipe = temp.Write("recipe/Dockerfile", "FROM scratch");
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
         _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
         _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
@@ -482,8 +475,9 @@ public class InstanceServiceTests
         BuildResponseDto response = _service.Build(new BuildDto
         {
             Name = "alpha",
-            BuildType = WslBuildType.Dockerfile,
-            BuildPath = "Dockerfile",
+            BuildType = WslBuildType.Recipe,
+            BuildPath = recipe,
+            Context = Path.GetDirectoryName(recipe),
             KeepImage = false,
         });
 
@@ -538,6 +532,7 @@ public class InstanceServiceTests
     {
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("alpha");
+        string recipe = temp.Write("recipe/Dockerfile", "FROM scratch");
         Directory.CreateDirectory(folder);
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
         _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
@@ -551,8 +546,9 @@ public class InstanceServiceTests
         Action act = () => _service.Build(new BuildDto
         {
             Name = "alpha",
-            BuildType = WslBuildType.Dockerfile,
-            BuildPath = "Dockerfile",
+            BuildType = WslBuildType.Recipe,
+            BuildPath = recipe,
+            Context = Path.GetDirectoryName(recipe),
             KeepImage = false,
         });
 
@@ -569,6 +565,7 @@ public class InstanceServiceTests
         using TemporaryDirectory temp = new();
         string folder = temp.Combine("alpha");
         string tar = temp.Combine("alpha-rootfs.tar");
+        string recipe = temp.Write("recipe/Dockerfile", "FROM scratch");
         _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
         _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
         _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
@@ -589,8 +586,9 @@ public class InstanceServiceTests
         Action act = () => _service.Build(new BuildDto
         {
             Name = "alpha",
-            BuildType = WslBuildType.Dockerfile,
-            BuildPath = "Dockerfile",
+            BuildType = WslBuildType.Recipe,
+            BuildPath = recipe,
+            Context = Path.GetDirectoryName(recipe),
             KeepImage = false,
         });
 

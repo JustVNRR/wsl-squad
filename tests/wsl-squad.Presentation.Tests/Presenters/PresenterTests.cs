@@ -213,21 +213,20 @@ public class PresenterTests
     }
 
     [Fact]
-    public void Build_presenter_walks_the_dockerfile_road()
+    public void Build_presenter_walks_the_recipe_road()
     {
         Mock<IInstanceService> service = new();
         service.Setup(s => s.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
-            Dockerfiles =
+            Onboardings = [],
+            Recipes =
             [
                 new WslBuildSourceDto
                 {
-                    Name = "ubuntu",
-                    Path = "/catalog/ubuntu/Dockerfile",
+                    Name = "default",
+                    Path = "/catalog/default",
                 },
             ],
-            Onboardings = [],
-            Recipes = [],
         });
         service.Setup(s => s.GetAllSavedImages()).Returns([]);
         service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
@@ -244,10 +243,10 @@ public class PresenterTests
         result.Subject.Should().Be("alpha");
         service.Verify(s => s.Build(It.Is<BuildDto>(dto =>
             dto.Name == "alpha" &&
-            dto.BuildType == WslBuildType.Dockerfile &&
-            dto.BuildPath == "/catalog/ubuntu/Dockerfile" &&
-            dto.Context == Path.GetDirectoryName(dto.BuildPath) &&
-            dto.KeepImage &&
+            dto.BuildType == WslBuildType.Recipe &&
+            dto.BuildPath == Path.Combine("/catalog/default", "Dockerfile") &&
+            dto.Context == "/catalog/default" &&
+            !dto.KeepImage &&
             !dto.RegisterDocker &&
             dto.Interactive)), Times.Once);
     }
@@ -258,16 +257,15 @@ public class PresenterTests
         Mock<IInstanceService> service = new();
         service.Setup(s => s.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
-            Dockerfiles =
+            Onboardings = [],
+            Recipes =
             [
                 new WslBuildSourceDto
                 {
-                    Name = "ubuntu",
-                    Path = "/catalog/ubuntu/Dockerfile",
+                    Name = "default",
+                    Path = "/catalog/default",
                 },
             ],
-            Onboardings = [],
-            Recipes = [],
         });
         service.Setup(s => s.GetAllSavedImages()).Returns([]);
         service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
@@ -624,7 +622,7 @@ public class PresenterTests
 
         public string? AskInstanceName(string prompt) => "alpha";
 
-        public BuildRoad? AskRoad() => new BuildRoad(WslBuildType.Dockerfile, "Dockerfile");
+        public BuildRoad? AskRoad() => new BuildRoad(WslBuildType.Recipe, "Recipe");
 
         public BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows) => rows.FirstOrDefault();
 

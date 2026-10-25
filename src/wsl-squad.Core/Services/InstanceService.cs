@@ -129,7 +129,6 @@ public sealed class InstanceService : IInstanceService
     {
         return new GetBuildSourcesResponseDto
         {
-            Dockerfiles = [.. FormatSourceRows(_configRepository.GetDockerfiles())],
             Onboardings = [.. FormatSourceRows(_configRepository.GetOnboardings())],
             Recipes = [.. FormatSourceRows(_configRepository.GetRecipes())],
         };
@@ -298,9 +297,9 @@ public sealed class InstanceService : IInstanceService
         string imageRef = dto.BuildPath ?? string.Empty;
         using AttachedConsoleScope console = new(dto.Interactive);
 
-        if (dto.BuildType is WslBuildType.Dockerfile or WslBuildType.Recipe)
+        if (dto.BuildType == WslBuildType.Recipe)
         {
-            if (dto.BuildType == WslBuildType.Recipe && !File.Exists(imageRef))
+            if (!File.Exists(imageRef))
             {
                 throw new WslSquadException(WslSquadErrorCode.InvalidBuildSource, dto.Context);
             }
@@ -438,7 +437,7 @@ public sealed class InstanceService : IInstanceService
             warnings.Add(new BuildNoticeDto(BuildNoticeKind.LookFailed, name, exception.Message));
         }
 
-        if (dto.BuildType is WslBuildType.Dockerfile or WslBuildType.Recipe)
+        if (dto.BuildType == WslBuildType.Recipe)
         {
             if (dto.KeepImage)
             {

@@ -135,7 +135,7 @@ public class MainWindowViewModelTests
     public async Task A_busy_window_ignores_add()
     {
         _viewModel.Busy = true;
-        _dialogs.BuildAnswer = new BuildDto { Name = "beta", BuildType = WslBuildType.Dockerfile, BuildPath = "/x" };
+        _dialogs.BuildAnswer = new BuildDto { Name = "beta", BuildType = WslBuildType.Image, BuildPath = "/x" };
 
         await _viewModel.AddCommand.ExecuteAsync(null);
 
@@ -168,7 +168,7 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Add_runs_the_build_through_the_workflow()
     {
-        BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Dockerfile, BuildPath = "/x" };
+        BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Image, BuildPath = "/x" };
         _dialogs.BuildAnswer = request;
         _instance.Setup(service => service.Build(request))
             .Returns(new BuildResponseDto { InstanceName = "beta" });
@@ -181,7 +181,7 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Add_surfaces_the_build_notices()
     {
-        BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Dockerfile, BuildPath = "/x" };
+        BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Image, BuildPath = "/x" };
         _dialogs.BuildAnswer = request;
         _instance.Setup(service => service.Build(request)).Returns(new BuildResponseDto
         {

@@ -62,8 +62,6 @@ public sealed record WslBuildSourceDto
 
 public sealed record GetBuildSourcesResponseDto
 {
-    public List<WslBuildSourceDto> Dockerfiles { get; init; } = [];
-
     public List<WslBuildSourceDto> Onboardings { get; init; } = [];
 
     public List<WslBuildSourceDto> Recipes { get; init; } = [];
@@ -110,7 +108,6 @@ public sealed record WslIconDto
 
 public enum WslBuildType
 {
-    Dockerfile,
     Image,
     Recipe,
 }
@@ -160,7 +157,6 @@ public sealed record BuildDto
         (string buildPath, string context) = type switch
         {
             WslBuildType.Recipe => (Path.Combine(source, "Dockerfile"), source),
-            WslBuildType.Dockerfile => (source, Path.GetDirectoryName(source) ?? string.Empty),
             WslBuildType.Image => (source, string.Empty),
             _ => (source, string.Empty),
         };

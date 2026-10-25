@@ -11,12 +11,11 @@ Every action is available both as a GUI and as a CLI.
 
 ## Features
 
-- **Build an instance** - from a recipe, a Dockerfile, or a saved image - with
-  an onboarding script that runs on the first shell and offers the packs to
-  install
+- **Build an instance** - from a recipe or a saved image - with an onboarding
+  script that runs on the first shell and offers the packs to install
 - **Manage the packs** of an instance, from the catalogue
-- **The recipes themselves** - Dockerfiles, onboarding scripts, recipes:
-  uploaded, edited, deleted - and the saved images
+- **The recipes themselves** - Dockerfiles and onboarding scripts inside
+  recipe folders: created, edited, deleted - and the saved images
 - **Live with an instance** - restart it, open a shell, change the look (icon,
   font, colours), duplicate it, compact it, register it with Docker Desktop or
   take it out

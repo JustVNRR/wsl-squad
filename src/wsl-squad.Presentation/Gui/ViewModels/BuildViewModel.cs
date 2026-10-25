@@ -17,7 +17,6 @@ public sealed partial class BuildViewModel : BaseViewModel
 {
     private readonly IInstanceService _instance;
     private readonly IDialogService _dialogs;
-    private readonly List<WslBuildSourceDto> _dockerfiles;
     private readonly List<WslBuildSourceDto> _onboardings;
     private readonly List<WslBuildSourceDto> _recipes;
     private readonly List<WslBuildSourceDto> _images;
@@ -38,15 +37,11 @@ public sealed partial class BuildViewModel : BaseViewModel
     public partial string UserError { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowDockerfile))]
     [NotifyPropertyChangedFor(nameof(ShowImage))]
     [NotifyPropertyChangedFor(nameof(ShowRecipe))]
     [NotifyPropertyChangedFor(nameof(ShowGeneralOptions))]
     [NotifyPropertyChangedFor(nameof(ShowSaveImage))]
     public partial int RoadIndex { get; set; }
-
-    [ObservableProperty]
-    public partial int DockerfileIndex { get; set; }
 
     [ObservableProperty]
     public partial int OnboardingIndex { get; set; }
@@ -64,9 +59,6 @@ public sealed partial class BuildViewModel : BaseViewModel
     public partial string RecipeError { get; set; }
 
     [ObservableProperty]
-    public partial string DockerfileError { get; set; }
-
-    [ObservableProperty]
     public partial string OnboardingError { get; set; }
 
     [ObservableProperty]
@@ -79,9 +71,6 @@ public sealed partial class BuildViewModel : BaseViewModel
     public partial bool RunOnboarding { get; set; }
 
     [ObservableProperty]
-    public partial bool CanTrashDockerfile { get; set; }
-
-    [ObservableProperty]
     public partial bool CanTrashOnboarding { get; set; }
 
     [ObservableProperty]
@@ -89,9 +78,6 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     [ObservableProperty]
     public partial bool CanTrashRecipe { get; set; }
-
-    [ObservableProperty]
-    public partial bool CanDownloadDockerfile { get; set; }
 
     [ObservableProperty]
     public partial bool CanDownloadOnboarding { get; set; }
@@ -103,7 +89,6 @@ public sealed partial class BuildViewModel : BaseViewModel
     {
         _instance = instance;
         _dialogs = dialogs;
-        _dockerfiles = [];
         _onboardings = [];
         _recipes = [];
         _images = [];
@@ -111,14 +96,11 @@ public sealed partial class BuildViewModel : BaseViewModel
         UserError = string.Empty;
         ImageError = string.Empty;
         RecipeError = string.Empty;
-        DockerfileError = string.Empty;
         OnboardingError = string.Empty;
         RegisterDocker = true;
         CreateCommand = new RelayCommand(Create, () => _nameOk && _userOk);
-        UploadDockerfileCommand = new RelayCommand(PickDockerfile);
         UploadOnboardingCommand = new RelayCommand(PickOnboarding);
         UploadImageCommand = new RelayCommand(PickImage);
-        DownloadDockerfileCommand = new RelayCommand(() => Download(WslCatalogSection.Dockerfiles));
         DownloadOnboardingCommand = new RelayCommand(() => Download(WslCatalogSection.Onboardings));
         DownloadImageCommand = new RelayCommand(() => Download(WslCatalogSection.DockerImages));
         EditSourceCommand = new RelayCommand<WslCatalogSection>(EditSource);
@@ -128,7 +110,6 @@ public sealed partial class BuildViewModel : BaseViewModel
         try
         {
             BuildContextDto context = instance.GetBuildContext();
-            _dockerfiles = [.. context.Sources.Dockerfiles];
             _onboardings = [.. context.Sources.Onboardings];
             _recipes = [.. context.Sources.Recipes];
             _images = [.. context.Images];
@@ -144,7 +125,6 @@ public sealed partial class BuildViewModel : BaseViewModel
         RunOnboarding = true;
         Name = string.Empty;
 
-        DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
         OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
         ImageIndex = _images.Count > 0 ? 0 : -1;
         RecipeIndex = _recipes.Count > 0 ? 0 : -1;
@@ -158,17 +138,13 @@ public sealed partial class BuildViewModel : BaseViewModel
     [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Bound as an instance property by WPF.")]
     public string Lead => Localizer.Instance["LeadBuild"];
 
-    public bool ShowDockerfile => RoadIndex == 0;
+    public bool ShowImage => RoadIndex == 0;
 
-    public bool ShowImage => RoadIndex == 1;
+    public bool ShowRecipe => RoadIndex == 1;
 
-    public bool ShowRecipe => RoadIndex == 2;
+    public bool ShowGeneralOptions => RoadIndex != 1;
 
-    public bool ShowGeneralOptions => RoadIndex != 2;
-
-    public bool ShowSaveImage => RoadIndex is 0 or 2;
-
-    public ObservableCollection<string> DockerfileNames { get; } = [];
+    public bool ShowSaveImage => RoadIndex == 1;
 
     public ObservableCollection<string> OnboardingNames { get; } = [];
 
@@ -180,13 +156,9 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public IRelayCommand CreateCommand { get; }
 
-    public IRelayCommand UploadDockerfileCommand { get; }
-
     public IRelayCommand UploadOnboardingCommand { get; }
 
     public IRelayCommand UploadImageCommand { get; }
-
-    public IRelayCommand DownloadDockerfileCommand { get; }
 
     public IRelayCommand DownloadOnboardingCommand { get; }
 
@@ -215,13 +187,8 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     partial void OnRoadIndexChanged(int value)
     {
-        RunOnboarding = value == 0;
-        SaveImage = value == 2;
-    }
-
-    partial void OnDockerfileIndexChanged(int value)
-    {
-        SyncButtons();
+        RunOnboarding = false;
+        SaveImage = value == 1;
     }
 
     partial void OnOnboardingIndexChanged(int value)
@@ -239,11 +206,6 @@ public sealed partial class BuildViewModel : BaseViewModel
         SyncButtons();
     }
 
-    public void AddDockerfile(string source)
-    {
-        AddRecipe(WslCatalogSection.Dockerfiles, source);
-    }
-
     public void AddOnboarding(string source)
     {
         AddRecipe(WslCatalogSection.Onboardings, source);
@@ -257,18 +219,6 @@ public sealed partial class BuildViewModel : BaseViewModel
         }
 
         AddRecipe(WslCatalogSection.DockerImages, source);
-    }
-
-    private void PickDockerfile()
-    {
-        string? source = _dialogs.PickOpenFile(
-            Localizer.Instance["FileDialogDockerfile"],
-            Localizer.Instance["FileFilterDockerfiles"]);
-
-        if (source is not null)
-        {
-            AddDockerfile(source);
-        }
     }
 
     private void PickOnboarding()
@@ -317,7 +267,6 @@ public sealed partial class BuildViewModel : BaseViewModel
     {
         string title = kind switch
         {
-            WslCatalogSection.Dockerfiles => Localizer.Instance["DeleteDockerfileTitle"],
             WslCatalogSection.Onboardings => Localizer.Instance["DeleteOnboardingTitle"],
             WslCatalogSection.DockerImages => Localizer.Instance["DeleteImageTitle"],
             WslCatalogSection.Recipes => Localizer.Instance["DeleteRecipeTitle"],
@@ -437,18 +386,14 @@ public sealed partial class BuildViewModel : BaseViewModel
             _userOk = true;
         }
 
-        DockerfileError = RoadIndex == 0 && DockerfileIndex < 0
-            ? Localizer.Instance["ErrorDockerfileMissing"]
-            : string.Empty;
-        ImageError = RoadIndex == 1 && ImageIndex < 0
+        ImageError = RoadIndex == 0 && ImageIndex < 0
             ? Localizer.Instance["ErrorImageMissing"]
             : string.Empty;
-        RecipeError = RoadIndex == 2 && RecipeIndex < 0
+        RecipeError = RoadIndex == 1 && RecipeIndex < 0
             ? Localizer.Instance["ErrorRecipeMissing"]
             : string.Empty;
 
         if (!_nameOk || !_userOk ||
-            DockerfileError.Length > 0 ||
             ImageError.Length > 0 ||
             RecipeError.Length > 0)
         {
@@ -458,20 +403,15 @@ public sealed partial class BuildViewModel : BaseViewModel
         WslBuildType buildType;
         string source;
 
-        if (RoadIndex == 1)
+        if (RoadIndex == 0)
         {
             buildType = WslBuildType.Image;
             source = _images[ImageIndex].Path ?? string.Empty;
         }
-        else if (RoadIndex == 2)
+        else
         {
             buildType = WslBuildType.Recipe;
             source = _recipes[RecipeIndex].Path ?? string.Empty;
-        }
-        else
-        {
-            buildType = WslBuildType.Dockerfile;
-            source = _dockerfiles[DockerfileIndex].Path ?? string.Empty;
         }
 
         BuildDto dto = BuildDto.FromSource(
@@ -519,17 +459,14 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     private void SyncLists()
     {
-        int dockerfileIndex = DockerfileIndex;
         int onboardingIndex = OnboardingIndex;
         int imageIndex = ImageIndex;
         int recipeIndex = RecipeIndex;
 
-        Fill(DockerfileNames, _dockerfiles.Select(row => row.Name));
         Fill(OnboardingNames, _onboardings.Select(row => row.Name));
         Fill(ImageNames, _images.Select(row => row.Name));
         Fill(RecipeNames, _recipes.Select(row => row.Name));
 
-        DockerfileIndex = dockerfileIndex >= 0 && dockerfileIndex < _dockerfiles.Count ? dockerfileIndex : -1;
         OnboardingIndex = onboardingIndex >= 0 && onboardingIndex < _onboardings.Count ? onboardingIndex : -1;
         ImageIndex = imageIndex >= 0 && imageIndex < _images.Count ? imageIndex : -1;
         RecipeIndex = recipeIndex >= 0 && recipeIndex < _recipes.Count ? recipeIndex : -1;
@@ -538,10 +475,8 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     private void SyncButtons()
     {
-        CanDownloadDockerfile = DockerfileIndex >= 0;
         CanDownloadOnboarding = OnboardingIndex >= 0;
         CanDownloadImage = ImageIndex >= 0;
-        CanTrashDockerfile = Uploaded(_dockerfiles, DockerfileIndex);
         CanTrashOnboarding = Uploaded(_onboardings, OnboardingIndex);
         CanTrashRecipe = Uploaded(_recipes, RecipeIndex);
         CanTrashImage = Uploaded(_images, ImageIndex);
@@ -551,7 +486,6 @@ public sealed partial class BuildViewModel : BaseViewModel
     {
         return kind switch
         {
-            WslCatalogSection.Dockerfiles => Selected(_dockerfiles, DockerfileIndex),
             WslCatalogSection.Onboardings => Selected(_onboardings, OnboardingIndex),
             WslCatalogSection.DockerImages => Selected(_images, ImageIndex),
             WslCatalogSection.Recipes => Selected(_recipes, RecipeIndex),
@@ -590,9 +524,6 @@ public sealed partial class BuildViewModel : BaseViewModel
 
         switch (kind)
         {
-            case WslCatalogSection.Dockerfiles:
-                _dockerfiles.RemoveAll(item => item.Path == row.Path);
-                break;
             case WslCatalogSection.Onboardings:
                 _onboardings.RemoveAll(item => item.Path == row.Path);
                 break;
@@ -610,9 +541,6 @@ public sealed partial class BuildViewModel : BaseViewModel
 
         switch (kind)
         {
-            case WslCatalogSection.Dockerfiles:
-                DockerfileIndex = _dockerfiles.Count > 0 ? 0 : -1;
-                break;
             case WslCatalogSection.Onboardings:
                 OnboardingIndex = _onboardings.Count > 0 ? 0 : -1;
                 break;
@@ -636,7 +564,6 @@ public sealed partial class BuildViewModel : BaseViewModel
 
         (string uploadKind, string fileName) = kind switch
         {
-            WslCatalogSection.Dockerfiles => ("dockerfiles", "Dockerfile"),
             WslCatalogSection.Onboardings => ("onboardings", "onboarding.sh"),
             WslCatalogSection.DockerImages => ("dockerimages", Path.GetFileName(source)),
             WslCatalogSection.Recipes => throw new ArgumentOutOfRangeException(nameof(kind)),
@@ -654,9 +581,6 @@ public sealed partial class BuildViewModel : BaseViewModel
 
             switch (kind)
             {
-                case WslCatalogSection.Dockerfiles:
-                    _dockerfiles.Add(row);
-                    break;
                 case WslCatalogSection.Onboardings:
                     _onboardings.Add(row);
                     OnboardingError = string.Empty;
@@ -674,9 +598,6 @@ public sealed partial class BuildViewModel : BaseViewModel
 
             switch (kind)
             {
-                case WslCatalogSection.Dockerfiles:
-                    DockerfileIndex = _dockerfiles.Count - 1;
-                    break;
                 case WslCatalogSection.Onboardings:
                     OnboardingIndex = _onboardings.Count - 1;
                     break;

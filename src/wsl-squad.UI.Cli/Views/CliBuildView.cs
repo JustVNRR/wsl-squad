@@ -27,7 +27,6 @@ public sealed class CliBuildView : CliViewBase, IBuildView
         return Pick(
             Localizer.Instance["CliBuildFrom"],
             [
-                new BuildRoad(WslBuildType.Dockerfile, Localizer.Instance["BuildRoadDockerfile"]),
                 new BuildRoad(WslBuildType.Image, Localizer.Instance["BuildRoadImage"]),
                 new BuildRoad(WslBuildType.Recipe, Localizer.Instance["BuildRoadRecipe"]),
             ],

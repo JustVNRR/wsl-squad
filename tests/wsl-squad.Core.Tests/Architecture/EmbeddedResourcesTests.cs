@@ -15,7 +15,6 @@ public class EmbeddedResourcesTests
                 .Select(name => name.Replace('\\', '/')),
         ];
 
-        names.Should().Contain("ingredients/Dockerfile");
         names.Should().Contain("ingredients/manage-packs.sh");
         names.Should().Contain("ingredients/manage-packs-bootstrap.sh");
         names.Should().Contain("ingredients/onboarding.sh");

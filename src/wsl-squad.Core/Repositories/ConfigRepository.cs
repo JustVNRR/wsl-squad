@@ -11,7 +11,7 @@ public sealed record SourceRow(string Name, string Path, DateTime Modified);
 
 public sealed class ConfigRepository : IConfigRepository
 {
-    private static readonly string[] _recipeKinds = ["dockerfiles", "onboardings", "dockerimages", "recipes"];
+    private static readonly string[] _recipeKinds = ["onboardings", "dockerimages", "recipes"];
 
     private readonly string _assetsDir;
     private readonly string _distroTree;
@@ -80,19 +80,6 @@ public sealed class ConfigRepository : IConfigRepository
         return [.. names.Order(StringComparer.OrdinalIgnoreCase)];
     }
 
-    public IReadOnlyList<SourceRow> GetDockerfiles()
-    {
-        List<SourceRow> rows = ReadDockerfileRows();
-
-        if (rows.Count == 0)
-        {
-            WriteSeedRecipe("dockerfiles", "Dockerfile", "Dockerfile", "Dockerfile.dockerignore");
-            rows = ReadDockerfileRows();
-        }
-
-        return rows;
-    }
-
     public IReadOnlyList<SourceRow> GetOnboardings()
     {
         List<SourceRow> rows = ReadSourceRows("onboardings", "onboarding.sh");
@@ -150,16 +137,6 @@ public sealed class ConfigRepository : IConfigRepository
         string target = Path.Combine(slot, fileName);
         File.Copy(source, target, overwrite: true);
         File.SetLastWriteTime(target, DateTime.Now);
-
-        if (fileName == "Dockerfile")
-        {
-            string sibling = Path.Combine(Path.GetDirectoryName(source) ?? string.Empty, ".dockerignore");
-
-            if (File.Exists(sibling))
-            {
-                File.Copy(sibling, Path.Combine(slot, "Dockerfile.dockerignore"), overwrite: true);
-            }
-        }
 
         return target;
     }
@@ -304,11 +281,6 @@ public sealed class ConfigRepository : IConfigRepository
         }
 
         return path;
-    }
-
-    private List<SourceRow> ReadDockerfileRows()
-    {
-        return ReadSourceRows("dockerfiles", "Dockerfile");
     }
 
     private static IReadOnlyList<string> ReadFontNames(string root)

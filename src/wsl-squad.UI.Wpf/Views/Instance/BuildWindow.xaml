@@ -28,28 +28,9 @@
                 </StackPanel>
                 <TextBlock Margin="0,12,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelBuildFrom]}"/>
                 <ComboBox SelectedIndex="{Binding RoadIndex, Mode=TwoWay}" Margin="0,6,0,0">
-                    <ComboBoxItem Content="{Binding Source={x:Static loc:Localizer.Instance}, Path=[BuildRoadDockerfile]}"/>
                     <ComboBoxItem Content="{Binding Source={x:Static loc:Localizer.Instance}, Path=[BuildRoadImage]}"/>
                     <ComboBoxItem Content="{Binding Source={x:Static loc:Localizer.Instance}, Path=[BuildRoadRecipe]}"/>
                 </ComboBox>
-                <StackPanel Visibility="{Binding ShowDockerfile, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock Margin="0,10,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelDockerfile]}"/>
-                    <Grid Margin="0,6,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <ComboBox ItemsSource="{Binding DockerfileNames}" SelectedIndex="{Binding DockerfileIndex, Mode=TwoWay}" Grid.Column="0"/>
-                        <Button Grid.Column="1" Content="&#xF093;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipUploadDockerfile]}" Command="{Binding UploadDockerfileCommand}"/>
-                        <Button Grid.Column="2" Content="&#xF019;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanDownloadDockerfile}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipSaveDockerfile]}" Command="{Binding DownloadDockerfileCommand}"/>
-                        <Button Grid.Column="3" Content="&#xF040;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipEditDockerfile]}" Command="{Binding EditSourceCommand}" CommandParameter="{x:Static vm:WslCatalogSection.Dockerfiles}"/>
-                        <Button Grid.Column="4" Content="&#xF1F8;" FontFamily="{DynamicResource IconFace}" Margin="8,0,0,0" IsEnabled="{Binding CanTrashDockerfile}" ToolTip="{Binding Source={x:Static loc:Localizer.Instance}, Path=[TooltipDeleteSource]}" Command="{Binding DeleteSelectedCommand}" CommandParameter="{x:Static vm:WslCatalogSection.Dockerfiles}"/>
-                    </Grid>
-                    <TextBlock Text="{Binding DockerfileError}" Visibility="{Binding DockerfileError, Converter={StaticResource StringVisibilityConverter}}" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}"/>
-                </StackPanel>
                 <StackPanel Visibility="{Binding ShowImage, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock Margin="0,10,0,0" Text="{Binding Source={x:Static loc:Localizer.Instance}, Path=[LabelDockerImage]}"/>
                     <Grid Margin="0,6,0,0">

@@ -77,32 +77,16 @@ public class ConfigRepositoryTests
     }
 
     [Fact]
-    public void Reads_dockerfile_sources()
+    public void Seeds_onboardings_from_ingredients()
     {
         using TemporaryDirectory temp = new();
-        temp.Write("dockerfiles/ubuntu/Dockerfile", "FROM --platform=linux/amd64 ubuntu:24.04\n");
-        ConfigRepository repository = new(temp.Path);
-
-        SourceRow row = repository.GetDockerfiles().Should().ContainSingle().Subject;
-        row.Name.Should().Be("ubuntu");
-    }
-
-    [Fact]
-    public void Seeds_dockerfiles_and_onboardings_from_ingredients()
-    {
-        using TemporaryDirectory temp = new();
-        temp.Write("ingredients/Dockerfile", "FROM alpine:3.20\n");
         temp.Write("ingredients/onboarding.sh", "#!/bin/sh\n");
         ConfigRepository repository = new(temp.Path, temp.Path);
 
-        SourceRow dockerfile = repository.GetDockerfiles().Should().ContainSingle().Subject;
         SourceRow onboarding = repository.GetOnboardings().Should().ContainSingle().Subject;
 
-        dockerfile.Name.Should().Be("Dockerfile");
-        dockerfile.Path.Should().Be(temp.Combine("dockerfiles", "Dockerfile", "Dockerfile"));
         onboarding.Name.Should().Be("onboarding");
         onboarding.Path.Should().Be(temp.Combine("onboardings", "onboarding", "onboarding.sh"));
-        File.ReadAllText(dockerfile.Path).Should().Be("FROM alpine:3.20\n");
     }
 
     [Fact]
@@ -120,10 +104,10 @@ public class ConfigRepositoryTests
     public void Copies_and_removes_a_source_within_the_catalogue()
     {
         using TemporaryDirectory temp = new();
-        string source = temp.Write("source.Dockerfile", "FROM debian:12\n");
+        string source = temp.Write("source.sh", "#!/bin/sh\n");
         ConfigRepository repository = new(temp.Path);
 
-        string target = repository.CopyRecipe("dockerfiles", source, "Dockerfile");
+        string target = repository.CopyRecipe("onboardings", source, "onboarding.sh");
         File.Exists(target).Should().BeTrue();
 
         repository.RemoveRecipe(Path.GetDirectoryName(target)!);

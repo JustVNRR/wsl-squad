@@ -6,8 +6,6 @@ public interface IConfigRepository
 
     IReadOnlyList<string> GetPromptFontNames();
 
-    IReadOnlyList<SourceRow> GetDockerfiles();
-
     IReadOnlyList<SourceRow> GetOnboardings();
 
     IReadOnlyList<SourceRow> GetRecipes();
