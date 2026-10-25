@@ -8,7 +8,7 @@ public sealed class ServiceFactory : IServiceFactory
 {
     public IInstanceService CreateInstanceService(string assets)
     {
-        ConfigRepository config = new(assets, assets);
+        ConfigRepository config = new(assets);
 
         return new InstanceService(
             new InstanceRepository(config),
@@ -35,7 +35,7 @@ public sealed class ServiceFactory : IServiceFactory
 
     public IFleetService CreateFleetService(string assets)
     {
-        ConfigRepository config = new(assets, assets);
+        ConfigRepository config = new(assets);
         InstanceRepository instances = new(config);
         ArchiveRepository archives = new(config);
         WslRepository wsl = new();

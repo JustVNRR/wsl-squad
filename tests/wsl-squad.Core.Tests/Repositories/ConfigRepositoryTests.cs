@@ -77,19 +77,6 @@ public class ConfigRepositoryTests
     }
 
     [Fact]
-    public void Seeds_onboardings_from_ingredients()
-    {
-        using TemporaryDirectory temp = new();
-        temp.Write("ingredients/onboarding.sh", "#!/bin/sh\n");
-        ConfigRepository repository = new(temp.Path, temp.Path);
-
-        SourceRow onboarding = repository.GetOnboardings().Should().ContainSingle().Subject;
-
-        onboarding.Name.Should().Be("onboarding");
-        onboarding.Path.Should().Be(temp.Combine("onboardings", "onboarding", "onboarding.sh"));
-    }
-
-    [Fact]
     public void Reads_recipes()
     {
         using TemporaryDirectory temp = new();
@@ -98,20 +85,6 @@ public class ConfigRepositoryTests
 
         SourceRow row = repository.GetRecipes().Should().ContainSingle().Subject;
         row.Name.Should().Be("alpine");
-    }
-
-    [Fact]
-    public void Copies_and_removes_a_source_within_the_catalogue()
-    {
-        using TemporaryDirectory temp = new();
-        string source = temp.Write("source.sh", "#!/bin/sh\n");
-        ConfigRepository repository = new(temp.Path);
-
-        string target = repository.CopyRecipe("onboardings", source, "onboarding.sh");
-        File.Exists(target).Should().BeTrue();
-
-        repository.RemoveRecipe(Path.GetDirectoryName(target)!);
-        Directory.Exists(Path.GetDirectoryName(target)).Should().BeFalse();
     }
 
     [Fact]

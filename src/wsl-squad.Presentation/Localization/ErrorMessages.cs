@@ -93,8 +93,6 @@ public static class ErrorMessages
                 Localizer.Instance.Format("ErrorWslCompactFailed", target),
             WslSquadErrorCode.WslPackManagerCopyFailed =>
                 Localizer.Instance.Format("ErrorWslPackManagerCopyFailed", target),
-            WslSquadErrorCode.WslOnboardingCopyFailed =>
-                Localizer.Instance.Format("ErrorWslOnboardingCopyFailed", target),
             WslSquadErrorCode.WslOperationFailed => detail,
             WslSquadErrorCode.EmbeddedResourceMissing =>
                 Localizer.Instance.Format("ErrorEmbeddedResourceMissing", target),

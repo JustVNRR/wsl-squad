@@ -6,8 +6,6 @@ using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 
-public sealed record SavedImageRow(string Name, string Path, DateTime Modified);
-
 public sealed class DockerRepository : IDockerRepository
 {
     private readonly string _assetsDir;
@@ -28,35 +26,6 @@ public sealed class DockerRepository : IDockerRepository
         {
             throw new WslSquadException(WslSquadErrorCode.DockerOperationFailed, "build", $"exit code {exitCode}");
         }
-    }
-
-    public string Load(string tarPath, bool interactive = false)
-    {
-        (int code, string output) = interactive
-            ? NativeCommand.RunInteractive("docker", ["load", "-i", tarPath])
-            : NativeCommand.Run("docker", ["load", "-i", tarPath]);
-
-        if (code != 0)
-        {
-            throw new WslSquadException(WslSquadErrorCode.DockerOperationFailed, "load", output);
-        }
-
-        foreach (string line in output.Split('\n'))
-        {
-            string text = line.Trim();
-
-            if (text.StartsWith("Loaded image ID: ", StringComparison.Ordinal))
-            {
-                return text["Loaded image ID: ".Length..].Trim();
-            }
-
-            if (text.StartsWith("Loaded image: ", StringComparison.Ordinal))
-            {
-                return text["Loaded image: ".Length..].Trim();
-            }
-        }
-
-        throw new WslSquadException(WslSquadErrorCode.DockerOperationFailed, tarPath, "docker load told nothing usable about the image");
     }
 
     public void ExportRootfs(string imageName, string outputPath, bool interactive = false)
@@ -306,35 +275,6 @@ public sealed class DockerRepository : IDockerRepository
     public string GetSavedImagePath(string name)
     {
         return Path.Combine(_assetsDir, "dockerimages", name, $"{name}.tar");
-    }
-
-    public IReadOnlyList<SavedImageRow> GetAllSavedImages()
-    {
-        string imageRoot = Path.Combine(_assetsDir, "dockerimages");
-
-        if (!Directory.Exists(imageRoot))
-        {
-            return [];
-        }
-
-        List<SavedImageRow> images = [];
-
-        foreach (string slot in Directory.EnumerateDirectories(imageRoot).Order(StringComparer.Ordinal))
-        {
-            string? file = Directory.EnumerateFiles(slot).FirstOrDefault();
-
-            if (file is null)
-            {
-                continue;
-            }
-
-            images.Add(new SavedImageRow(
-                Path.GetFileNameWithoutExtension(file),
-                file,
-                File.GetLastWriteTime(file)));
-        }
-
-        return images;
     }
 
     public IReadOnlyList<string>? GetDesktopNames()

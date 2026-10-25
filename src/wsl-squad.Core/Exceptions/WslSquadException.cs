@@ -37,7 +37,6 @@ public enum WslSquadErrorCode
     WslStopFailed,
     WslCompactFailed,
     WslPackManagerCopyFailed,
-    WslOnboardingCopyFailed,
     WslOperationFailed,
     EmbeddedResourceMissing,
     PlatformUnsupported,

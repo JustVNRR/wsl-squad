@@ -62,37 +62,19 @@ public class InstanceServiceTests
     }
 
     [Fact]
-    public void Saved_images_are_removable()
-    {
-        _docker.Setup(docker => docker.GetAllSavedImages()).Returns(
-        [
-            new SavedImageRow("alpha", "/assets/dockerimages/alpha/alpha.tar", DateTime.UnixEpoch),
-        ]);
-
-        WslBuildSourceDto row = _service.GetAllSavedImages().Should().ContainSingle().Subject;
-
-        row.Name.Should().StartWith("alpha");
-        row.Path.Should().Be("/assets/dockerimages/alpha/alpha.tar");
-        row.Uploaded.Should().BeTrue();
-        row.ExportFileName.Should().Be("alpha.tar");
-    }
-
-    [Fact]
-    public void Uploaded_sources_expose_the_clean_export_name()
+    public void Recipes_are_returned_with_their_path()
     {
         DateTime modified = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
-        _config.Setup(config => config.GetOnboardings()).Returns(
+        _config.Setup(config => config.GetRecipes()).Returns(
         [
-            new SourceRow(
-                "setup-1a2b3c4d",
-                "/catalog/onboardings/setup-1a2b3c4d/onboarding.sh",
-                modified),
+            new SourceRow("default-1a2b3c4d", "/catalog/default-1a2b3c4d", modified),
         ]);
-        _config.Setup(config => config.GetRecipes()).Returns([]);
 
-        GetBuildSourcesResponseDto sources = _service.GetBuildSources();
+        WslBuildSourceDto recipe = _service.GetRecipes().Should().ContainSingle().Subject;
 
-        sources.Onboardings.Should().ContainSingle(row => row.ExportFileName == "setup.sh");
+        recipe.Name.Should().StartWith("default");
+        recipe.Path.Should().Be("/catalog/default-1a2b3c4d");
+        recipe.Uploaded.Should().BeTrue();
     }
 
     [Fact]
@@ -475,7 +457,6 @@ public class InstanceServiceTests
         BuildResponseDto response = _service.Build(new BuildDto
         {
             Name = "alpha",
-            BuildType = WslBuildType.Recipe,
             BuildPath = recipe,
             Context = Path.GetDirectoryName(recipe),
             KeepImage = false,
@@ -515,7 +496,6 @@ public class InstanceServiceTests
         _service.Build(new BuildDto
         {
             Name = "alpha",
-            BuildType = WslBuildType.Recipe,
             BuildPath = recipe,
             Context = Path.GetDirectoryName(recipe),
             KeepImage = true,
@@ -546,7 +526,6 @@ public class InstanceServiceTests
         Action act = () => _service.Build(new BuildDto
         {
             Name = "alpha",
-            BuildType = WslBuildType.Recipe,
             BuildPath = recipe,
             Context = Path.GetDirectoryName(recipe),
             KeepImage = false,
@@ -586,7 +565,6 @@ public class InstanceServiceTests
         Action act = () => _service.Build(new BuildDto
         {
             Name = "alpha",
-            BuildType = WslBuildType.Recipe,
             BuildPath = recipe,
             Context = Path.GetDirectoryName(recipe),
             KeepImage = false,

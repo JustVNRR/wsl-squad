@@ -22,17 +22,6 @@ public sealed class CliBuildView : CliViewBase, IBuildView
         return AskLine(prompt);
     }
 
-    public BuildRoad? AskRoad()
-    {
-        return Pick(
-            Localizer.Instance["CliBuildFrom"],
-            [
-                new BuildRoad(WslBuildType.Image, Localizer.Instance["BuildRoadImage"]),
-                new BuildRoad(WslBuildType.Recipe, Localizer.Instance["BuildRoadRecipe"]),
-            ],
-            road => road.Label);
-    }
-
     public void ShowAbort(IReadOnlyList<string> lines)
     {
         Write(string.Empty);
@@ -51,51 +40,11 @@ public sealed class CliBuildView : CliViewBase, IBuildView
         return Pick(label, rows, row => row.Name);
     }
 
-    public void ShowNoOnboarding()
-    {
-        Write(string.Empty);
-        Write(Localizer.Instance["CliNoOnboarding"], ConsoleTone.Muted);
-    }
-
-    public bool? AskRunOnboarding()
-    {
-        Write(string.Empty);
-
-        return AskConfirmation(Localizer.Instance["CliRunOnboarding"], defaultNo: false);
-    }
-
-    public BuildSourceChoice? AskOnboarding(IReadOnlyList<BuildSourceChoice> rows)
-    {
-        return Pick(Localizer.Instance["CliOnboardingShell"], rows, row => row.Name);
-    }
-
-    public void ShowBeforeAccount()
-    {
-        Write(string.Empty);
-    }
-
-    public string? AskUserName(string prompt)
-    {
-        return AskLine(prompt)?.Trim();
-    }
-
-    public void ShowUserHint()
-    {
-        Write("  " + Localizer.Instance["ErrorUserName"], ConsoleTone.Hint);
-    }
-
     public bool? AskKeepImage()
     {
         Write(string.Empty);
 
         return AskConfirmation(Localizer.Instance["CliKeepImage"], defaultNo: false);
-    }
-
-    public bool? AskRegisterDocker(string name)
-    {
-        Write(string.Empty);
-
-        return AskConfirmation(Localizer.Instance.Format("CliAddDocker", name), defaultNo: false);
     }
 
     public void Show(BuildResponseDto response)

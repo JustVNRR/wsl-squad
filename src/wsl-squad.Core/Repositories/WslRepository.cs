@@ -372,64 +372,6 @@ public sealed class WslRepository : IWslRepository
             : id;
     }
 
-    public void SaveOnboardingScript(string instanceName, string source, string? asUser = null)
-    {
-        string throughTheDrives = ToWslPath(source);
-        string sourcePath = Quote(throughTheDrives);
-        string user = Quote(asUser ?? string.Empty);
-        string script = $$"""
-            cp -f {{sourcePath}} /root/onboarding.sh || exit 1
-            chmod 755 /root/onboarding.sh || exit 1
-            printf '%s' {{user}} > /root/onboarding.user
-            cat > /root/onboarding-run.sh <<'EOF'
-            #!/bin/sh
-            [ -x /root/onboarding.sh ] || exit 0
-            if [ -s /root/onboarding.user ]; then
-                /root/onboarding.sh "$(cat /root/onboarding.user)"
-            else
-                /root/onboarding.sh
-            fi
-            status=$?
-            if [ "$status" -ne 0 ]; then
-                printf '\nOnboarding failed (exit %s).\nPress Enter to close... ' "$status"
-                read -r _
-                exit "$status"
-            fi
-            rm -f /root/onboarding.sh /root/onboarding-run.sh /root/onboarding.user
-            wsl_exe=""
-            if command -v wsl.exe >/dev/null 2>&1; then
-                wsl_exe=wsl.exe
-            elif [ -x /mnt/c/Windows/System32/wsl.exe ]; then
-                wsl_exe=/mnt/c/Windows/System32/wsl.exe
-            fi
-            if [ -n "$wsl_exe" ] && [ -n "${WSL_DISTRO_NAME:-}" ]; then
-                "$wsl_exe" --terminate "$WSL_DISTRO_NAME" >/dev/null 2>&1 || true
-            fi
-            exit 0
-            EOF
-            chmod 755 /root/onboarding-run.sh || exit 1
-            touch /root/.bashrc
-            sed -i '/onboarding-run\.sh/d' /root/.bashrc || exit 1
-            printf '%s\n' '[ -x /root/onboarding-run.sh ] && exec /root/onboarding-run.sh' >> /root/.bashrc
-            touch /root/.zshenv
-            sed -i '/onboarding-run\.sh/d' /root/.zshenv || exit 1
-            printf '%s\n' '[[ -o interactive ]] && [ -x /root/onboarding-run.sh ] && exec /root/onboarding-run.sh' >> /root/.zshenv
-            """;
-
-        (int exitCode, _) = NativeCommand.RunWithInput(
-            "wsl.exe",
-            ["-d", instanceName, "-u", "root", "--", "sh", "-s"],
-            script,
-            includeError: true);
-
-        if (exitCode != 0)
-        {
-            throw new WslSquadException(
-                WslSquadErrorCode.WslOnboardingCopyFailed,
-                source);
-        }
-    }
-
     private static string Quote(string value)
     {
         return "'" + value.Replace("'", "'\\''") + "'";

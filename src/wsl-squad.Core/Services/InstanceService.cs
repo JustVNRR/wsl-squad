@@ -125,13 +125,9 @@ public sealed class InstanceService : IInstanceService
         return _wslRepository.GetRunningNames();
     }
 
-    public GetBuildSourcesResponseDto GetBuildSources()
+    public IReadOnlyList<WslBuildSourceDto> GetRecipes()
     {
-        return new GetBuildSourcesResponseDto
-        {
-            Onboardings = [.. FormatSourceRows(_configRepository.GetOnboardings())],
-            Recipes = [.. FormatSourceRows(_configRepository.GetRecipes())],
-        };
+        return [.. FormatSourceRows(_configRepository.GetRecipes())];
     }
 
     public WslBuildSourceDto CreateRecipe(NewRecipeDto dto)
@@ -233,22 +229,6 @@ public sealed class InstanceService : IInstanceService
         return new UnregisterDockerResponseDto { InstanceName = name, Restart = restart };
     }
 
-    public WslBuildSourceDto UploadRecipe(UploadRecipeDto dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        string kind = dto.Kind ?? string.Empty;
-        string source = dto.Source ?? string.Empty;
-        string fileName = dto.FileName ?? string.Empty;
-        string target = _configRepository.CopyRecipe(kind, source, fileName);
-        SourceRow row = new(
-            Path.GetFileName(Path.GetDirectoryName(target) ?? string.Empty),
-            target,
-            File.GetLastWriteTime(target));
-
-        return FormatSourceRows([row])[0];
-    }
-
     private bool StartDocker()
     {
         return _dockerRepository.TestRunning() || _dockerRepository.StartDesktop();
@@ -259,19 +239,11 @@ public sealed class InstanceService : IInstanceService
         _configRepository.RemoveRecipe(path);
     }
 
-    public void ExportRecipe(ExportRecipeDto dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        _configRepository.ExportRecipe(dto.Path ?? string.Empty, dto.Target ?? string.Empty);
-    }
-
     public BuildResponseDto Build(BuildDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
         string name = dto.Name ?? string.Empty;
-        string? user = dto.User;
 
         foreach (WslInstance distro in _wslRepository.GetAllDistros())
         {
@@ -297,20 +269,13 @@ public sealed class InstanceService : IInstanceService
         string imageRef = dto.BuildPath ?? string.Empty;
         using AttachedConsoleScope console = new(dto.Interactive);
 
-        if (dto.BuildType == WslBuildType.Recipe)
+        if (!File.Exists(imageRef))
         {
-            if (!File.Exists(imageRef))
-            {
-                throw new WslSquadException(WslSquadErrorCode.InvalidBuildSource, dto.Context);
-            }
+            throw new WslSquadException(WslSquadErrorCode.InvalidBuildSource, dto.Context);
+        }
 
-            _dockerRepository.Build(tag, imageRef, dto.Context ?? string.Empty, dto.Interactive);
-            imageRef = tag;
-        }
-        else if (dto.BuildType == WslBuildType.Image)
-        {
-            imageRef = _dockerRepository.Load(imageRef, dto.Interactive);
-        }
+        _dockerRepository.Build(tag, imageRef, dto.Context ?? string.Empty, dto.Interactive);
+        imageRef = tag;
 
         string installPath = _instanceRepository.GetFolder(name);
         string tarPath = Path.Combine(Path.GetDirectoryName(installPath) ?? string.Empty, $"{name}-rootfs.tar");
@@ -345,51 +310,27 @@ public sealed class InstanceService : IInstanceService
         WslInstance instance = new()
         {
             Name = name,
-            DefaultUser = user ?? "root",
+            DefaultUser = "root",
             Family = _wslRepository.GetFamily(name) ?? string.Empty,
+            Theme = WslTheme.Default(),
         };
-        WslTheme theme = WslTheme.Default();
 
-        if (!string.IsNullOrEmpty(dto.Font))
+        string imageUser = string.Empty;
+
+        foreach (string line in _wslRepository.GetInInstance(name, ["cat", "/etc/wsl.conf"]))
         {
-            theme.FontName = dto.Font;
-        }
-
-        if (!string.IsNullOrEmpty(dto.ColourScheme))
-        {
-            theme.ColorScheme = dto.ColourScheme;
-        }
-
-        if (dto.Icon is not null)
-        {
-            theme.SetIcon(_instanceMapper.ToDrawing(dto.Icon));
-        }
-
-        instance.Theme = theme;
-
-        if (!string.IsNullOrEmpty(dto.Onboarding))
-        {
-            _wslRepository.SaveOnboardingScript(name, dto.Onboarding, user);
-        }
-        else
-        {
-            string imageUser = string.Empty;
-
-            foreach (string line in _wslRepository.GetInInstance(name, ["cat", "/etc/wsl.conf"]))
+            if (line.TrimStart().StartsWith("default", StringComparison.Ordinal))
             {
-                if (line.TrimStart().StartsWith("default", StringComparison.Ordinal))
-                {
-                    int separator = line.IndexOf('=', StringComparison.Ordinal);
+                int separator = line.IndexOf('=', StringComparison.Ordinal);
 
-                    if (separator >= 0)
-                    {
-                        imageUser = line[(separator + 1)..].Trim();
-                    }
+                if (separator >= 0)
+                {
+                    imageUser = line[(separator + 1)..].Trim();
                 }
             }
-
-            instance.DefaultUser = imageUser.Length == 0 ? "root" : imageUser;
         }
+
+        instance.DefaultUser = imageUser.Length == 0 ? "root" : imageUser;
 
         try
         {
@@ -437,26 +378,17 @@ public sealed class InstanceService : IInstanceService
             warnings.Add(new BuildNoticeDto(BuildNoticeKind.LookFailed, name, exception.Message));
         }
 
-        if (dto.BuildType == WslBuildType.Recipe)
+        if (dto.KeepImage)
         {
-            if (dto.KeepImage)
+            string savePath = _dockerRepository.GetSavedImagePath(name);
+
+            if (!_dockerRepository.SaveImage(tag, savePath))
             {
-                string savePath = _dockerRepository.GetSavedImagePath(name);
-
-                if (!_dockerRepository.SaveImage(tag, savePath))
-                {
-                    warnings.Add(new BuildNoticeDto(BuildNoticeKind.ImageSaveFailed, savePath));
-                }
+                warnings.Add(new BuildNoticeDto(BuildNoticeKind.ImageSaveFailed, savePath));
             }
-
-            _dockerRepository.RemoveImage(tag);
         }
 
-        if (dto.RegisterDocker)
-        {
-            RegisterDockerDesktop(name);
-            warnings.AddRange(WaitDockerClient(name));
-        }
+        _dockerRepository.RemoveImage(tag);
 
         WslRecipeStatus status = WslRecipeStatus.Ok;
 
@@ -795,24 +727,6 @@ public sealed class InstanceService : IInstanceService
         }
 
         _wslRepository.OpenPackManager(instanceName, hasProfile);
-    }
-
-    public IReadOnlyList<WslBuildSourceDto> GetAllSavedImages()
-    {
-        List<WslBuildSourceDto> rows = [];
-
-        foreach (SavedImageRow image in _dockerRepository.GetAllSavedImages())
-        {
-            rows.Add(new WslBuildSourceDto
-            {
-                Name = $"{image.Name} ({image.Modified:dd'/'MM HH:mm})",
-                Path = image.Path,
-                Uploaded = true,
-                ExportFileName = $"{image.Name}{Path.GetExtension(image.Path)}",
-            });
-        }
-
-        return rows;
     }
 
     public ArchiveResponseDto Archive(ArchiveDto dto)
@@ -1173,46 +1087,6 @@ public sealed class InstanceService : IInstanceService
         return warnings;
     }
 
-    private void RegisterDockerDesktop(string name)
-    {
-        try
-        {
-            _dockerRepository.SetDesktopState(name);
-        }
-        catch (Exception exception) when (exception is IOException or InvalidOperationException)
-        {
-            throw new WslSquadException(
-                WslSquadErrorCode.DockerSettingsWriteFailed,
-                name,
-                exception.Message,
-                exception);
-        }
-
-        if (!_dockerRepository.RestartDesktop())
-        {
-            throw new WslSquadException(WslSquadErrorCode.DockerRestartFailed, name);
-        }
-    }
-
-    private IReadOnlyList<BuildNoticeDto> WaitDockerClient(string name)
-    {
-        bool usable = false;
-
-        for (int attempt = 1; attempt <= 5 && !usable; attempt++)
-        {
-            usable = _wslRepository.TestInInstance(name, ["docker", "version"]);
-
-            if (!usable)
-            {
-                Thread.Sleep(2000);
-            }
-        }
-
-        return usable
-            ? [new BuildNoticeDto(BuildNoticeKind.DockerReady)]
-            : [new BuildNoticeDto(BuildNoticeKind.DockerNotAnswering)];
-    }
-
     private static IReadOnlyList<WslCommandDto> LiveCommands(
         string family,
         string docker,
@@ -1275,7 +1149,6 @@ public sealed class InstanceService : IInstanceService
                 Name = $"{name} ({row.Modified.ToString("dd'/'MM HH:mm", CultureInfo.InvariantCulture)})",
                 Path = row.Path,
                 Uploaded = uploaded,
-                ExportFileName = $"{name}{Path.GetExtension(row.Path)}",
             });
         }
 

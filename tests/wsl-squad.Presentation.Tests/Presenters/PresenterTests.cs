@@ -216,19 +216,15 @@ public class PresenterTests
     public void Build_presenter_walks_the_recipe_road()
     {
         Mock<IInstanceService> service = new();
-        service.Setup(s => s.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
-        {
-            Onboardings = [],
-            Recipes =
-            [
-                new WslBuildSourceDto
-                {
-                    Name = "default",
-                    Path = "/catalog/default",
-                },
-            ],
-        });
-        service.Setup(s => s.GetAllSavedImages()).Returns([]);
+        service.Setup(s => s.GetRecipes()).Returns(
+        [
+            new WslBuildSourceDto
+            {
+                Name = "default",
+                Path = "/catalog/default",
+            },
+        ]);
+        service.Setup(s => s.GetAll()).Returns([]);
         service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
         {
             InstanceName = "alpha",
@@ -243,11 +239,9 @@ public class PresenterTests
         result.Subject.Should().Be("alpha");
         service.Verify(s => s.Build(It.Is<BuildDto>(dto =>
             dto.Name == "alpha" &&
-            dto.BuildType == WslBuildType.Recipe &&
             dto.BuildPath == Path.Combine("/catalog/default", "Dockerfile") &&
             dto.Context == "/catalog/default" &&
-            !dto.KeepImage &&
-            !dto.RegisterDocker &&
+            dto.KeepImage &&
             dto.Interactive)), Times.Once);
     }
 
@@ -255,19 +249,15 @@ public class PresenterTests
     public void Build_presenter_survives_a_shell_open_failure()
     {
         Mock<IInstanceService> service = new();
-        service.Setup(s => s.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
-        {
-            Onboardings = [],
-            Recipes =
-            [
-                new WslBuildSourceDto
-                {
-                    Name = "default",
-                    Path = "/catalog/default",
-                },
-            ],
-        });
-        service.Setup(s => s.GetAllSavedImages()).Returns([]);
+        service.Setup(s => s.GetRecipes()).Returns(
+        [
+            new WslBuildSourceDto
+            {
+                Name = "default",
+                Path = "/catalog/default",
+            },
+        ]);
+        service.Setup(s => s.GetAll()).Returns([]);
         service.Setup(s => s.Build(It.IsAny<BuildDto>())).Returns(new BuildResponseDto
         {
             InstanceName = "alpha",
@@ -622,29 +612,13 @@ public class PresenterTests
 
         public string? AskInstanceName(string prompt) => "alpha";
 
-        public BuildRoad? AskRoad() => new BuildRoad(WslBuildType.Recipe, "Recipe");
-
         public BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows) => rows.FirstOrDefault();
 
-        public bool? AskRunOnboarding() => false;
-
-        public BuildSourceChoice? AskOnboarding(IReadOnlyList<BuildSourceChoice> rows) => rows.FirstOrDefault();
-
-        public string? AskUserName(string prompt) => "alice";
-
         public bool? AskKeepImage() => true;
-
-        public bool? AskRegisterDocker(string name) => false;
 
         public void ShowNameProblem(string message) { }
 
         public void ShowAbort(IReadOnlyList<string> lines) { }
-
-        public void ShowNoOnboarding() { }
-
-        public void ShowBeforeAccount() { }
-
-        public void ShowUserHint() { }
 
         public bool? Confirm(string question, bool defaultNo = true) => true;
 

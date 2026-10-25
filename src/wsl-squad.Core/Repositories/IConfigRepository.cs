@@ -6,17 +6,11 @@ public interface IConfigRepository
 
     IReadOnlyList<string> GetPromptFontNames();
 
-    IReadOnlyList<SourceRow> GetOnboardings();
-
     IReadOnlyList<SourceRow> GetRecipes();
 
     string CreateRecipe(string name);
 
-    string CopyRecipe(string kind, string source, string fileName);
-
     void RemoveRecipe(string path);
-
-    void ExportRecipe(string path, string target);
 
     string GetSavedRoot();
 

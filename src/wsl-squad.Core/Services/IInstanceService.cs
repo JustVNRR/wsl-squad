@@ -10,7 +10,7 @@ public interface IInstanceService
 
     IReadOnlyList<string> GetRunningNames();
 
-    GetBuildSourcesResponseDto GetBuildSources();
+    IReadOnlyList<WslBuildSourceDto> GetRecipes();
 
     WslBuildSourceDto CreateRecipe(NewRecipeDto dto);
 
@@ -20,11 +20,7 @@ public interface IInstanceService
 
     UnregisterDockerResponseDto UnregisterDocker(UnregisterDockerDto dto);
 
-    WslBuildSourceDto UploadRecipe(UploadRecipeDto dto);
-
     void DeleteRecipe(string path);
-
-    void ExportRecipe(ExportRecipeDto dto);
 
     BuildResponseDto Build(BuildDto dto);
 
@@ -47,8 +43,6 @@ public interface IInstanceService
     IReadOnlyList<WslColorSchemeDto> GetColorSchemes();
 
     void OpenPackManager(string instanceName);
-
-    IReadOnlyList<WslBuildSourceDto> GetAllSavedImages();
 
     ArchiveResponseDto Archive(ArchiveDto dto);
 

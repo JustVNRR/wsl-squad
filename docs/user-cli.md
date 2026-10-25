@@ -92,10 +92,7 @@ wsl-squad restore ubuntu_archive
 wsl-squad migrate D:\WSL
 ```
 
-Build asks for the name, optional user and onboarding, and the source:
-
-- a saved Docker image;
-- a recipe.
+Build asks for the name and the recipe, then whether to keep the Docker image.
 
 Destructive commands ask for confirmation. Removing an instance and deleting
 an archive cannot be undone.

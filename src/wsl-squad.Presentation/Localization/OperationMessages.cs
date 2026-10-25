@@ -12,8 +12,6 @@ public static class OperationMessages
                 Localizer.Instance.Format("NoticeLookFailed", notice.TechnicalDetail),
             BuildNoticeKind.ImageSaveFailed =>
                 Localizer.Instance.Format("NoticeImageSaveFailed", notice.Subject),
-            BuildNoticeKind.DockerReady => Localizer.Instance["NoticeDockerReady"],
-            BuildNoticeKind.DockerNotAnswering => Localizer.Instance["NoticeDockerNotAnswering"],
             BuildNoticeKind.FontInstallFailed =>
                 Localizer.Instance.Format("NoticeFontInstallFailed", notice.Subject, notice.TechnicalDetail),
             BuildNoticeKind.NoIconGenerated =>

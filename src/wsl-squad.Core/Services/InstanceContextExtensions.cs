@@ -8,16 +8,14 @@ public static class InstanceContextExtensions
     {
         ArgumentNullException.ThrowIfNull(service);
 
-        GetBuildSourcesResponseDto sources = service.GetBuildSources();
-        IReadOnlyList<WslBuildSourceDto> images = service.GetAllSavedImages();
+        IReadOnlyList<WslBuildSourceDto> recipes = service.GetRecipes();
         List<string> taken = [.. (service.GetAll() ?? [])
             .Where(row => !row.IsArchive && !string.IsNullOrEmpty(row.Name))
             .Select(row => row.Name!)];
 
         return new BuildContextDto
         {
-            Sources = sources,
-            Images = images,
+            Recipes = recipes,
             TakenNames = taken,
         };
     }

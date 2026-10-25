@@ -56,36 +56,11 @@ public sealed record WslBuildSourceDto
     public string? Path { get; init; }
 
     public bool Uploaded { get; init; }
-
-    public string ExportFileName { get; init; } = string.Empty;
-}
-
-public sealed record GetBuildSourcesResponseDto
-{
-    public List<WslBuildSourceDto> Onboardings { get; init; } = [];
-
-    public List<WslBuildSourceDto> Recipes { get; init; } = [];
 }
 
 public sealed record NewRecipeDto
 {
     public string? Name { get; init; }
-}
-
-public sealed record UploadRecipeDto
-{
-    public string? Kind { get; init; }
-
-    public string? Source { get; init; }
-
-    public string? FileName { get; init; }
-}
-
-public sealed record ExportRecipeDto
-{
-    public string? Path { get; init; }
-
-    public string? Target { get; init; }
 }
 
 public sealed record MigrateResponseDto
@@ -106,71 +81,33 @@ public sealed record WslIconDto
     public string? TextColor { get; init; }
 }
 
-public enum WslBuildType
-{
-    Image,
-    Recipe,
-}
-
 public sealed record BuildDto
 {
     public string? Name { get; init; }
-
-    public string? User { get; init; }
-
-    public WslBuildType BuildType { get; init; }
 
     public string? BuildPath { get; init; }
 
     public string? Context { get; init; }
 
-    public string? Onboarding { get; init; }
-
-    public string? Font { get; init; }
-
-    public string? ColourScheme { get; init; }
-
-    public WslIconDto? Icon { get; init; }
-
     public bool KeepImage { get; init; }
-
-    public bool RegisterDocker { get; init; }
 
     public bool Interactive { get; init; }
 
-    public static BuildDto FromSource(
+    public static BuildDto FromRecipe(
         string name,
-        string user,
-        WslBuildType type,
-        string source,
-        string onboarding = "",
+        string recipePath,
         bool keepImage = false,
-        bool registerDocker = false,
         bool interactive = true)
     {
         ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(user);
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onboarding);
-
-        bool recipe = type == WslBuildType.Recipe;
-        (string buildPath, string context) = type switch
-        {
-            WslBuildType.Recipe => (Path.Combine(source, "Dockerfile"), source),
-            WslBuildType.Image => (source, string.Empty),
-            _ => (source, string.Empty),
-        };
+        ArgumentNullException.ThrowIfNull(recipePath);
 
         return new BuildDto
         {
             Name = name,
-            User = recipe ? string.Empty : user,
-            BuildType = type,
-            BuildPath = buildPath,
-            Context = context,
-            Onboarding = recipe ? string.Empty : onboarding,
+            BuildPath = Path.Combine(recipePath, "Dockerfile"),
+            Context = recipePath,
             KeepImage = keepImage,
-            RegisterDocker = !recipe && registerDocker,
             Interactive = interactive,
         };
     }
@@ -187,8 +124,6 @@ public enum BuildNoticeKind
 {
     LookFailed,
     ImageSaveFailed,
-    DockerReady,
-    DockerNotAnswering,
     FontInstallFailed,
     NoIconGenerated,
     GhostEntriesNotPruned,
@@ -276,9 +211,7 @@ public sealed record AppearanceContextDto
 
 public sealed record BuildContextDto
 {
-    public GetBuildSourcesResponseDto Sources { get; init; } = new();
-
-    public IReadOnlyList<WslBuildSourceDto> Images { get; init; } = [];
+    public IReadOnlyList<WslBuildSourceDto> Recipes { get; init; } = [];
 
     public IReadOnlyList<string> TakenNames { get; init; } = [];
 }

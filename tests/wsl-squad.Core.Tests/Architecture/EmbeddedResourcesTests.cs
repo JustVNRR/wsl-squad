@@ -17,7 +17,6 @@ public class EmbeddedResourcesTests
 
         names.Should().Contain("ingredients/manage-packs.sh");
         names.Should().Contain("ingredients/manage-packs-bootstrap.sh");
-        names.Should().Contain("ingredients/onboarding.sh");
         names.Should().Contain("packs/_oh_my_pack/pack.conf");
         names.Should().Contain("packs/cleanup_orphans.sh");
         names.Should().Contain("recipes/ubuntu-24-04/Dockerfile");

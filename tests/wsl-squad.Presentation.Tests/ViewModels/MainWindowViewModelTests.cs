@@ -28,8 +28,7 @@ public class MainWindowViewModelTests
         [
             new WslIndexDto { Name = "alpha", Size = 2048, Docker = "no" },
         ]);
-        _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto());
-        _instance.Setup(service => service.GetAllSavedImages()).Returns([]);
+        _instance.Setup(service => service.GetRecipes()).Returns([]);
         _catalogue.Setup(catalogue => catalogue.GetAllPacks()).Returns([]);
         _ui.Theme = new UiThemeSettings
         {
@@ -135,7 +134,7 @@ public class MainWindowViewModelTests
     public async Task A_busy_window_ignores_add()
     {
         _viewModel.Busy = true;
-        _dialogs.BuildAnswer = new BuildDto { Name = "beta", BuildType = WslBuildType.Image, BuildPath = "/x" };
+        _dialogs.BuildAnswer = BuildDto.FromRecipe("beta", "/x");
 
         await _viewModel.AddCommand.ExecuteAsync(null);
 
@@ -168,7 +167,7 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Add_runs_the_build_through_the_workflow()
     {
-        BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Image, BuildPath = "/x" };
+        BuildDto request = BuildDto.FromRecipe("beta", "/x");
         _dialogs.BuildAnswer = request;
         _instance.Setup(service => service.Build(request))
             .Returns(new BuildResponseDto { InstanceName = "beta" });
@@ -181,20 +180,20 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task Add_surfaces_the_build_notices()
     {
-        BuildDto request = new() { Name = "beta", BuildType = WslBuildType.Image, BuildPath = "/x" };
+        BuildDto request = BuildDto.FromRecipe("beta", "/x");
         _dialogs.BuildAnswer = request;
         _instance.Setup(service => service.Build(request)).Returns(new BuildResponseDto
         {
             InstanceName = "beta",
             Status = WslRecipeStatus.Warning,
-            Notices = [new BuildNoticeDto(BuildNoticeKind.DockerReady)],
+            Notices = [new BuildNoticeDto(BuildNoticeKind.ImageSaveFailed, "/x/beta.tar")],
         });
 
         await _viewModel.AddCommand.ExecuteAsync(null);
 
         _logger.Entries.Should().Contain(entry =>
             entry.Message != null &&
-            entry.Message.Contains("Docker Desktop: ready", StringComparison.Ordinal));
+            entry.Message.Contains("could not be saved", StringComparison.Ordinal));
     }
 
     [Fact]

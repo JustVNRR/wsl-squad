@@ -1,6 +1,5 @@
 using WslSquad.Core.Exceptions;
 using System.Diagnostics;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using WslSquad.Core.Infrastructure;
@@ -11,20 +10,13 @@ public sealed record SourceRow(string Name, string Path, DateTime Modified);
 
 public sealed class ConfigRepository : IConfigRepository
 {
-    private static readonly string[] _recipeKinds = ["onboardings", "dockerimages", "recipes"];
+    private static readonly string[] _recipeKinds = ["recipes"];
 
     private readonly string _assetsDir;
-    private readonly string _distroTree;
 
     public ConfigRepository(string assetsDir)
-        : this(assetsDir, string.Empty)
-    {
-    }
-
-    public ConfigRepository(string assetsDir, string distroTree)
     {
         _assetsDir = assetsDir;
-        _distroTree = distroTree;
     }
 
     public IReadOnlyList<string> GetFontNames()
@@ -80,19 +72,6 @@ public sealed class ConfigRepository : IConfigRepository
         return [.. names.Order(StringComparer.OrdinalIgnoreCase)];
     }
 
-    public IReadOnlyList<SourceRow> GetOnboardings()
-    {
-        List<SourceRow> rows = ReadSourceRows("onboardings", "onboarding.sh");
-
-        if (rows.Count == 0)
-        {
-            WriteSeedRecipe("onboardings", "onboarding", "onboarding.sh", string.Empty);
-            rows = ReadSourceRows("onboardings", "onboarding.sh");
-        }
-
-        return rows;
-    }
-
     public IReadOnlyList<SourceRow> GetRecipes()
     {
         string root = Path.Combine(_assetsDir, "recipes");
@@ -125,22 +104,6 @@ public sealed class ConfigRepository : IConfigRepository
         return slot;
     }
 
-    public string CopyRecipe(string kind, string source, string fileName)
-    {
-        string fingerprint = ShortHash(source);
-        string slot = Path.Combine(
-            _assetsDir,
-            kind,
-            $"{Path.GetFileNameWithoutExtension(source)}-{fingerprint}");
-
-        Directory.CreateDirectory(slot);
-        string target = Path.Combine(slot, fileName);
-        File.Copy(source, target, overwrite: true);
-        File.SetLastWriteTime(target, DateTime.Now);
-
-        return target;
-    }
-
     public void RemoveRecipe(string path)
     {
         string slot = Path.GetFullPath(path);
@@ -160,11 +123,6 @@ public sealed class ConfigRepository : IConfigRepository
         }
 
         Directory.Delete(slot, recursive: true);
-    }
-
-    public void ExportRecipe(string path, string target)
-    {
-        File.Copy(path, target, overwrite: true);
     }
 
     public string GetSavedRoot()
@@ -312,75 +270,6 @@ public sealed class ConfigRepository : IConfigRepository
         }
 
         return [.. names.Order(StringComparer.Ordinal)];
-    }
-
-    private List<SourceRow> ReadSourceRows(string folder, string file)
-    {
-        string root = Path.Combine(_assetsDir, folder);
-
-        if (!Directory.Exists(root))
-        {
-            return [];
-        }
-
-        List<SourceRow> rows = [];
-
-        foreach (string slot in Directory.EnumerateDirectories(root))
-        {
-            string path = Path.Combine(slot, file);
-
-            if (!File.Exists(path))
-            {
-                continue;
-            }
-
-            rows.Add(new SourceRow(
-                Path.GetFileName(slot),
-                path,
-                File.GetLastWriteTime(path)));
-        }
-
-        return rows;
-    }
-
-    private void WriteSeedRecipe(string kind, string slot, string fileName, string sibling)
-    {
-        if (_distroTree.Length == 0)
-        {
-            return;
-        }
-
-        string source = Path.Combine(_distroTree, "ingredients", fileName);
-
-        if (!File.Exists(source))
-        {
-            return;
-        }
-
-        string targetDirectory = Path.Combine(_assetsDir, kind, slot);
-        Directory.CreateDirectory(targetDirectory);
-
-        string target = Path.Combine(targetDirectory, fileName);
-        File.Copy(source, target, overwrite: true);
-        File.SetLastWriteTime(target, DateTime.Now);
-
-        if (sibling.Length > 0)
-        {
-            string beside = Path.Combine(Path.GetDirectoryName(source) ?? string.Empty, sibling);
-
-            if (File.Exists(beside))
-            {
-                File.Copy(beside, Path.Combine(targetDirectory, sibling), overwrite: true);
-            }
-        }
-    }
-
-    private static string ShortHash(string path)
-    {
-        using FileStream stream = File.OpenRead(path);
-        byte[] hash = SHA256.HashData(stream);
-
-        return Convert.ToHexStringLower(hash)[..8];
     }
 
     private static readonly JsonDocumentOptions _documentOptions = new()

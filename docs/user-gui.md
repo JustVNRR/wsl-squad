@@ -38,16 +38,11 @@ dialog and written to `%LOCALAPPDATA%\wsl-squad\wsl-squad.log`.
 The Add dialog asks for:
 
 - the instance name;
-- the user name, when the onboarding is enabled;
-- the source:
-  - **Docker image** - pick a saved image archive;
-  - **Recipe** - pick a recipe; recipes can be created, opened, or deleted;
-- whether to save the Docker image locally (recipe source);
-- whether to register the instance with Docker Desktop;
-- whether to run an onboarding script, and which one (not for a recipe).
+- the recipe; recipes can be created, opened, or deleted;
+- whether to save the Docker image locally.
 
-The onboarding shell is selected from the catalog and can be uploaded,
-downloaded, edited, or deleted. **Create** starts the build.
+**Create** starts the build. The recipe's Dockerfile owns the onboarding and
+the default account.
 
 ## Instance actions
 

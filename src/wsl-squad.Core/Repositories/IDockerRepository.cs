@@ -4,8 +4,6 @@ public interface IDockerRepository
 {
     void Build(string tag, string dockerfile, string context, bool interactive = false);
 
-    string Load(string tarPath, bool interactive = false);
-
     void ExportRootfs(string imageName, string outputPath, bool interactive = false);
 
     bool SaveImage(string tag, string outputPath);
@@ -19,8 +17,6 @@ public interface IDockerRepository
     bool TestRunning();
 
     string GetSavedImagePath(string name);
-
-    IReadOnlyList<SavedImageRow> GetAllSavedImages();
 
     IReadOnlyList<string>? GetDesktopNames();
 

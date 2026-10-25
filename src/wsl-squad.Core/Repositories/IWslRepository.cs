@@ -47,6 +47,4 @@ public interface IWslRepository
 
     string GetFamily(string instanceName);
 
-    void SaveOnboardingScript(string instanceName, string source, string? asUser = null);
-
 }

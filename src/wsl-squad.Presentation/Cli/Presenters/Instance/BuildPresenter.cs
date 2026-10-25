@@ -21,15 +21,13 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
     public IWorkflowResult Run()
     {
-        GetBuildSourcesResponseDto sources;
-        IReadOnlyList<WslBuildSourceDto> images;
+        IReadOnlyList<WslBuildSourceDto> recipes;
         IReadOnlyList<string> takenNames;
 
         try
         {
             BuildContextDto buildContext = _service.GetBuildContext();
-            sources = buildContext.Sources;
-            images = buildContext.Images;
+            recipes = buildContext.Recipes;
             takenNames = buildContext.TakenNames;
         }
         catch (InvalidOperationException exception)
@@ -39,13 +37,21 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             return WorkflowResults.Failed(string.Empty, Localizer.Instance.Format("CliBuildFailed", exception.Message));
         }
 
+        if (recipes.Count == 0)
+        {
+            View.ShowAbort(
+            [
+                Localizer.Instance["CliAbortNoRecipe"],
+                Localizer.Instance["CliAbortCreateRecipe"],
+                Localizer.Instance["CliAbortNothingModified"],
+            ]);
+
+            return WorkflowResults.Failed(string.Empty, Localizer.Instance["CliBuildNoRecipe"]);
+        }
+
         string name = string.Empty;
-        BuildRoad? road = null;
         string source = string.Empty;
-        string onboarding = string.Empty;
-        string user = string.Empty;
         bool keep = false;
-        bool register = false;
         bool done = false;
 
         Stack<string> stack = new();
@@ -89,7 +95,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         if (ok)
                         {
-                            stack.Push("road");
+                            stack.Push("recipe");
                         }
                         else
                         {
@@ -99,56 +105,11 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         break;
                     }
 
-                case "road":
+                case "recipe":
                     {
-                        BuildRoad? picked = View.AskRoad();
-
-                        if (picked is null)
-                        {
-                            stack.Pop();
-
-                            break;
-                        }
-
-                        road = picked;
-
-                        IReadOnlyList<BuildSourceChoice> rows = road.Type switch
-                        {
-                            WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
-                            image.Name ?? string.Empty,
-                            image.Path ?? string.Empty))],
-                            WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
-                            _ => [],
-                        };
-
-                        if (rows.Count == 0)
-                        {
-                            View.ShowAbort(AbortLines(road.Type));
-
-                            return WorkflowResults.Failed(string.Empty, road.Type switch
-                            {
-                                WslBuildType.Image => Localizer.Instance["CliBuildNoImage"],
-                                WslBuildType.Recipe => Localizer.Instance["CliBuildNoRecipe"],
-                                _ => Localizer.Instance["CliBuildNoSource"],
-                            });
-                        }
-
-                        stack.Push("source");
-
-                        break;
-                    }
-
-                case "source":
-                    {
-                        IReadOnlyList<BuildSourceChoice> rows = road!.Type switch
-                        {
-                            WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
-                            image.Name ?? string.Empty,
-                            image.Path ?? string.Empty))],
-                            WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
-                            _ => [],
-                        };
-                        BuildSourceChoice? picked = View.AskSource(road.Label, rows);
+                        BuildSourceChoice? picked = View.AskSource(
+                            Localizer.Instance["LabelRecipe"],
+                            [.. recipes.Select(ToChoice)]);
 
                         if (picked is null)
                         {
@@ -158,83 +119,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         }
 
                         source = picked.Path;
-                        stack.Push(NextAfterSource(sources.Onboardings.Count, road));
-
-                        break;
-                    }
-
-                case "onboarding":
-                    {
-                        bool? run = View.AskRunOnboarding();
-
-                        if (run is null)
-                        {
-                            stack.Pop();
-
-                            break;
-                        }
-
-                        if (run == false)
-                        {
-                            onboarding = string.Empty;
-                            stack.Push(NextAfterOnboarding(road!));
-
-                            break;
-                        }
-
-                        BuildSourceChoice? picked = View.AskOnboarding([.. sources.Onboardings.Select(ToChoice)]);
-
-                        if (picked is not null)
-                        {
-                            onboarding = picked.Path;
-                            stack.Push("user");
-                        }
-
-                        break;
-                    }
-
-                case "user":
-                    {
-                        string proposal = NameRules.ProposeUserName();
-                        string prompt = proposal.Length > 0
-                            ? Localizer.Instance.Format("CliUserNameProposal", name, proposal)
-                            : Localizer.Instance.Format("CliUserName", name);
-                        View.ShowBeforeAccount();
-                        bool ok = false;
-
-                        while (true)
-                        {
-                            string? answer = View.AskUserName(prompt);
-
-                            if (answer is null)
-                            {
-                                break;
-                            }
-
-                            if (answer.Length == 0 && proposal.Length > 0)
-                            {
-                                answer = proposal;
-                            }
-
-                            if (NameRules.IsValidUser(answer))
-                            {
-                                user = answer;
-                                ok = true;
-
-                                break;
-                            }
-
-                            View.ShowUserHint();
-                        }
-
-                        if (!ok)
-                        {
-                            stack.Pop();
-                        }
-                        else
-                        {
-                            stack.Push(NextAfterOnboarding(road!));
-                        }
+                        stack.Push("keep");
 
                         break;
                     }
@@ -250,34 +135,9 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                         else
                         {
                             keep = answer.Value;
-                            stack.Push("register");
-                        }
-
-                        break;
-                    }
-
-                case "register":
-                    {
-                        bool? answer = View.AskRegisterDocker(name);
-
-                        if (answer is null)
-                        {
-                            stack.Pop();
-                        }
-                        else
-                        {
-                            register = answer.Value;
                             done = true;
                             stack.Clear();
                         }
-
-                        break;
-                    }
-
-                case "done":
-                    {
-                        done = true;
-                        stack.Clear();
 
                         break;
                     }
@@ -288,22 +148,14 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
             }
         }
 
-        if (!done || road is null)
+        if (!done)
         {
             View.ShowCancelled(Localizer.Instance["CliModified"]);
 
             return WorkflowResults.Cancelled(Localizer.Instance["OperationBuild"]);
         }
 
-        BuildDto dto = BuildDto.FromSource(
-            name,
-            user,
-            road.Type,
-            source,
-            onboarding,
-            keep,
-            register,
-            interactive: true);
+        BuildDto dto = BuildDto.FromRecipe(name, source, keep, interactive: true);
 
         try
         {
@@ -329,53 +181,10 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
         }
     }
 
-    private string NextAfterSource(int onboardingCount, BuildRoad road)
-    {
-        if (road.Type == WslBuildType.Recipe)
-        {
-            return "done";
-        }
-
-        if (onboardingCount == 0)
-        {
-            View.ShowNoOnboarding();
-
-            return NextAfterOnboarding(road);
-        }
-
-        return "onboarding";
-    }
-
-    private static string NextAfterOnboarding(BuildRoad road)
-    {
-        return road.Type == WslBuildType.Recipe ? "keep" : "register";
-    }
-
     private static BuildSourceChoice ToChoice(WslBuildSourceDto source)
     {
         return new BuildSourceChoice(
             source.Name ?? string.Empty,
             source.Path ?? string.Empty);
     }
-
-    private static IReadOnlyList<string> AbortLines(WslBuildType type)
-    {
-        return type switch
-        {
-            WslBuildType.Image =>
-            [
-                Localizer.Instance["CliAbortNoImage"],
-                Localizer.Instance["CliAbortUploadOrPick"],
-                Localizer.Instance["CliAbortNothingModified"],
-            ],
-            WslBuildType.Recipe =>
-            [
-                Localizer.Instance["CliAbortNoRecipe"],
-                Localizer.Instance["CliAbortCreateRecipe"],
-                Localizer.Instance["CliAbortNothingModified"],
-            ],
-            _ => [],
-        };
-    }
-
 }
