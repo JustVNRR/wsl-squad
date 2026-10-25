@@ -40,9 +40,9 @@ public sealed partial class BuildViewModel : BaseViewModel
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowDockerfile))]
     [NotifyPropertyChangedFor(nameof(ShowImage))]
-    [NotifyPropertyChangedFor(nameof(ShowRegistry))]
     [NotifyPropertyChangedFor(nameof(ShowRecipe))]
     [NotifyPropertyChangedFor(nameof(ShowGeneralOptions))]
+    [NotifyPropertyChangedFor(nameof(ShowSaveImage))]
     public partial int RoadIndex { get; set; }
 
     [ObservableProperty]
@@ -58,13 +58,7 @@ public sealed partial class BuildViewModel : BaseViewModel
     public partial int RecipeIndex { get; set; }
 
     [ObservableProperty]
-    public partial string RegistryRef { get; set; }
-
-    [ObservableProperty]
     public partial string ImageError { get; set; }
-
-    [ObservableProperty]
-    public partial string RegistryError { get; set; }
 
     [ObservableProperty]
     public partial string RecipeError { get; set; }
@@ -115,9 +109,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         _images = [];
         NameError = string.Empty;
         UserError = string.Empty;
-        RegistryRef = string.Empty;
         ImageError = string.Empty;
-        RegistryError = string.Empty;
         RecipeError = string.Empty;
         DockerfileError = string.Empty;
         OnboardingError = string.Empty;
@@ -170,11 +162,11 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public bool ShowImage => RoadIndex == 1;
 
-    public bool ShowRegistry => RoadIndex == 2;
+    public bool ShowRecipe => RoadIndex == 2;
 
-    public bool ShowRecipe => RoadIndex == 3;
+    public bool ShowGeneralOptions => RoadIndex != 2;
 
-    public bool ShowGeneralOptions => RoadIndex != 3;
+    public bool ShowSaveImage => RoadIndex is 0 or 2;
 
     public ObservableCollection<string> DockerfileNames { get; } = [];
 
@@ -224,6 +216,7 @@ public sealed partial class BuildViewModel : BaseViewModel
     partial void OnRoadIndexChanged(int value)
     {
         RunOnboarding = value == 0;
+        SaveImage = value == 2;
     }
 
     partial void OnDockerfileIndexChanged(int value)
@@ -450,44 +443,13 @@ public sealed partial class BuildViewModel : BaseViewModel
         ImageError = RoadIndex == 1 && ImageIndex < 0
             ? Localizer.Instance["ErrorImageMissing"]
             : string.Empty;
-        RecipeError = RoadIndex == 3 && RecipeIndex < 0
+        RecipeError = RoadIndex == 2 && RecipeIndex < 0
             ? Localizer.Instance["ErrorRecipeMissing"]
             : string.Empty;
-        RegistryError = string.Empty;
-
-        if (RoadIndex == 2)
-        {
-            string reference = RegistryRef.Trim();
-
-            if (reference.Length == 0)
-            {
-                RegistryError = Localizer.Instance["ErrorRegistryEmpty"];
-            }
-            else
-            {
-                try
-                {
-                    IsRegistryImageValidResponseDto verdict = _instance.IsRegistryImageValid(reference);
-
-                    if (!verdict.Valid)
-                    {
-                        RegistryError = Localizer.Instance.Format(
-                            "ErrorRegistryUnknown",
-                            reference,
-                            verdict.Error.ToMessage(verdict.TechnicalDetail));
-                    }
-                }
-                catch (InvalidOperationException ex)
-                {
-                    Trace.TraceWarning($"[BuildViewModel] Could not verify registry image '{reference}': {ex.Message}");
-                }
-            }
-        }
 
         if (!_nameOk || !_userOk ||
             DockerfileError.Length > 0 ||
             ImageError.Length > 0 ||
-            RegistryError.Length > 0 ||
             RecipeError.Length > 0)
         {
             return;
@@ -496,17 +458,12 @@ public sealed partial class BuildViewModel : BaseViewModel
         WslBuildType buildType;
         string source;
 
-        if (RoadIndex == 2)
-        {
-            buildType = WslBuildType.Registry;
-            source = RegistryRef.Trim();
-        }
-        else if (RoadIndex == 1)
+        if (RoadIndex == 1)
         {
             buildType = WslBuildType.Image;
             source = _images[ImageIndex].Path ?? string.Empty;
         }
-        else if (RoadIndex == 3)
+        else if (RoadIndex == 2)
         {
             buildType = WslBuildType.Recipe;
             source = _recipes[RecipeIndex].Path ?? string.Empty;

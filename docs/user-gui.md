@@ -43,7 +43,6 @@ The Add dialog asks for:
   - **Dockerfile** - pick an uploaded Dockerfile; it can be uploaded,
     downloaded, edited, or deleted from the same row;
   - **Docker image** - pick a saved image archive;
-  - **Docker registry** - type a reference such as `alpine:latest`;
   - **Recipe** - pick a recipe; recipes can be created, opened, or deleted;
 - whether to save the Docker image locally (Dockerfile source);
 - whether to register the instance with Docker Desktop;

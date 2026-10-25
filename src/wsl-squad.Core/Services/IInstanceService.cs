@@ -50,8 +50,6 @@ public interface IInstanceService
 
     IReadOnlyList<WslBuildSourceDto> GetAllSavedImages();
 
-    IsRegistryImageValidResponseDto IsRegistryImageValid(string imageRef);
-
     ArchiveResponseDto Archive(ArchiveDto dto);
 
     RestoreResponseDto Restore(RestoreDto dto);

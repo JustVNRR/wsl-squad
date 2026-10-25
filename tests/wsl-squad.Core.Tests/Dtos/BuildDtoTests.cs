@@ -50,7 +50,7 @@ public class BuildDtoTests
         dto.Context.Should().Be("/catalog/default");
         dto.User.Should().BeEmpty();
         dto.Onboarding.Should().BeEmpty();
-        dto.KeepImage.Should().BeFalse();
+        dto.KeepImage.Should().BeTrue();
         dto.RegisterDocker.Should().BeFalse();
         dto.Interactive.Should().BeTrue();
     }
@@ -70,16 +70,4 @@ public class BuildDtoTests
         dto.KeepImage.Should().BeTrue();
     }
 
-    [Fact]
-    public void A_registry_reference_is_the_build_path_without_context()
-    {
-        BuildDto dto = BuildDto.FromSource(
-            "alpha",
-            "alice",
-            WslBuildType.Registry,
-            "alpine:latest");
-
-        dto.BuildPath.Should().Be("alpine:latest");
-        dto.Context.Should().BeEmpty();
-    }
 }

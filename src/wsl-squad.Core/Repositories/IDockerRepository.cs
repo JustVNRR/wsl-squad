@@ -2,8 +2,6 @@ namespace WslSquad.Core.Repositories;
 
 public interface IDockerRepository
 {
-    RegistryAnswer TestRegistryImage(string reference);
-
     void Build(string tag, string dockerfile, string context, bool interactive = false);
 
     string Load(string tarPath, bool interactive = false);

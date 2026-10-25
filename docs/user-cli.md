@@ -96,7 +96,6 @@ Build asks for the name, optional user and onboarding, and the source:
 
 - a Dockerfile from the catalog;
 - a saved Docker image;
-- a registry reference such as `alpine:latest`;
 - a recipe.
 
 Destructive commands ask for confirmation. Removing an instance and deleting

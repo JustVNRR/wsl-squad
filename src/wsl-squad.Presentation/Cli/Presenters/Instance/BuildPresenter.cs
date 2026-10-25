@@ -112,13 +112,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
 
                         road = picked;
 
-                        if (road.Type == WslBuildType.Registry)
-                        {
-                            stack.Push("reference");
-
-                            break;
-                        }
-
                         IReadOnlyList<BuildSourceChoice> rows = road.Type switch
                         {
                             WslBuildType.Image => [.. images.Select(image => new BuildSourceChoice(
@@ -126,7 +119,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                             image.Path ?? string.Empty))],
                             WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
                             WslBuildType.Dockerfile => [.. sources.Dockerfiles.Select(ToChoice)],
-                            WslBuildType.Registry => [],
                             _ => [],
                         };
 
@@ -139,51 +131,11 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                                 WslBuildType.Image => Localizer.Instance["CliBuildNoImage"],
                                 WslBuildType.Recipe => Localizer.Instance["CliBuildNoRecipe"],
                                 WslBuildType.Dockerfile => Localizer.Instance["CliBuildNoDockerfile"],
-                                WslBuildType.Registry => Localizer.Instance["CliBuildNoRegistry"],
                                 _ => Localizer.Instance["CliBuildNoSource"],
                             });
                         }
 
                         stack.Push("source");
-
-                        break;
-                    }
-
-                case "reference":
-                    {
-                        bool ok = false;
-
-                        while (true)
-                        {
-                            string? reference = View.AskRegistryReference(
-                                Localizer.Instance["CliRegistryPrompt"]);
-
-                            if (string.IsNullOrWhiteSpace(reference))
-                            {
-                                break;
-                            }
-
-                            IsRegistryImageValidResponseDto verdict = _service.IsRegistryImageValid(reference);
-
-                            if (verdict.Valid)
-                            {
-                                source = reference;
-                                ok = true;
-
-                                break;
-                            }
-
-                            View.ShowUnknownRegistry(reference, verdict.Error.ToMessage(verdict.TechnicalDetail));
-                        }
-
-                        if (!ok)
-                        {
-                            stack.Pop();
-                        }
-                        else
-                        {
-                            stack.Push(NextAfterSource(sources.Onboardings.Count, road!));
-                        }
 
                         break;
                     }
@@ -197,7 +149,6 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                             image.Path ?? string.Empty))],
                             WslBuildType.Recipe => [.. sources.Recipes.Select(ToChoice)],
                             WslBuildType.Dockerfile => [.. sources.Dockerfiles.Select(ToChoice)],
-                            WslBuildType.Registry => [],
                             _ => [],
                         };
                         BuildSourceChoice? picked = View.AskSource(road.Label, rows);
@@ -426,7 +377,7 @@ public sealed class BuildPresenter : BasePresenter<IBuildView>
                 Localizer.Instance["CliAbortCreateRecipe"],
                 Localizer.Instance["CliAbortNothingModified"],
             ],
-            WslBuildType.Dockerfile or WslBuildType.Registry =>
+            WslBuildType.Dockerfile =>
             [
                 Localizer.Instance["CliAbortNoDockerfile"],
                 Localizer.Instance["CliAbortUploadOrDeleteFolder"],

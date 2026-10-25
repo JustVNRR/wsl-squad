@@ -112,7 +112,6 @@ public enum WslBuildType
 {
     Dockerfile,
     Image,
-    Registry,
     Recipe,
 }
 
@@ -163,7 +162,6 @@ public sealed record BuildDto
             WslBuildType.Recipe => (Path.Combine(source, "Dockerfile"), source),
             WslBuildType.Dockerfile => (source, Path.GetDirectoryName(source) ?? string.Empty),
             WslBuildType.Image => (source, string.Empty),
-            WslBuildType.Registry => (source, string.Empty),
             _ => (source, string.Empty),
         };
 
@@ -175,7 +173,7 @@ public sealed record BuildDto
             BuildPath = buildPath,
             Context = context,
             Onboarding = recipe ? string.Empty : onboarding,
-            KeepImage = !recipe && keepImage,
+            KeepImage = keepImage,
             RegisterDocker = !recipe && registerDocker,
             Interactive = interactive,
         };

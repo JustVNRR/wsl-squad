@@ -29,20 +29,9 @@ public sealed class CliBuildView : CliViewBase, IBuildView
             [
                 new BuildRoad(WslBuildType.Dockerfile, Localizer.Instance["BuildRoadDockerfile"]),
                 new BuildRoad(WslBuildType.Image, Localizer.Instance["BuildRoadImage"]),
-                new BuildRoad(WslBuildType.Registry, Localizer.Instance["BuildRoadRegistry"]),
                 new BuildRoad(WslBuildType.Recipe, Localizer.Instance["BuildRoadRecipe"]),
             ],
             road => road.Label);
-    }
-
-    public string? AskRegistryReference(string prompt)
-    {
-        return AskLine(prompt)?.Trim();
-    }
-
-    public void ShowUnknownRegistry(string reference, string why)
-    {
-        Write(Localizer.Instance.Format("CliUnknownRegistry", reference, why), ConsoleTone.Warning);
     }
 
     public void ShowAbort(IReadOnlyList<string> lines)

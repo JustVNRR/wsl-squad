@@ -54,21 +54,4 @@ public static class OperationMessages
         };
     }
 
-    public static string ToMessage(
-        this RegistryValidationError error,
-        string? technicalDetail = null)
-    {
-        return error switch
-        {
-            RegistryValidationError.None => string.Empty,
-            RegistryValidationError.DockerUnavailable => Localizer.Instance["RegistryDockerUnavailable"],
-            RegistryValidationError.NotFound => Localizer.Instance["RegistryNotFound"],
-            RegistryValidationError.Rejected =>
-                string.IsNullOrEmpty(technicalDetail)
-                    ? Localizer.Instance["RegistryRejected"]
-                    : technicalDetail,
-            RegistryValidationError.Unreachable => Localizer.Instance["RegistryUnreachable"],
-            _ => Localizer.Instance["RegistryUnknown"],
-        };
-    }
 }

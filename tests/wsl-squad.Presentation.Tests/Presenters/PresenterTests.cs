@@ -626,8 +626,6 @@ public class PresenterTests
 
         public BuildRoad? AskRoad() => new BuildRoad(WslBuildType.Dockerfile, "Dockerfile");
 
-        public string? AskRegistryReference(string prompt) => null;
-
         public BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows) => rows.FirstOrDefault();
 
         public bool? AskRunOnboarding() => false;
@@ -643,8 +641,6 @@ public class PresenterTests
         public void ShowNameProblem(string message) { }
 
         public void ShowAbort(IReadOnlyList<string> lines) { }
-
-        public void ShowUnknownRegistry(string reference, string why) { }
 
         public void ShowNoOnboarding() { }
 

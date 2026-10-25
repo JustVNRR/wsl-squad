@@ -38,8 +38,6 @@ public class BuildViewModelTests
         });
         _instance.Setup(service => service.GetAllSavedImages()).Returns([]);
         _instance.Setup(service => service.GetAll()).Returns([]);
-        _instance.Setup(service => service.IsRegistryImageValid(It.IsAny<string>()))
-            .Returns(new IsRegistryImageValidResponseDto { Valid = true });
     }
 
     [Fact]
@@ -120,7 +118,7 @@ public class BuildViewModelTests
     }
 
     [Fact]
-    public void Recipe_build_ignores_image_registration_and_onboarding_options()
+    public void Recipe_build_keeps_the_image_and_ignores_registration_and_onboarding_options()
     {
         _instance.Setup(service => service.GetBuildSources()).Returns(new GetBuildSourcesResponseDto
         {
@@ -137,7 +135,7 @@ public class BuildViewModelTests
         });
         BuildViewModel viewModel = Create();
         viewModel.Name = "alpha";
-        viewModel.RoadIndex = 3;
+        viewModel.RoadIndex = 2;
         viewModel.SaveImage = true;
         viewModel.RegisterDocker = true;
         viewModel.RunOnboarding = true;
@@ -147,10 +145,31 @@ public class BuildViewModelTests
         viewModel.ShowGeneralOptions.Should().BeFalse();
         viewModel.Result.Should().NotBeNull();
         viewModel.Result!.BuildType.Should().Be(WslBuildType.Recipe);
-        viewModel.Result.KeepImage.Should().BeFalse();
+        viewModel.Result.KeepImage.Should().BeTrue();
         viewModel.Result.RegisterDocker.Should().BeFalse();
         viewModel.Result.Onboarding.Should().BeEmpty();
         viewModel.Result.User.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Recipe_mode_proposes_saving_the_image_by_default()
+    {
+        BuildViewModel viewModel = Create();
+
+        viewModel.RoadIndex = 2;
+
+        viewModel.ShowSaveImage.Should().BeTrue();
+        viewModel.SaveImage.Should().BeTrue();
+
+        viewModel.RoadIndex = 1;
+
+        viewModel.ShowSaveImage.Should().BeFalse();
+        viewModel.SaveImage.Should().BeFalse();
+
+        viewModel.RoadIndex = 0;
+
+        viewModel.ShowSaveImage.Should().BeTrue();
+        viewModel.SaveImage.Should().BeFalse();
     }
 
     [Fact]
@@ -196,26 +215,6 @@ public class BuildViewModelTests
         viewModel.CreateCommand.Execute(null);
 
         viewModel.ImageError.Should().Contain("Upload a Docker image");
-        viewModel.Result.Should().BeNull();
-    }
-
-    [Fact]
-    public void Registry_road_reports_an_unknown_image()
-    {
-        _instance.Setup(service => service.IsRegistryImageValid("ghost:latest"))
-            .Returns(new IsRegistryImageValidResponseDto
-            {
-                Valid = false,
-                Error = RegistryValidationError.NotFound,
-            });
-        BuildViewModel viewModel = Create();
-        viewModel.Name = "alpha";
-        viewModel.RoadIndex = 2;
-        viewModel.RegistryRef = "ghost:latest";
-
-        viewModel.CreateCommand.Execute(null);
-
-        viewModel.RegistryError.Should().Contain("Unknown registry image");
         viewModel.Result.Should().BeNull();
     }
 
@@ -383,23 +382,6 @@ public class BuildViewModelTests
         Action act = () => viewModel.ExportRecipeTo(WslCatalogSection.Dockerfiles, "/tmp/out");
 
         act.Should().NotThrow();
-    }
-
-    [Fact]
-    public void Create_survives_a_registry_probe_failure()
-    {
-        _instance.Setup(service => service.IsRegistryImageValid("alpine:latest"))
-            .Throws(new InvalidOperationException("docker failed"));
-        BuildViewModel viewModel = Create();
-        viewModel.Name = "alpha";
-        viewModel.RoadIndex = 2;
-        viewModel.RegistryRef = "alpine:latest";
-
-        Action act = () => viewModel.CreateCommand.Execute(null);
-
-        act.Should().NotThrow();
-        viewModel.Result.Should().NotBeNull();
-        viewModel.Result!.BuildType.Should().Be(WslBuildType.Registry);
     }
 
     [Fact]

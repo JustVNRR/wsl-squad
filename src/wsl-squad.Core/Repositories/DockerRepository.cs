@@ -1,113 +1,20 @@
 using WslSquad.Core.Exceptions;
 using System.Diagnostics;
-using System.Net;
 using System.Text.Json.Nodes;
 
-using WslSquad.Core.Dtos;
 using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
-
-public sealed record RegistryAnswer(RegistryValidationError Error, string? TechnicalDetail);
 
 public sealed record SavedImageRow(string Name, string Path, DateTime Modified);
 
 public sealed class DockerRepository : IDockerRepository
 {
-    private static readonly HttpClient _http = new();
-
     private readonly string _assetsDir;
 
     public DockerRepository(string assetsDir)
     {
         _assetsDir = assetsDir;
-    }
-
-    public RegistryAnswer TestRegistryImage(string reference)
-    {
-        if (!NativeCommand.Test("docker", ["--version"]))
-        {
-            return new RegistryAnswer(RegistryValidationError.DockerUnavailable, "docker is not on the PATH.");
-        }
-
-        bool onHub = true;
-        string[] segments = reference.Split('/');
-
-        if (segments.Length > 1)
-        {
-            string first = segments[0];
-
-            if (first.Contains('.', StringComparison.Ordinal) ||
-                first.Contains(':', StringComparison.Ordinal) ||
-                first == "localhost")
-            {
-                onHub = false;
-            }
-        }
-
-        if (reference.Contains('@', StringComparison.Ordinal))
-        {
-            onHub = false;
-        }
-
-        if (onHub)
-        {
-            string name = reference;
-            string tag = "latest";
-            int colon = reference.LastIndexOf(':');
-
-            if (colon >= 0)
-            {
-                name = reference[..colon];
-                tag = reference[(colon + 1)..];
-            }
-
-            if (!name.Contains('/', StringComparison.Ordinal))
-            {
-                name = "library/" + name;
-            }
-
-            string url = $"https://hub.docker.com/v2/repositories/{name}/tags/{tag}";
-
-            try
-            {
-                using HttpRequestMessage request = new(HttpMethod.Head, url);
-                using HttpResponseMessage answer = _http.Send(request);
-
-                if (answer.StatusCode == HttpStatusCode.OK)
-                {
-                    return new RegistryAnswer(RegistryValidationError.None, null);
-                }
-
-                if (answer.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return new RegistryAnswer(RegistryValidationError.NotFound, null);
-                }
-
-                return new RegistryAnswer(RegistryValidationError.Rejected, $"Docker Hub answered '{(int)answer.StatusCode}'.");
-            }
-            catch (HttpRequestException)
-            {
-                return new RegistryAnswer(RegistryValidationError.Unreachable, null);
-            }
-        }
-
-        (int code, string output) = NativeCommand.Run("docker", ["manifest", "inspect", reference]);
-
-        if (code == 0)
-        {
-            return new RegistryAnswer(RegistryValidationError.None, null);
-        }
-
-        string why = output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .FirstOrDefault() ?? string.Empty;
-
-        if (why.Length == 0)
-        {
-            why = $"docker exited with code {code}.";
-        }
-
-        return new RegistryAnswer(RegistryValidationError.Rejected, why);
     }
 
     public void Build(string tag, string dockerfile, string context, bool interactive = false)

@@ -495,6 +495,45 @@ public class InstanceServiceTests
     }
 
     [Fact]
+    public void Build_saves_the_recipe_image_when_asked()
+    {
+        using TemporaryDirectory temp = new();
+        string folder = temp.Combine("alpha");
+        string recipe = temp.Write("recipe/Dockerfile", "FROM scratch");
+        _wsl.Setup(wsl => wsl.GetAllDistros()).Returns([]);
+        _wsl.Setup(wsl => wsl.GetFamily("alpha")).Returns("debian");
+        _wsl.Setup(wsl => wsl.GetInInstance("alpha", It.IsAny<IReadOnlyList<string>>())).Returns([]);
+        _instances.Setup(instances => instances.IsFolderOccupied("alpha")).Returns(false);
+        _instances.Setup(instances => instances.GetFolder("alpha")).Returns(folder);
+        _instances.Setup(instances => instances.GetIconPath("alpha")).Returns(Path.Combine(folder, "icon.png"));
+        _docker.Setup(docker => docker.TestRunning()).Returns(true);
+        _docker.Setup(docker => docker.GetSavedImagePath("alpha")).Returns("/images/alpha.tar");
+        _docker.Setup(docker => docker.SaveImage("wsl-squad:alpha", "/images/alpha.tar")).Returns(true);
+        _terminal.Setup(terminal => terminal.IsFontInstalled(It.IsAny<string>())).Returns(true);
+        _terminal.Setup(terminal => terminal.DrawIcon("alpha", It.IsAny<string>(), null))
+            .Returns(new IconDrawing("AL", "#000000", "#111111", "#FFFFFF"));
+        _terminal.Setup(terminal => terminal.GetWslGuids("alpha")).Returns(new WslGuids([], "guid"));
+        _terminal.Setup(terminal => terminal.PruneGhostEntries("alpha", It.IsAny<IReadOnlyList<string>>()))
+            .Returns(new PruneReport(0, []));
+        _terminal.Setup(terminal => terminal.RemoveStaleFragments(It.IsAny<IReadOnlyList<string>>()))
+            .Returns([]);
+
+        _service.Build(new BuildDto
+        {
+            Name = "alpha",
+            BuildType = WslBuildType.Recipe,
+            BuildPath = recipe,
+            Context = Path.GetDirectoryName(recipe),
+            KeepImage = true,
+        });
+
+        _docker.Verify(
+            docker => docker.SaveImage("wsl-squad:alpha", "/images/alpha.tar"),
+            Times.Once);
+        _docker.Verify(docker => docker.RemoveImage("wsl-squad:alpha"), Times.Once);
+    }
+
+    [Fact]
     public void Build_unregisters_the_instance_when_its_file_cannot_be_written()
     {
         using TemporaryDirectory temp = new();

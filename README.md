@@ -11,9 +11,9 @@ Every action is available both as a GUI and as a CLI.
 
 ## Features
 
-- **Build an instance** - from a recipe, a Dockerfile, a saved image, or a
-  registry reference - with an onboarding script that runs on the first shell
-  and offers the packs to install
+- **Build an instance** - from a recipe, a Dockerfile, or a saved image - with
+  an onboarding script that runs on the first shell and offers the packs to
+  install
 - **Manage the packs** of an instance, from the catalogue
 - **The recipes themselves** - Dockerfiles, onboarding scripts, recipes:
   uploaded, edited, deleted - and the saved images

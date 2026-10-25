@@ -438,7 +438,7 @@ public sealed class InstanceService : IInstanceService
             warnings.Add(new BuildNoticeDto(BuildNoticeKind.LookFailed, name, exception.Message));
         }
 
-        if (dto.BuildType == WslBuildType.Dockerfile)
+        if (dto.BuildType is WslBuildType.Dockerfile or WslBuildType.Recipe)
         {
             if (dto.KeepImage)
             {
@@ -814,18 +814,6 @@ public sealed class InstanceService : IInstanceService
         }
 
         return rows;
-    }
-
-    public IsRegistryImageValidResponseDto IsRegistryImageValid(string imageRef)
-    {
-        RegistryAnswer answer = _dockerRepository.TestRegistryImage(imageRef);
-
-        return new IsRegistryImageValidResponseDto
-        {
-            Valid = answer.Error == RegistryValidationError.None,
-            Error = answer.Error,
-            TechnicalDetail = answer.TechnicalDetail,
-        };
     }
 
     public ArchiveResponseDto Archive(ArchiveDto dto)

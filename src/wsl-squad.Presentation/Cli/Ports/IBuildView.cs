@@ -16,10 +16,6 @@ public interface IBuildView : IPresenterViewBase
 
     void ShowAbort(IReadOnlyList<string> lines);
 
-    string? AskRegistryReference(string prompt);
-
-    void ShowUnknownRegistry(string reference, string why);
-
     BuildSourceChoice? AskSource(string label, IReadOnlyList<BuildSourceChoice> rows);
 
     void ShowNoOnboarding();
