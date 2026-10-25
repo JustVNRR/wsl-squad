@@ -309,6 +309,31 @@ public sealed class DockerRepository : IDockerRepository
         return Path.Combine(_assetsDir, "dockerimages", name, $"{name}.tar");
     }
 
+    public bool DeleteSavedImage(string name)
+    {
+        string root = Path.GetFullPath(Path.Combine(_assetsDir, "dockerimages"));
+        string path = Path.GetFullPath(GetSavedImagePath(name));
+        string prefix = root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        if (!path.StartsWith(prefix, StringComparison.Ordinal) || !File.Exists(path))
+        {
+            return false;
+        }
+
+        File.Delete(path);
+
+        string? folder = Path.GetDirectoryName(path);
+
+        if (!string.IsNullOrEmpty(folder) &&
+            Directory.Exists(folder) &&
+            !Directory.EnumerateFileSystemEntries(folder).Any())
+        {
+            Directory.Delete(folder);
+        }
+
+        return true;
+    }
+
     public IReadOnlyList<string>? GetDesktopNames()
     {
         JsonObject? config = ReadDesktopSettings(DesktopSettingsPath());

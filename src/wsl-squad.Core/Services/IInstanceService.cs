@@ -14,6 +14,8 @@ public interface IInstanceService
 
     string? GetSavedRecipeImage(string recipeName);
 
+    void DeleteSavedRecipeImage(string recipeName);
+
     WslBuildSourceDto CreateRecipe(NewRecipeDto dto);
 
     WslBuildSourceDto DuplicateRecipe(DuplicateRecipeDto dto);

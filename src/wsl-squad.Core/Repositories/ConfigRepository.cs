@@ -6,7 +6,7 @@ using WslSquad.Core.Infrastructure;
 
 namespace WslSquad.Core.Repositories;
 
-public sealed record SourceRow(string Name, string Path, DateTime Modified);
+public sealed record SourceRow(string Name, string Path);
 
 public sealed class ConfigRepository : IConfigRepository
 {
@@ -87,8 +87,7 @@ public sealed class ConfigRepository : IConfigRepository
         {
             rows.Add(new SourceRow(
                 Path.GetFileName(slot),
-                slot,
-                Directory.GetLastWriteTime(slot)));
+                slot));
         }
 
         return rows;

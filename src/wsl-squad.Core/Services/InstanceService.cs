@@ -137,6 +137,11 @@ public sealed class InstanceService : IInstanceService
         return File.Exists(path) ? path : null;
     }
 
+    public void DeleteSavedRecipeImage(string recipeName)
+    {
+        _dockerRepository.DeleteSavedImage(recipeName);
+    }
+
     public WslBuildSourceDto CreateRecipe(NewRecipeDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
@@ -144,8 +149,7 @@ public sealed class InstanceService : IInstanceService
         string target = _configRepository.CreateRecipe((dto.Name ?? string.Empty).Trim());
         SourceRow row = new(
             Path.GetFileName(target),
-            target,
-            Directory.GetLastWriteTime(target));
+            target);
 
         return FormatSourceRows([row])[0];
     }
@@ -159,8 +163,7 @@ public sealed class InstanceService : IInstanceService
             (dto.NewName ?? string.Empty).Trim());
         SourceRow row = new(
             Path.GetFileName(target),
-            target,
-            Directory.GetLastWriteTime(target));
+            target);
 
         return FormatSourceRows([row])[0];
     }
@@ -1164,7 +1167,7 @@ public sealed class InstanceService : IInstanceService
         {
             output.Add(new WslBuildSourceDto
             {
-                Name = $"{row.Name} ({row.Modified.ToString("dd'/'MM HH:mm", CultureInfo.InvariantCulture)})",
+                Name = row.Name,
                 Path = row.Path,
                 BaseName = row.Name,
             });

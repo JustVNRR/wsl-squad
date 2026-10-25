@@ -42,6 +42,9 @@ The Add dialog asks for:
 - whether to build from its saved image when one exists; otherwise, or when
   unchecked, whether to save the Docker image locally.
 
+When a saved image exists and is unchecked, the trash button next to it deletes
+the saved image after confirmation.
+
 **Create** starts the build. The recipe's Dockerfile owns the onboarding and
 the default account.
 

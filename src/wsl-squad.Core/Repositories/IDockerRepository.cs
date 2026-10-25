@@ -20,6 +20,8 @@ public interface IDockerRepository
 
     string GetSavedImagePath(string name);
 
+    bool DeleteSavedImage(string name);
+
     IReadOnlyList<string>? GetDesktopNames();
 
     string GetDesktopState(string instanceName);

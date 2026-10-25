@@ -38,10 +38,12 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowSaveImage))]
+    [NotifyPropertyChangedFor(nameof(ShowDeleteImage))]
     public partial bool HasSavedImage { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowSaveImage))]
+    [NotifyPropertyChangedFor(nameof(ShowDeleteImage))]
     public partial bool UseLocalImage { get; set; }
 
     [ObservableProperty]
@@ -60,6 +62,7 @@ public sealed partial class BuildViewModel : BaseViewModel
         DuplicateRecipeCommand = new RelayCommand(DuplicateRecipe, () => SelectedRecipe() is not null);
         EditRecipeCommand = new RelayCommand(EditRecipe, () => RecipeIndex >= 0);
         DeleteRecipeCommand = new RelayCommand(DeleteRecipe, () => CanDeleteRecipe);
+        DeleteImageCommand = new RelayCommand(DeleteImage);
 
         try
         {
@@ -87,6 +90,8 @@ public sealed partial class BuildViewModel : BaseViewModel
 
     public bool ShowSaveImage => !HasSavedImage || !UseLocalImage;
 
+    public bool ShowDeleteImage => HasSavedImage && !UseLocalImage;
+
     public BuildDto? Result { get; private set; }
 
     public IRelayCommand CreateCommand { get; }
@@ -98,6 +103,8 @@ public sealed partial class BuildViewModel : BaseViewModel
     public IRelayCommand EditRecipeCommand { get; }
 
     public IRelayCommand DeleteRecipeCommand { get; }
+
+    public IRelayCommand DeleteImageCommand { get; }
 
     partial void OnNameChanged(string value)
     {
@@ -191,6 +198,42 @@ public sealed partial class BuildViewModel : BaseViewModel
         {
             Trace.TraceWarning($"[BuildViewModel] Failed to open the recipe: {ex.Message}");
         }
+    }
+
+    public void DeleteImage()
+    {
+        WslBuildSourceDto? recipe = SelectedRecipe();
+
+        if (recipe is null || !HasSavedImage)
+        {
+            return;
+        }
+
+        string recipeName = RecipeName(recipe);
+
+        if (!_dialogs.Confirm(
+                Localizer.Instance["DeleteImageTitle"],
+                Localizer.Instance.Format("RemoveFileQuestion", recipeName)))
+        {
+            return;
+        }
+
+        try
+        {
+            _instance.DeleteSavedRecipeImage(recipeName);
+        }
+        catch (Exception ex) when (
+            ex is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            RecipeError = ex.ToMessage();
+
+            return;
+        }
+
+        RecipeError = string.Empty;
+        HasSavedImage = false;
+        UseLocalImage = false;
+        SaveImage = true;
     }
 
     public void DeleteRecipe()

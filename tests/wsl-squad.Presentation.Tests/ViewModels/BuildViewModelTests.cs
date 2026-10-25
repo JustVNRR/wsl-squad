@@ -21,7 +21,7 @@ public class BuildViewModelTests
         [
             new WslBuildSourceDto
             {
-                Name = "default (01/01 12:00)",
+                Name = "default",
                 Path = "/catalog/default",
                 BaseName = "default",
             },
@@ -34,12 +34,13 @@ public class BuildViewModelTests
     {
         BuildViewModel viewModel = Create();
 
-        viewModel.RecipeNames.Should().ContainSingle().Which.Should().Be("default (01/01 12:00)");
+        viewModel.RecipeNames.Should().ContainSingle().Which.Should().Be("default");
         viewModel.RecipeIndex.Should().Be(0);
         viewModel.SaveImage.Should().BeTrue();
         viewModel.HasSavedImage.Should().BeFalse();
         viewModel.UseLocalImage.Should().BeFalse();
         viewModel.ShowSaveImage.Should().BeTrue();
+        viewModel.ShowDeleteImage.Should().BeFalse();
         viewModel.CanDeleteRecipe.Should().BeTrue();
     }
 
@@ -83,6 +84,7 @@ public class BuildViewModelTests
         viewModel.HasSavedImage.Should().BeTrue();
         viewModel.UseLocalImage.Should().BeTrue();
         viewModel.ShowSaveImage.Should().BeFalse();
+        viewModel.ShowDeleteImage.Should().BeFalse();
 
         viewModel.CreateCommand.Execute(null);
 
@@ -101,12 +103,50 @@ public class BuildViewModelTests
         viewModel.UseLocalImage = false;
 
         viewModel.ShowSaveImage.Should().BeTrue();
+        viewModel.ShowDeleteImage.Should().BeTrue();
         viewModel.SaveImage.Should().BeTrue();
 
         viewModel.CreateCommand.Execute(null);
 
         viewModel.Result!.UseSavedImage.Should().BeFalse();
         viewModel.Result.KeepImage.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Deletes_the_saved_image_after_confirmation()
+    {
+        _instance.Setup(service => service.GetSavedRecipeImage("default"))
+            .Returns("/images/default.tar");
+        _dialogs.ConfirmAnswer = true;
+        BuildViewModel viewModel = Create();
+        viewModel.UseLocalImage = false;
+
+        viewModel.DeleteImageCommand.Execute(null);
+
+        _dialogs.LastConfirm!.Value.Title.Should().Be("Delete saved image");
+        _instance.Verify(service => service.DeleteSavedRecipeImage("default"), Times.Once);
+        viewModel.HasSavedImage.Should().BeFalse();
+        viewModel.UseLocalImage.Should().BeFalse();
+        viewModel.ShowDeleteImage.Should().BeFalse();
+        viewModel.ShowSaveImage.Should().BeTrue();
+        viewModel.SaveImage.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Keeps_the_saved_image_when_deletion_is_cancelled()
+    {
+        _instance.Setup(service => service.GetSavedRecipeImage("default"))
+            .Returns("/images/default.tar");
+        _dialogs.ConfirmAnswer = false;
+        BuildViewModel viewModel = Create();
+        viewModel.UseLocalImage = false;
+
+        viewModel.DeleteImageCommand.Execute(null);
+
+        _instance.Verify(service => service.DeleteSavedRecipeImage(It.IsAny<string>()), Times.Never);
+        viewModel.HasSavedImage.Should().BeTrue();
+        viewModel.UseLocalImage.Should().BeFalse();
+        viewModel.ShowDeleteImage.Should().BeTrue();
     }
 
     [Fact]
@@ -142,7 +182,7 @@ public class BuildViewModelTests
         _instance.Setup(service => service.CreateRecipe(It.Is<NewRecipeDto>(dto => dto.Name == "mine")))
             .Returns(new WslBuildSourceDto
             {
-                Name = "mine (01/01 12:00)",
+                Name = "mine",
                 Path = "/recipes/mine",
                 BaseName = "mine",
             });
@@ -151,7 +191,7 @@ public class BuildViewModelTests
         viewModel.NewRecipe();
 
         _dialogs.LastRecipeName!.Value.Taken.Should().Contain("default");
-        viewModel.RecipeNames.Should().Contain("mine (01/01 12:00)");
+        viewModel.RecipeNames.Should().Contain("mine");
         viewModel.RecipeIndex.Should().Be(1);
         viewModel.CanDeleteRecipe.Should().BeTrue();
     }
@@ -164,7 +204,7 @@ public class BuildViewModelTests
                 dto.SourcePath == "/catalog/default" && dto.NewName == "default-copy")))
             .Returns(new WslBuildSourceDto
             {
-                Name = "default-copy (01/01 12:00)",
+                Name = "default-copy",
                 Path = "/catalog/default-copy",
                 BaseName = "default-copy",
             });
@@ -174,7 +214,7 @@ public class BuildViewModelTests
 
         _dialogs.LastRecipeName!.Value.Suggested.Should().Be("default-copy");
         _dialogs.LastRecipeName.Value.Source.Should().Be("default");
-        viewModel.RecipeNames.Should().Contain("default-copy (01/01 12:00)");
+        viewModel.RecipeNames.Should().Contain("default-copy");
         viewModel.RecipeIndex.Should().Be(1);
     }
 
@@ -199,7 +239,7 @@ public class BuildViewModelTests
         [
             new WslBuildSourceDto
             {
-                Name = "mine (01/01 12:00)",
+                Name = "mine",
                 Path = "/recipes/mine",
             },
         ]);
@@ -221,7 +261,7 @@ public class BuildViewModelTests
         [
             new WslBuildSourceDto
             {
-                Name = "mine (01/01 12:00)",
+                Name = "mine",
                 Path = "/recipes/mine",
             },
         ]);

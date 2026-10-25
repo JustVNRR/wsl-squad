@@ -64,10 +64,9 @@ public class InstanceServiceTests
     [Fact]
     public void Recipes_are_returned_with_their_path()
     {
-        DateTime modified = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
         _config.Setup(config => config.GetRecipes()).Returns(
         [
-            new SourceRow("default", "/catalog/default", modified),
+            new SourceRow("default", "/catalog/default"),
         ]);
 
         WslBuildSourceDto recipe = _service.GetRecipes().Should().ContainSingle().Subject;
@@ -577,6 +576,14 @@ public class InstanceServiceTests
 
         _service.GetSavedRecipeImage("base").Should().Be(saved);
         _service.GetSavedRecipeImage("missing").Should().BeNull();
+    }
+
+    [Fact]
+    public void Deletes_the_saved_recipe_image()
+    {
+        _service.DeleteSavedRecipeImage("base");
+
+        _docker.Verify(docker => docker.DeleteSavedImage("base"), Times.Once);
     }
 
     [Fact]
