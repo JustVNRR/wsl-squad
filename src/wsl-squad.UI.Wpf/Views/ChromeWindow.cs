@@ -20,7 +20,7 @@ public partial class ChromeWindow : Window
 
     public static FontFamily? UiFont { get; set; }
 
-    public static int UiSize { get; set; } = 15;
+    public static int UiSize { get; set; } = 17;
 
     public bool AnimateOnShow { get; set; } = true;
 

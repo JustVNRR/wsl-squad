@@ -120,7 +120,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
         Fonts = [.. fonts.Select(name => new SettingsRow(name, name))];
         int fontIndex = Math.Max(0, Fonts.FindIndex(row => string.Equals(row.Name, theme.FontFamily, StringComparison.Ordinal)));
 
-        List<int> sizes = [11, 13, 15, 17, 19];
+        List<int> sizes = [13, 15, 17, 19, 21];
 
         if (!sizes.Contains(theme.FontSize))
         {
@@ -240,7 +240,7 @@ public sealed partial class SettingsViewModel : BaseViewModel
     public string SelectedFont => Fonts.Count == 0 ? string.Empty : Fonts[Math.Clamp(FontIndex, 0, Fonts.Count - 1)].Name;
 
     public int SelectedSize =>
-        Sizes.Count == 0 ? 15 : int.Parse(Sizes[Math.Clamp(SizeIndex, 0, Sizes.Count - 1)].Name, System.Globalization.CultureInfo.InvariantCulture);
+        Sizes.Count == 0 ? 17 : int.Parse(Sizes[Math.Clamp(SizeIndex, 0, Sizes.Count - 1)].Name, System.Globalization.CultureInfo.InvariantCulture);
 
     public string SelectedColour => Colours.Count == 0 ? string.Empty : Colours[Math.Clamp(ColourIndex, 0, Colours.Count - 1)].Name;
 

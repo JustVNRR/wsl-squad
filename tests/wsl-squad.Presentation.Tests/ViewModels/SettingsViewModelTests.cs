@@ -58,6 +58,17 @@ public class SettingsViewModelTests
     }
 
     [Fact]
+    public void Defaults_to_meslo_at_size_17()
+    {
+        TestThemeService ui = new();
+        SettingsViewModel viewModel = new(ui, _languages, _catalogue.Object, _fleet.Object, _dialogs);
+
+        viewModel.SelectedFont.Should().Be("MesloLGS NF");
+        viewModel.SelectedSize.Should().Be(17);
+        viewModel.Sizes.Select(row => row.Name).Should().Equal("13", "15", "17", "19", "21");
+    }
+
+    [Fact]
     public void Changing_a_choice_previews_it_immediately()
     {
         SettingsViewModel viewModel = Create();
@@ -68,7 +79,7 @@ public class SettingsViewModelTests
         viewModel.Variant = "Light";
 
         _ui.Previewed.Should().NotBeEmpty();
-        _ui.Previewed[^1].Should().Be(("VT323", 15, "ice", "Light"));
+        _ui.Previewed[^1].Should().Be(("VT323", 17, "ice", "Light"));
     }
 
     [Fact]
