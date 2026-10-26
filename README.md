@@ -50,13 +50,10 @@ Choose one of the four builds:
 - Portable, self-contained:
   [wsl-squad-portable-self-contained.zip](https://github.com/JustVNRR/wsl-squad/releases/latest/download/wsl-squad-portable-self-contained.zip)
 
-Verify the download with
-[SHA256SUMS.txt](https://github.com/JustVNRR/wsl-squad/releases/latest/download/SHA256SUMS.txt),
-or browse [Releases](https://github.com/JustVNRR/wsl-squad/releases).
+Browse [Releases](https://github.com/JustVNRR/wsl-squad/releases).
 
-Without a code-signing certificate, Windows SmartScreen may warn, and Smart
-App Control may block the build. Check `SHA256SUMS.txt` in the release to
-verify the downloaded files.
+Without a code-signing certificate, Windows SmartScreen may warn when running
+the installer or the executables, and Smart App Control may block them.
 
 ---
 
