@@ -58,7 +58,7 @@ public class BuildViewModelTests
         viewModel.Result.Context.Should().Be("/catalog/default");
         viewModel.Result.KeepImage.Should().BeTrue();
         viewModel.Result.UseSavedImage.Should().BeFalse();
-        viewModel.Result.Interactive.Should().BeFalse();
+        viewModel.Result.Interactive.Should().BeTrue();
     }
 
     [Fact]

@@ -291,7 +291,7 @@ public sealed partial class BuildViewModel : BaseViewModel
             recipe.Path ?? string.Empty,
             keepImage: !useSavedImage && SaveImage,
             useSavedImage: useSavedImage,
-            interactive: false);
+            interactive: true);
 
         RequestClose();
     }
