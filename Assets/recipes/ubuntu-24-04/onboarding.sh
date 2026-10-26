@@ -340,6 +340,18 @@ else
     echo "${C_GREY}Pack catalog not reachable; add packs later with Manage Packs.${C_RESET}"
 fi
 
+zsh_path=$(command -v zsh || true)
+if [ -n "$zsh_path" ]; then
+    login_shell=$(getent passwd "$NEW_USER" | cut -d: -f7)
+    if [ "$login_shell" != "$zsh_path" ]; then
+        if usermod --shell "$zsh_path" "$NEW_USER"; then
+            echo "${C_CYAN}The login shell is now zsh.${C_RESET}"
+        else
+            echo "${C_YELLOW}[WARNING] The login shell could not be changed to zsh.${C_RESET}"
+        fi
+    fi
+fi
+
 rm -f /root/onboarding.sh /root/onboarding-run.sh /root/onboarding.user
 
 restart_distro() {
