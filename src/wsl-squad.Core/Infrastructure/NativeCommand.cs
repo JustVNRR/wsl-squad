@@ -15,6 +15,7 @@ internal static class NativeCommand
         {
             FileName = program,
             UseShellExecute = false,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
@@ -32,6 +33,8 @@ internal static class NativeCommand
 
         using Process process = Process.Start(start)
             ?? throw new WslSquadException(WslSquadErrorCode.ExternalToolFailed, program, "could not be started");
+
+        process.StandardInput.Close();
 
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();

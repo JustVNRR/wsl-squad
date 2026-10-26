@@ -133,7 +133,15 @@ public sealed class DockerRepository : IDockerRepository
 
     public bool RestartDesktop()
     {
-        return NativeCommand.Test("docker", ["desktop", "restart"]);
+        (int code, string output) = NativeCommand.Run("docker", ["desktop", "restart"]);
+
+        if (code != 0)
+        {
+            Trace.TraceWarning(
+                $"[DockerRepository] docker desktop restart failed (exit {code}): {output.Trim()}");
+        }
+
+        return code == 0;
     }
 
     private static readonly TimeSpan _dockerStartupTimeout =
