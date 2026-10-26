@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <RepositoryRoot>$(MSBuildThisFileDirectory)</RepositoryRoot>
     <BaseOutputPath>$(RepositoryRoot)artifacts\bin\$(MSBuildProjectName)\</BaseOutputPath>
