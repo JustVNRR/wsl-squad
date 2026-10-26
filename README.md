@@ -31,13 +31,12 @@ Every action is available both as a GUI and as a CLI.
 - Windows 10/11.
 - **WSL2** - `wsl --install` on a machine without it; every instance lives
   inside it.
-- **Docker Desktop** (or Docker Engine running via WSL).
+- **Docker Desktop** (or Docker Engine running via WSL), only needed to build
+  instances; WSL Squad starts it when a build needs it.
 
 ---
 
 ## Quick Start
-
-Make sure Docker Desktop is running before you start.
 
 Choose one of the four builds:
 
@@ -52,8 +51,9 @@ Choose one of the four builds:
 
 Browse [Releases](https://github.com/JustVNRR/wsl-squad/releases).
 
-Without a code-signing certificate, Windows SmartScreen may warn when running
-the installer or the executables, and Smart App Control may block them.
+> **Note:** these binaries have no code-signing certificate. Windows SmartScreen
+> may warn when running the installer or the executables, and Smart App Control
+> may block them.
 
 ---
 
