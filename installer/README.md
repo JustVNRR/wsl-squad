@@ -17,15 +17,19 @@ installer\
   - per-user install, typically with `winget` without elevation: `%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe`.
 - Publication outputs present in `artifacts\publish\`:
 
+Framework-dependent:
+
 ```powershell
 .\scripts\publish-framework-dependent.ps1
 ```
 
-or:
+Self-contained:
 
 ```powershell
 .\scripts\publish-self-contained.ps1
 ```
+
+The release workflow runs both and builds both installers.
 
 ## Build
 
@@ -57,6 +61,18 @@ Output:
 artifacts\dist\wsl-squad-setup.exe
 ```
 
+For the self-contained installer:
+
+```powershell
+iscc installer\wsl-squad.iss /DSelfContained=1
+```
+
+Output:
+
+```text
+artifacts\dist\wsl-squad-setup-self-contained.exe
+```
+
 `artifacts\` groups all generated outputs: `bin\`, `obj\`, `publish\` and `dist\`. The folder is ignored by Git. The `.iss` script locates it with `RepoRoot + "\artifacts"` from the `installer\` folder.
 
 ## Wizard size
@@ -68,13 +84,13 @@ The setup window uses `WizardSizePercent=125` and the dialog font uses `DialogFo
 The script defaults to a **framework-dependent** publication:
 
 ```ini
-#define SelfContained 0
+#define SelfContained "0"
 ```
 
-For a self-contained installer:
+For a self-contained installer, pass the override on the command line:
 
-```ini
-#define SelfContained 1
+```powershell
+iscc installer\wsl-squad.iss /DSelfContained=1
 ```
 
 In this mode:
@@ -82,6 +98,13 @@ In this mode:
 - the .NET runtime is not required;
 - the Desktop Runtime check is disabled;
 - files come from `artifacts\publish\self-contained\gui\*` and `artifacts\publish\self-contained\cli\*`; the CLI is installed under `cli\`.
+
+The release workflow builds both modes:
+
+```text
+wsl-squad-setup.exe
+wsl-squad-setup-self-contained.exe
+```
 
 ## Bundled .NET runtime
 
@@ -137,17 +160,24 @@ Run this on a Windows machine, ideally without the .NET SDK for the framework-de
 From the repository root:
 
 ```powershell
-iscc installer\wsl-squad.iss
+iscc installer\wsl-squad.iss /DSelfContained=0
+iscc installer\wsl-squad.iss /DSelfContained=1
 ```
 
-Verify that `artifacts\dist\wsl-squad-setup.exe` exists.
+Verify that both files exist:
+
+```text
+artifacts\dist\wsl-squad-setup.exe
+artifacts\dist\wsl-squad-setup-self-contained.exe
+```
 
 ### 2. Install
 
-Run `artifacts\dist\wsl-squad-setup.exe`.
+Run one of the two setups, then repeat the procedure for the other.
 
 - Verify the WSL check and the Docker warning.
 - In framework-dependent mode, verify the .NET 10 Desktop Runtime check.
+- In self-contained mode, verify that the runtime check does not appear.
 - Verify the installation completes without UAC elevation, unless `BundleRuntime=1`.
 - Verify the `%LOCALAPPDATA%\Programs\WSL Squad` folder.
 
@@ -244,9 +274,9 @@ The release workflow signs automatically when these repository secrets exist:
 - `SIGNING_CERTIFICATE` - base64 of the `.pfx`;
 - `SIGNING_PASSWORD` - its password.
 
-It signs `wsl-squad.gui.exe` and `wsl-squad.cli.exe` before building the
-installer, then signs `wsl-squad-setup.exe`. Without the secrets, those steps
-are skipped.
+It signs the GUI and CLI binaries in both publication modes before building the
+installers, then signs both setup files. Without the secrets, those steps are
+skipped.
 
 To produce the base64 value:
 
@@ -255,17 +285,21 @@ To produce the base64 value:
 ```
 
 To sign a local build with a certificate installed in the Windows store, sign
-the published binaries before building the installer, then sign the setup:
+the published binaries before building the installers, then sign both setups:
 
 ```powershell
 signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a `
   artifacts\publish\framework-dependent\gui\wsl-squad.gui.exe `
-  artifacts\publish\framework-dependent\cli\wsl-squad.cli.exe
+  artifacts\publish\framework-dependent\cli\wsl-squad.cli.exe `
+  artifacts\publish\self-contained\gui\wsl-squad.gui.exe `
+  artifacts\publish\self-contained\cli\wsl-squad.cli.exe
 
-.\scripts\build-installer.ps1
+iscc installer\wsl-squad.iss /DSelfContained=0
+iscc installer\wsl-squad.iss /DSelfContained=1
 
 signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a `
-  artifacts\dist\wsl-squad-setup.exe
+  artifacts\dist\wsl-squad-setup.exe `
+  artifacts\dist\wsl-squad-setup-self-contained.exe
 ```
 
 A self-signed certificate is suitable only for local testing: it does not

@@ -7,12 +7,16 @@
 #define CliExe "cli\wsl-squad.cli.exe"
 
 ; 0 = framework-dependent, 1 = self-contained
-#define SelfContained 0
+#ifndef SelfContained
+#define SelfContained "0"
+#endif
 
-#if SelfContained == 1
+#if SelfContained == "1"
 #define PublishModeDir "self-contained"
+#define SetupBaseName "wsl-squad-setup-self-contained"
 #else
 #define PublishModeDir "framework-dependent"
+#define SetupBaseName "wsl-squad-setup"
 #endif
 
 ; 1 = install redist\windowsdesktop-runtime-10.0.x-win-x64.exe before launching the app
@@ -33,7 +37,7 @@ DefaultDirName={localappdata}\Programs\WSL Squad
 DefaultGroupName={#AppName}
 PrivilegesRequired=lowest
 OutputDir={#DistDir}
-OutputBaseFilename=wsl-squad-setup
+OutputBaseFilename={#SetupBaseName}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -58,7 +62,7 @@ Source: "{#PublishDir}\{#PublishModeDir}\cli\*"; DestDir: "{app}\cli"; Flags: re
 Source: "wsl-squad.cmd"; DestDir: "{app}"; Flags: ignoreversion
 
 #if BundleRuntime == 1
-#if SelfContained == 0
+#if SelfContained == "0"
 Source: "redist\windowsdesktop-runtime-10.0.x-win-x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 #endif
 #endif
@@ -76,7 +80,7 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#GuiExe}"; Tasks: desktopico
 
 [Run]
 #if BundleRuntime == 1
-#if SelfContained == 0
+#if SelfContained == "0"
 Filename: "{tmp}\windowsdesktop-runtime-10.0.x-win-x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing the .NET 10 Desktop Runtime..."; Flags: waituntilterminated
 #endif
 #endif
@@ -219,7 +223,7 @@ begin
     Exit;
   end;
 
-#if SelfContained == 0
+#if SelfContained == "0"
 #if BundleRuntime == 0
   if not DotNet10DesktopInstalled() then
   begin

@@ -55,7 +55,9 @@ jobs:
 
       - name: Publish application
         shell: pwsh
-        run: ./scripts/publish-framework-dependent.ps1
+        run: |
+          ./scripts/publish-framework-dependent.ps1
+          ./scripts/publish-self-contained.ps1
 
       - name: Prepare signing
         id: signing
@@ -126,7 +128,9 @@ jobs:
 
           $arguments += @(
             "artifacts\publish\framework-dependent\gui\wsl-squad.gui.exe",
-            "artifacts\publish\framework-dependent\cli\wsl-squad.cli.exe"
+            "artifacts\publish\framework-dependent\cli\wsl-squad.cli.exe",
+            "artifacts\publish\self-contained\gui\wsl-squad.gui.exe",
+            "artifacts\publish\self-contained\cli\wsl-squad.cli.exe"
           )
 
           & $env:SIGNTOOL_PATH @arguments
@@ -139,7 +143,7 @@ jobs:
         shell: pwsh
         run: choco install innosetup --no-progress -y
 
-      - name: Build installer
+      - name: Build installers
         shell: pwsh
         env:
           APP_VERSION: ${{ steps.version.outputs.version }}
@@ -150,13 +154,19 @@ jobs:
             throw "ISCC.exe not found at $iscc."
           }
 
-          & $iscc "installer\wsl-squad.iss" "/DAppVersion=$env:APP_VERSION"
+          & $iscc "installer\wsl-squad.iss" "/DAppVersion=$env:APP_VERSION" "/DSelfContained=0"
 
           if ($LASTEXITCODE -ne 0) {
-            throw "Inno Setup compilation failed with exit code $LASTEXITCODE."
+            throw "Framework-dependent installer compilation failed with exit code $LASTEXITCODE."
           }
 
-      - name: Sign installer
+          & $iscc "installer\wsl-squad.iss" "/DAppVersion=$env:APP_VERSION" "/DSelfContained=1"
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Self-contained installer compilation failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Sign installers
         if: steps.signing.outputs.enabled == 'true'
         shell: pwsh
         env:
@@ -176,19 +186,25 @@ jobs:
             $arguments += @("/p", $env:SIGNING_PASSWORD)
           }
 
-          $arguments += @("artifacts\dist\wsl-squad-setup.exe")
+          $arguments += @(
+            "artifacts\dist\wsl-squad-setup.exe",
+            "artifacts\dist\wsl-squad-setup-self-contained.exe"
+          )
 
           & $env:SIGNTOOL_PATH @arguments
 
           if ($LASTEXITCODE -ne 0) {
-            throw "Signing the installer failed with exit code $LASTEXITCODE."
+            throw "Signing the installers failed with exit code $LASTEXITCODE."
           }
 
-      - name: Create portable ZIP
+      - name: Create portable ZIPs
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force artifacts/dist | Out-Null
-          Compress-Archive -Path artifacts/publish/framework-dependent/* -DestinationPath artifacts/dist/wsl-squad-portable.zip -Force
+          Compress-Archive -Path artifacts/publish/framework-dependent/* `
+            -DestinationPath artifacts/dist/wsl-squad-portable.zip -Force
+          Compress-Archive -Path artifacts/publish/self-contained/* `
+            -DestinationPath artifacts/dist/wsl-squad-portable-self-contained.zip -Force
 
       - name: Generate checksums
         shell: pwsh
@@ -218,5 +234,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             artifacts/dist/wsl-squad-setup.exe
+            artifacts/dist/wsl-squad-setup-self-contained.exe
             artifacts/dist/wsl-squad-portable.zip
+            artifacts/dist/wsl-squad-portable-self-contained.zip
             artifacts/dist/SHA256SUMS.txt
