@@ -1,6 +1,6 @@
 # oh_my_py: Python 3, uv and ruff
 
-[← Back to the README](../../../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#default-packs)
 
 Python for a project's life: uv manages the interpreters and the virtualenvs, ruff lints and formats, and the targets below drive the linter and the test suites.
 

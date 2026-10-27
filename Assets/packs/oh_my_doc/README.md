@@ -1,6 +1,6 @@
 # oh_my_doc: Pandoc and XeLaTeX.
 
-[← Back to the README](../../../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#default-packs)
 
 Markdown to PDF and the document chain around it:
 - pandoc for the conversion,

@@ -1,6 +1,6 @@
 # hide_my_ops
 
-[← Back to the README](../../../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#default-packs)
 
 Project targets: Docker, GitHub PRs.
 

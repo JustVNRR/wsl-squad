@@ -1,6 +1,6 @@
 # oh_my_code: Claude Code (CLI)
 
-[← Back to the README](../../../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#default-packs)
 
 Claude Code, the agentic CLI, installed under the user's own `~/.local` from Anthropic's script: no apt package, no root, no Node.
 

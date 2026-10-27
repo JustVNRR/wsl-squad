@@ -1,6 +1,6 @@
 # oh_my_peg: ffmpeg, ImageMagick and Tesseract OCR
 
-[← Back to the README](../../../../../../README.md#optional-tooling-packs)
+[← Back to the README](../../../../../../README.md#default-packs)
 
 Computer vision and OCR in the instance:
 - ffmpeg for audio and video,
