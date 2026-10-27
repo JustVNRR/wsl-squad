@@ -10,10 +10,10 @@ public sealed class SetAppearancePresenter : BasePresenter<IAppearanceView>
 {
     private readonly InstanceAppearanceWorkflow _workflow;
 
-    public SetAppearancePresenter(IInstanceService service, IAppearanceView view)
+    public SetAppearancePresenter(IInstanceService service, IInstanceView instanceView, IAppearanceView view)
         : base(view)
     {
-        _workflow = new InstanceAppearanceWorkflow(service, new ViewAppearanceInteraction(view));
+        _workflow = new InstanceAppearanceWorkflow(service, new ViewInstanceInteraction(instanceView, view));
     }
 
     public IWorkflowResult Run(string? target)

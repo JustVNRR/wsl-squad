@@ -59,7 +59,6 @@ public sealed partial class MainWindowViewModel : BaseViewModel
         _workflow = new InstanceWorkflow(
             instance,
             interaction,
-            interaction,
             message => SetBusy(true, message));
         _fleetWorkflow = new FleetWorkflow(fleet, executionStarted: message => SetBusy(true, message));
         _logger = logger;

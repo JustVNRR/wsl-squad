@@ -9,10 +9,17 @@ namespace WslSquad.Presentation.Cli.Adapters;
 public sealed class ViewInstanceInteraction : IInstanceInteraction
 {
     private readonly IInstanceView _view;
+    private readonly IAppearanceView? _appearanceView;
 
     public ViewInstanceInteraction(IInstanceView view)
     {
         _view = view;
+    }
+
+    public ViewInstanceInteraction(IInstanceView view, IAppearanceView appearanceView)
+    {
+        _view = view;
+        _appearanceView = appearanceView;
     }
 
     public string? PickInstance(IReadOnlyList<WslIndexDto> candidates)
@@ -196,5 +203,233 @@ public sealed class ViewInstanceInteraction : IInstanceInteraction
     public bool? PromptDocker(string instanceName, bool shouldRegister)
     {
         return _view.AskDockerAction(instanceName, shouldRegister);
+    }
+
+    public IReadOnlyList<SetAppearanceDto> PromptAppearance(
+        string instanceName,
+        AppearanceContextDto context)
+    {
+        if (_appearanceView is null)
+        {
+            throw new InvalidOperationException("No appearance view is available.");
+        }
+
+        GetAppearanceResponseDto appearance = context.Appearance;
+        List<SetAppearanceDto> requests = [];
+        string font = appearance.Font ?? string.Empty;
+        string scheme = appearance.ColourScheme ?? string.Empty;
+        WslIconDto recipe = new()
+        {
+            Text = appearance.Icon?.Text ?? string.Empty,
+            Top = appearance.Icon?.Top ?? string.Empty,
+            Bottom = appearance.Icon?.Bottom ?? string.Empty,
+            TextColor = appearance.Icon?.TextColor ?? string.Empty,
+        };
+
+        while (true)
+        {
+            _appearanceView.Clear();
+            string? chosen = _appearanceView.AskTheme(instanceName);
+
+            if (chosen is null)
+            {
+                return requests;
+            }
+
+            string? newFont = null;
+            string? newScheme = null;
+            WslIconDto? newIcon = null;
+            string? newImage = null;
+            bool changed = false;
+
+            if (chosen == "font")
+            {
+                _appearanceView.Clear();
+                string? picked = _appearanceView.AskFont(instanceName, context.Fonts, font);
+
+                if (!string.IsNullOrEmpty(picked))
+                {
+                    newFont = picked;
+                    font = picked;
+                    changed = true;
+                }
+            }
+            else if (chosen == "color")
+            {
+                _appearanceView.Clear();
+                string? picked = _appearanceView.AskColour(instanceName, context.ColorSchemes, scheme);
+
+                if (!string.IsNullOrEmpty(picked))
+                {
+                    newScheme = picked;
+                    scheme = picked;
+                    changed = true;
+                }
+            }
+            else
+            {
+                while (true)
+                {
+                    _appearanceView.Clear();
+                    string? how = _appearanceView.AskIconType(instanceName);
+
+                    if (how is null)
+                    {
+                        break;
+                    }
+
+                    if (how == "auto")
+                    {
+                        recipe = new WslIconDto
+                        {
+                            Text = string.Empty,
+                            Top = string.Empty,
+                            Bottom = string.Empty,
+                            TextColor = string.Empty,
+                        };
+                        newIcon = recipe;
+                        changed = true;
+
+                        break;
+                    }
+
+                    if (how == "letters")
+                    {
+                        _appearanceView.Clear();
+                        string suggestion = recipe.Text ?? string.Empty;
+                        string question = suggestion.Length > 0
+                            ? Localizer.Instance.Format("CliLettersQuestion", suggestion)
+                            : Localizer.Instance["CliLetters"];
+                        bool settled = false;
+
+                        while (true)
+                        {
+                            string? answer = _appearanceView.AskLetters(question);
+
+                            if (answer is null)
+                            {
+                                break;
+                            }
+
+                            if (string.IsNullOrWhiteSpace(answer))
+                            {
+                                if (suggestion.Length > 0)
+                                {
+                                    recipe = recipe with { Text = suggestion.ToUpperInvariant() };
+                                    settled = true;
+                                }
+
+                                break;
+                            }
+
+                            string trimmed = answer.Trim();
+
+                            if (trimmed.Length is >= 1 and <= 3 &&
+                                trimmed.All(char.IsAsciiLetterOrDigit))
+                            {
+                                recipe = recipe with { Text = trimmed.ToUpperInvariant() };
+                                settled = true;
+
+                                break;
+                            }
+
+                            _appearanceView.ShowLettersHint();
+                        }
+
+                        if (!settled)
+                        {
+                            continue;
+                        }
+
+                        newIcon = recipe;
+                        changed = true;
+
+                        break;
+                    }
+
+                    if (how == "colours")
+                    {
+                        _appearanceView.Clear();
+                        WslIconPairDto? pair = _appearanceView.AskIconPair(
+                            instanceName,
+                            context.IconPairs,
+                            recipe.Text ?? string.Empty,
+                            recipe.Top,
+                            recipe.Bottom);
+
+                        if (pair is null)
+                        {
+                            continue;
+                        }
+
+                        recipe = recipe with
+                        {
+                            Top = pair.Top ?? string.Empty,
+                            Bottom = pair.Bottom ?? string.Empty,
+                            TextColor = pair.TextColor ?? string.Empty,
+                        };
+                        newIcon = recipe;
+                        changed = true;
+
+                        break;
+                    }
+
+                    bool imageSettled = false;
+                    _appearanceView.Clear();
+
+                    while (true)
+                    {
+                        string? answer = _appearanceView.AskImagePath();
+
+                        if (answer is null)
+                        {
+                            break;
+                        }
+
+                        if (!File.Exists(answer))
+                        {
+                            _appearanceView.ShowNoFile();
+
+                            continue;
+                        }
+
+                        string extension = Path.GetExtension(answer).ToLowerInvariant();
+
+                        if (extension is not ".png" and not ".jpg" and not ".jpeg" and not ".ico" and not ".bmp")
+                        {
+                            _appearanceView.ShowBadExtension();
+
+                            continue;
+                        }
+
+                        newImage = Path.GetFullPath(answer);
+                        imageSettled = true;
+
+                        break;
+                    }
+
+                    if (imageSettled)
+                    {
+                        changed = true;
+
+                        break;
+                    }
+                }
+            }
+
+            if (!changed)
+            {
+                continue;
+            }
+
+            requests.Add(new SetAppearanceDto
+            {
+                InstanceName = instanceName,
+                Font = newFont,
+                ColourScheme = newScheme,
+                Icon = newIcon,
+                IconImage = newImage,
+            });
+        }
     }
 }

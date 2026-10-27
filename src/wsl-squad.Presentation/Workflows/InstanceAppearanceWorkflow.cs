@@ -6,11 +6,11 @@ namespace WslSquad.Presentation.Workflows;
 
 public sealed class InstanceAppearanceWorkflow : WorkflowBase
 {
-    private readonly IAppearanceInteraction _interaction;
+    private readonly IInstanceInteraction _interaction;
 
     public InstanceAppearanceWorkflow(
         IInstanceService service,
-        IAppearanceInteraction interaction,
+        IInstanceInteraction interaction,
         Action<string>? executionStarted = null)
         : base(service, executionStarted)
     {

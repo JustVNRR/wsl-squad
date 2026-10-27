@@ -6,7 +6,7 @@ using WslSquad.Presentation.Workflows;
 
 namespace WslSquad.Presentation.Gui.Adapters;
 
-public sealed class DialogInstanceInteraction : IInstanceInteraction, IAppearanceInteraction
+public sealed class DialogInstanceInteraction : IInstanceInteraction
 {
     private readonly IDialogService _dialogs;
 

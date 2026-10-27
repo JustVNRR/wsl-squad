@@ -69,7 +69,7 @@ public class PresenterTests
         view.Themes.Enqueue("color");
         view.Themes.Enqueue(null);
 
-        IWorkflowResult result = new SetAppearancePresenter(service.Object, view).Run("alpha");
+        IWorkflowResult result = new SetAppearancePresenter(service.Object, new TestInstanceView(), view).Run("alpha");
 
         result.Status.Should().Be(WorkflowStatus.Success);
         service.Verify(s => s.SetAppearance(It.Is<SetAppearanceDto>(dto =>

@@ -13,13 +13,12 @@ public sealed class InstanceWorkflow
     public InstanceWorkflow(
         IInstanceService service,
         IInstanceInteraction interaction,
-        IAppearanceInteraction appearanceInteraction,
         Action<string>? executionStarted = null)
     {
         _lifecycle = new InstanceLifecycleWorkflow(service, interaction, executionStarted);
         _storage = new InstanceStorageWorkflow(service, interaction, executionStarted);
         _integration = new InstanceIntegrationWorkflow(service, interaction, executionStarted);
-        _appearance = new InstanceAppearanceWorkflow(service, appearanceInteraction, executionStarted);
+        _appearance = new InstanceAppearanceWorkflow(service, interaction, executionStarted);
     }
 
     public Task<WorkflowResult<BuildResponseDto>> BuildAsync(BuildDto request)

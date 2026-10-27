@@ -23,4 +23,8 @@ public interface IInstanceInteraction
     bool PromptDeleteArchive(string archiveName);
 
     bool? PromptDocker(string instanceName, bool shouldRegister);
+
+    IReadOnlyList<SetAppearanceDto> PromptAppearance(
+        string instanceName,
+        AppearanceContextDto context);
 }
