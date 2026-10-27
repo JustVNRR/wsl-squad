@@ -1,11 +1,9 @@
 # Wsl Squad
 
-Wsl Squad is a WSL distribution manager written in c#. It builds a
-distro from a Docker recipe, and lets you open it, restart it, copy it, archive
-it or remove it.
+Wsl Squad is a WSL distribution manager written in c#.
 
-Optional packs install the tools a project needs inside the instance - the
-shell, Python, the Docker gmake targets, the Google Cloud CLI.
+It lets you build WSL instances from a Docker recipe, and lets you manage and
+customise them with optional tools (as packs).
 
 Every action is available both as a GUI and as a CLI.
 
@@ -13,16 +11,22 @@ Every action is available both as a GUI and as a CLI.
 
 - **Build an instance** - from a recipe, offering to reuse its saved image when
   one exists
-- **Manage the packs** of an instance, from the catalogue
-- **The recipes themselves** - Dockerfiles and onboarding scripts inside
-  recipe folders: created, duplicated, edited, deleted
-- **Live with an instance** - restart it, open a shell, change the look (icon,
-  font, colours), duplicate it, compact it, register it with Docker Desktop or
-  take it out
-- **Archive and restore** - to a named archive, and back
-- **Remove** an instance, and delete an archive
-- **The fleet** - move the working folder (migrate), open the Windows-wide
-  `.wslconfig`
+- **Manage an instance**
+  - restart it
+  - open a shell
+  - change its theme (icon, font, colours)
+  - duplicate it
+  - compact it
+  - register or unregister it with Docker Desktop
+  - manage its packs
+  - archive it
+  - restore it from an archive or delete it permanently
+  - remove it
+- **Manage the pack catalogue** - edit a pack, duplicate it or delete it from the
+  catalogue
+- **Manage the recipe catalogue** - edit a recipe, duplicate it or delete it from
+  the catalogue
+- **Migrate the working folder to another location**
 
 ---
 
@@ -57,7 +61,7 @@ Browse [Releases](https://github.com/JustVNRR/wsl-squad/releases).
 
 ---
 
-## Optional Tooling (Packs)
+## Default Packs
 | Pack | Start here | Main targets |
 | :--- | :--- | :--- |
 | `oh_my_shell` | [The shell](src/distro/packs/oh_my_shell/README.md) | `wsl_config`, `wsl_status`, `env_*`, `packs_list` - and the whole shell: aliases, bindings, navigation, `fcheat`, `gmake` |
