@@ -56,7 +56,9 @@ apt_install() {
 # can leave /etc/resolv.conf pointing at a file that no longer exists, and the
 # rest of this install still needs DNS.
 resolv_backup=/tmp/wsl-squad-resolv.conf
-if [ -s /etc/resolv.conf ]; then
+if [ -s /run/systemd/resolve/resolv.conf ]; then
+    cp -L /run/systemd/resolve/resolv.conf "$resolv_backup"
+elif [ -s /etc/resolv.conf ]; then
     cp -L /etc/resolv.conf "$resolv_backup"
 fi
 
@@ -134,6 +136,23 @@ PREF
     echo "The sound reaches WSLg (media.cubeb.sandbox off, as a default)."
 else
     echo "No /usr/lib/firefox/defaults/pref: the sound was left alone."
+fi
+
+# The boot hook. It must exist before the instance restarts: it puts the
+# resolver back into /run at every start. Installing it from the user half
+# meant one more sudo prompt, and a password-protected sudo has no terminal
+# during the onboarding - the pack then looked installed, but DNS died at the
+# first restart. Root owns it, like the resolver itself.
+boot_script=/usr/local/sbin/web-vpn-boot
+hook_line="command=$boot_script"
+install -d -m 0755 /usr/local/sbin
+install -m 0755 "$here/bin/vpn-boot.sh" "$boot_script"
+if ! grep -qxF "$hook_line" /etc/wsl.conf 2>/dev/null; then
+    if grep -q '^\[boot\]' /etc/wsl.conf 2>/dev/null; then
+        sed -i "\|^\[boot\]|a $hook_line" /etc/wsl.conf
+    else
+        printf '\n[boot]\n%s\n' "$hook_line" >> /etc/wsl.conf
+    fi
 fi
 
 # --- the resolver last ------------------------------------------------------

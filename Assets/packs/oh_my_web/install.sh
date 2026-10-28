@@ -30,13 +30,6 @@ here=$(cd "$(dirname "$0")" && pwd)
 # half must never need sudo, because a password-protected sudo has no terminal
 # here during the onboarding.
 
-# The boot hook, installed with the pack: it puts the base resolver back at
-# each start. vpn_auto_on/off only decide whether it also raises the tunnel.
-if ! bash "$here/bin/vpn.sh" hook on; then
-    echo "The boot hook was not installed - run it by hand:"
-    echo "   bash ~/.config/packs/oh_my_web/bin/vpn.sh hook on"
-fi
-
 # The privacy link, and the light profile in place: one link in the browser's
 # directory pointing at a file of the user's own - the launchers switch with no
 # password. Best-effort, like the hook.
