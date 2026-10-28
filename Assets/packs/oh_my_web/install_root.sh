@@ -51,10 +51,13 @@ apt_install() {
 
 # --- the tunnel -------------------------------------------------------------
 
-# 1. systemd-resolved ships a resolvconf of its own; Debian's openresolv
-#    refuses to install beside it.
-if dpkg -s systemd-resolved >/dev/null 2>&1; then
-    apt-get -qq remove -y systemd-resolved > /dev/null
+# systemd-resolved ships a resolvconf of its own; Debian's openresolv refuses
+# to install beside it. Keep the working resolver aside: removing the package
+# can leave /etc/resolv.conf pointing at a file that no longer exists, and the
+# rest of this install still needs DNS.
+resolv_backup=/tmp/wsl-squad-resolv.conf
+if [ -s /etc/resolv.conf ]; then
+    cp -L /etc/resolv.conf "$resolv_backup"
 fi
 
 # 2. wireguard-tools, kmod (the module dies with 'wsl --shutdown' without
@@ -79,8 +82,7 @@ apt_install "${packages[@]}" libpulse0 "${codecs[@]}"
 # 3. The resolver, from Debian's archive (no such package in Ubuntu 24.04).
 resolver_deb=/tmp/$resolver_package.deb
 wget -q "$resolver_url" -O "$resolver_deb"
-dpkg -i "$resolver_deb" > /dev/null
-rm -f "$resolver_deb"
+# dpkg runs after systemd-resolved is out of the way, at the end.
 
 # 4. WSL must stop rewriting /etc/resolv.conf at every start, or openresolv's
 #    work is undone by the next boot. vpn.sh writes the file (the base, from
@@ -115,3 +117,36 @@ apt-get -qq update
 # --allow-downgrades: Ubuntu's stub carries an epoch (1:1snap1) and ranks
 #    above Mozilla's package, so apt refuses the change without it.
 apt_install --allow-downgrades firefox
+
+# The audio sandbox keeps the browser away from WSLg's sound socket; this
+# default turns it off (about:config wins). The user half used to write it
+# through sudo, which is absent on a build that chose a sudo password: the
+# pack failed silently at the first sudo prompt. Root owns the file.
+pref_file=/usr/lib/firefox/defaults/pref/wslg-audio.js
+if [ -d /usr/lib/firefox/defaults/pref ]; then
+    cat > "$pref_file" <<'PREF'
+// Set by the oh_my_web pack: the sound of a WSLg window goes through PulseAudio, and
+// the audio sandbox keeps the browser away from the socket WSLg serves. This is
+// a default - a value set in about:config wins over it.
+pref("media.cubeb.sandbox", false);
+PREF
+    chmod 0644 "$pref_file"
+    echo "The sound reaches WSLg (media.cubeb.sandbox off, as a default)."
+else
+    echo "No /usr/lib/firefox/defaults/pref: the sound was left alone."
+fi
+
+# --- the resolver last ------------------------------------------------------
+
+# Firefox and every package above came from the network. Only now remove the
+# resolver the image ships, then install the cached Debian package.
+if dpkg -s systemd-resolved >/dev/null 2>&1; then
+    apt-get -qq remove -y systemd-resolved > /dev/null
+fi
+dpkg -i "$resolver_deb" > /dev/null
+rm -f "$resolver_deb"
+if [ -s "$resolv_backup" ] && [ ! -s /etc/resolv.conf ]; then
+    rm -f /etc/resolv.conf
+    cp "$resolv_backup" /etc/resolv.conf
+fi
+rm -f "$resolv_backup"

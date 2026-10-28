@@ -26,32 +26,15 @@ fi
 here=$(cd "$(dirname "$0")" && pwd)
 
 # The root half ran before this script - the engine's call, as WSL's own
-# root, ahead of the door. The sudo lines below pass through that door: it
-# asks nothing, and this prompt ends its line, which is what would show if it
-# ever asked.
-sudo_prompt=$(printf '[sudo] password:\n')
+# root, ahead of the door. It also owns the Firefox audio default: the user
+# half must never need sudo, because a password-protected sudo has no terminal
+# here during the onboarding.
 
 # The boot hook, installed with the pack: it puts the base resolver back at
 # each start. vpn_auto_on/off only decide whether it also raises the tunnel.
 if ! bash "$here/bin/vpn.sh" hook on; then
     echo "The boot hook was not installed - run it by hand:"
     echo "   bash ~/.config/packs/oh_my_web/bin/vpn.sh hook on"
-fi
-
-# The audio sandbox keeps the browser away from WSLg's sound socket; this
-# default turns it off (about:config wins). remove.sh takes the file back.
-pref_file=/usr/lib/firefox/defaults/pref/wslg-audio.js
-if [ -d /usr/lib/firefox/defaults/pref ]; then
-    sudo -p "$sudo_prompt" tee "$pref_file" > /dev/null <<'PREF'
-// Set by the oh_my_web pack: the sound of a WSLg window goes through PulseAudio, and
-// the audio sandbox keeps the browser away from the socket WSLg serves. This is
-// a default - a value set in about:config wins over it.
-pref("media.cubeb.sandbox", false);
-PREF
-    sudo -p "$sudo_prompt" chmod 0644 "$pref_file"
-    echo "The sound reaches WSLg (media.cubeb.sandbox off, as a default)."
-else
-    echo "No /usr/lib/firefox/defaults/pref: the sound was left alone."
 fi
 
 # The privacy link, and the light profile in place: one link in the browser's
