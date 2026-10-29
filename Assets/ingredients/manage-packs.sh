@@ -154,6 +154,19 @@ for conf in "$catalog"/*/pack.conf; do
     [ -n "${visible[$name]}" ] || visible[$name]=yes
 done
 
+# The pack's env.global.sample is only visible once its folder is in
+# ~/.config/packs; merging while it is still staging leaves its variables out
+# of .env.global.
+merge_global_env() {
+    local makefile="$user_home/.config/zsh/gmake/Makefile"
+    [ -f "$makefile" ] || return 1
+    if [ "$default_user" = "root" ]; then
+        HOME="$user_home" make -f "$makefile" env_global_enable
+    else
+        su - "$default_user" -c "make -f '$makefile' env_global_enable"
+    fi
+}
+
 install_pack() {
     local name="$1"
     local source="$catalog/$name"
@@ -201,6 +214,12 @@ install_pack() {
     if ! mv "$staging" "$target"; then
         echo "${C_RED}The pack '$name' could not be moved into place.${C_RESET}"
         rm -rf "$staging"
+        return 1
+    fi
+
+    if [ -f "$target/env.global.sample" ] && ! merge_global_env; then
+        echo "${C_RED}The variables of '$name' were not merged into .env.global.${C_RESET}"
+        echo "${C_YELLOW}The pack is installed; run 'gmake env_global_enable' as $default_user before using it or restarting.${C_RESET}"
         return 1
     fi
 

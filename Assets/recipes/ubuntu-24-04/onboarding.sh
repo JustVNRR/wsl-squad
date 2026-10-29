@@ -288,6 +288,15 @@ if [ -d "$pack_catalog" ]; then
             mkdir -p "$user_staging"
             chown "$NEW_USER:$NEW_USER" "$user_home" "$user_home/.config" "$user_packs" "$user_staging"
 
+            # The pack's env.global.sample is only visible once its folder is in
+            # ~/.config/packs; merging while it is still staging leaves its
+            # variables out of .env.global.
+            merge_global_env() {
+                local makefile="$user_home/.config/zsh/gmake/Makefile"
+                [ -f "$makefile" ] || return 1
+                su - "$NEW_USER" -c "make -f '$makefile' env_global_enable"
+            }
+
             for name in "${ordered[@]}"; do
                 source_pack="$pack_catalog/$name"
                 staging_pack="$user_staging/$name"
@@ -327,10 +336,15 @@ if [ -d "$pack_catalog" ]; then
                     continue
                 fi
 
-                welcome=$(sed -n 's/^PACK_WELCOME[[:space:]]*:=[[:space:]]*//p' "$target_pack/pack.conf" | head -n 1 | tr -d '\r')
-                if [ -n "$welcome" ]; then
-                    echo ""
-                    echo "${C_CYAN}$welcome${C_RESET}"
+                if [ -f "$target_pack/env.global.sample" ] && ! merge_global_env; then
+                    echo "${C_RED}The variables of '$name' were not merged into .env.global.${C_RESET}"
+                    echo "${C_YELLOW}The pack is installed; run 'gmake env_global_enable' as $NEW_USER before using it or restarting.${C_RESET}"
+                else
+                    welcome=$(sed -n 's/^PACK_WELCOME[[:space:]]*:=[[:space:]]*//p' "$target_pack/pack.conf" | head -n 1 | tr -d '\r')
+                    if [ -n "$welcome" ]; then
+                        echo ""
+                        echo "${C_CYAN}$welcome${C_RESET}"
+                    fi
                 fi
             done
             rmdir "$user_staging" 2>/dev/null || true

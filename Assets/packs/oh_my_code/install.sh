@@ -2,8 +2,8 @@
 # ==============================================================================
 # THE OH_MY_CODE PACK - WHAT IT INSTALLS
 # ==============================================================================
-# `wsl-squad packs` copies this pack's folder into ~/.config/packs/oh_my_code, then
-# runs this script from inside it, as the instance's own user.
+# The engine stages the pack under ~/.config/packs.staging, runs this script from
+# there, then moves the folder into ~/.config/packs/oh_my_code.
 #
 # Everything this script PRINTS is plain ASCII: it travels through wsl.exe to
 # the Windows console, which reads those bytes in its own code page - an emoji
@@ -91,19 +91,6 @@ else
     install -m 600 "$here/profiles.sample" "$profiles"
     echo "A dictionary of providers is in place: $profiles."
     echo "Fill it with your tokens."
-fi
-
-# The shell builds .env.global from the samples; this runs that target once so
-# the first `gmake claude_profile` finds it. Only when it is not there; a
-# failure here is said, not fatal - the program is installed, which is what the
-# pack came for.
-global_env=$HOME/.config/zsh/gmake/.env.global
-makefile=$HOME/.config/zsh/gmake/Makefile
-if [ ! -f "$global_env" ] && [ -f "$makefile" ]; then
-    echo "Building $global_env from the samples..."
-    if ! make -f "$makefile" env_global_enable; then
-        echo "$global_env could not be built - 'gmake env_global_enable' will do it from a shell."
-    fi
 fi
 
 # The status line the instance's sessions draw: set once, and never over one

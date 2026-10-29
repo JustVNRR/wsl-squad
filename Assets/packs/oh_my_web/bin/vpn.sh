@@ -34,16 +34,26 @@ AUTO_FLAG=$HOME/.config/vpn/auto
 # to this distro's cgroup path: the firewall is shared by every distro.
 KS_COMMENT='wsl-squad kill switch'
 
-# This distro's root in WSL's cgroup tree: the id is renumbered at every start,
-# and matching the root covers the sessions (iptables' --path covers
-# sub-folders). Empty when WSL says nothing usable - no rule is laid then.
+# This distro's cgroup in WSL: the global /wsl-user/distro-<id> path, or the
+# namespace-relative /non-systemd or /systemd subtree a cgroup namespace shows.
+# Matching the subtree covers its processes (iptables' --path is recursive).
+# Empty when WSL says nothing usable - no rule is laid then.
 # CGROUP_ROOT is what a test points at a stand-in tree.
 CGROUP_ROOT=${CGROUP_ROOT:-/proc}
+cgroup_path_from() {
+    sed -n -e 's|^[0-9]*::\(/wsl-user/distro-[0-9]*\).*$|\1|p' \
+        -e 's|^[0-9]*::\(/non-systemd\)\(/.*\)\{0,1\}$|\1|p' \
+        -e 's|^[0-9]*::\(/systemd\)\(/.*\)\{0,1\}$|\1|p' "$1" 2>/dev/null | head -n 1 || true
+}
 cgroup_distro_path() {
-    local p=
-    p=$(sed -n 's|^[0-9]*::\(/wsl-user/distro-[0-9]*\).*$|\1|p' "$CGROUP_ROOT/self/cgroup" 2>/dev/null | head -n 1 || true)
+    local p file
+    p=$(cgroup_path_from "$CGROUP_ROOT/self/cgroup")
     if [ -z "$p" ]; then
-        p=$(sed -n 's|^[0-9]*::\(/wsl-user/distro-[0-9]*\).*$|\1|p' "$CGROUP_ROOT"/[0-9]*/cgroup 2>/dev/null | head -n 1 || true)
+        for file in "$CGROUP_ROOT"/[0-9]*/cgroup; do
+            [ -f "$file" ] || continue
+            p=$(cgroup_path_from "$file")
+            [ -n "$p" ] && break
+        done
     fi
     printf '%s\n' "$p"
 }
@@ -77,6 +87,19 @@ as_root() {
     else
         sudo "$@"
     fi
+}
+
+# The kernel resolves the cgroup path when the rule is written. Ask it now with
+# -C (0: rule present, 1: path accepted but no rule, 2 or more: refused), so
+# wg-quick never fails later on a path this kernel cannot read.
+cgroup_path_usable() {
+    local path=$1 rc=0
+    [ -n "$path" ] || return 1
+    as_root iptables -C OUTPUT -m cgroup --path "$path" -j REJECT 2>/dev/null || rc=$?
+    [ "$rc" -le 1 ] || return 1
+    rc=0
+    as_root ip6tables -C OUTPUT -m cgroup --path "$path" -j REJECT 2>/dev/null || rc=$?
+    [ "$rc" -le 1 ]
 }
 
 # Remove every labelled rule still in the kernel; answers how many went. By
@@ -357,11 +380,11 @@ compose() {
         printf 'MTU        = %s\n' "$mtu"
         if ks_on; then
             ks_path=$(cgroup_distro_path)
-            if [ -n "$ks_path" ]; then
+            if [ -n "$ks_path" ] && cgroup_path_usable "$ks_path"; then
                 printf 'PostUp     = %s\n' "$(ks_rule -I "$ks_path" '')"
                 printf 'PreDown    = %s\n' "$(ks_rule -D "$ks_path" ' || true')"
             else
-                printf 'kill switch on, but this instance has no /wsl-user/distro-* place: no rule added.\n' >&2
+                printf 'kill switch on, but this instance has no usable cgroup place: no rule added.\n' >&2
             fi
         fi
         printf '\n[Peer]\n'

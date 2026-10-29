@@ -2,8 +2,8 @@
 # ==============================================================================
 # THE OH_MY_WEB PACK - WHAT IT INSTALLS
 # ==============================================================================
-# `wsl-squad packs` copies the pack's folder into ~/.config/packs/oh_my_web, then
-# runs this script from inside it, as the instance's own user.
+# The engine stages the pack under ~/.config/packs.staging, runs this script from
+# there, then moves the folder into ~/.config/packs/oh_my_web.
 #
 # Firefox comes from Mozilla's own repository (Ubuntu's `firefox` is a snap
 # stub), the tunnel is WireGuard over openresolv, and the servers land in
@@ -60,13 +60,6 @@ else
         echo "   value goes (the WireGuard configuration from your provider)."
         echo "   Then: gmake vpn_edit_profiles, gmake vpn_up."
     fi
-fi
-
-# The pack's variables, merged into the file the shell loads. Best-effort: the
-# merge loads every installed pack's module, and a broken neighbour must not
-# fail an install that worked.
-if ! make -f "$HOME/.config/zsh/gmake/Makefile" env_global_enable; then
-    echo "The variables were not merged - run 'gmake env_global_enable' yourself."
 fi
 
 success "Firefox is installed: 'fox' opens it on the light privacy settings, 'pfox' on the strict ones."

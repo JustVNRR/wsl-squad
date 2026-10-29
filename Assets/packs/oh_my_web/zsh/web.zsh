@@ -14,9 +14,23 @@ export MOZ_ENABLE_WAYLAND=0
 PACK=${${(%):-%x}:A:h:h}
 FOX_SH=$PACK/bin/fox.sh
 
+# WSLg can stay at scale:1 while Windows is at 150 or 200%: GTK then draws
+# Firefox at 96 dpi and the interface is tiny. GDK_DPI_SCALE enlarges the fonts
+# only - the window keeps its size. A value the user set wins.
+_wslg_font_scale() {
+    local log=/mnt/wslg/weston.log scale factor
+    [ -r "$log" ] || return 0
+    scale=$(grep 'Head mode change' "$log" 2>/dev/null | tail -n 1 | grep -o 'scale:[0-9][0-9]*' | cut -d: -f2 | head -n 1)
+    [ "$scale" = 1 ] || return 0
+    factor=$(grep -o 'desktopScaleFactor:[0-9][0-9]*' "$log" 2>/dev/null | sed 's/.*://' | grep -v '^0$' | tail -n 1)
+    [ -n "$factor" ] && [ "$factor" -gt 100 ] || return 0
+    awk -v factor="$factor" 'BEGIN { printf "%.2f\n", factor / 100 }'
+}
+
 # What both launchers end on. No session bus in the image, and Firefox's first
 # window never opens without one: the first launch of a shell starts it.
 _fox_launch() {
+    local scale
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && command -v dbus-launch >/dev/null 2>&1; then
         # dbus refuses WSLg's runtime directory (world-writable); give this
         # call one of its own. The shell keeps WSLg's - Wayland and the sound
@@ -24,7 +38,12 @@ _fox_launch() {
         install -d -m 0700 "$HOME/.run"
         eval "$(XDG_RUNTIME_DIR="$HOME/.run" dbus-launch --sh-syntax)"
     fi
-    firefox "$@"
+    scale=$(_wslg_font_scale)
+    if [ -n "$scale" ] && [ -z "${GDK_DPI_SCALE:-}" ]; then
+        GDK_DPI_SCALE="$scale" firefox "$@"
+    else
+        firefox "$@"
+    fi
 }
 
 # fox opens on the light profile - and puts it back after a strict visit.
