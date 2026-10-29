@@ -4,7 +4,7 @@
 
 Project targets: Docker, GitHub PRs.
 
-Make targets for your projects: build and run the Docker image locally, create a GitHub pull request from the current branch, list the open ones.
+Make targets for your projects: build and run the Docker image locally, create a GitHub pull request from the current branch, list the open ones. `gh_auth_https` and `gh_auth_ssh` log the GitHub CLI in once per machine.
 
 Nothing is installed - the tools they call, Docker and the GitHub CLI, are already there.
 
@@ -20,6 +20,8 @@ oh_my_cloud, oh_my_py.
 | :--- | :--- |
 | `docker_build_local` | Build the Docker image locally for testing |
 | `docker_run_local` | Run the local Docker container on port 8080 |
+| `gh_auth_https` | Log in to GitHub for HTTPS remotes |
+| `gh_auth_ssh` | Log in to GitHub for SSH remotes |
 | `gh_pr_create` | Push the current branch and create a non-interactive PR |
 | `gh_pr_ls` | List open PRs in the repository |
 | `gh_pr_toreview` | Add the 'toreview' label to the PR of the current branch |

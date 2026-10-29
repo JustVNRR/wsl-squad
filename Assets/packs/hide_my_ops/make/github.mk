@@ -9,8 +9,18 @@
 # Default base branch for PRs (overridable: make gh_pr_create BASE_BRANCH=develop)
 BASE_BRANCH ?= main
 
+# The authentication is machine-wide: it does not need a project root.
+GATE_EXEMPT_GOALS += gh_auth_https gh_auth_ssh
+
 # .PHONY ensures make doesn't confuse these commands with actual files in the directory
-.PHONY: gh_pr_create gh_pr_toreview gh_pr_wip gh_pr_ls
+.PHONY: gh_auth_https gh_auth_ssh gh_pr_create gh_pr_toreview gh_pr_wip gh_pr_ls
+
+gh_auth_https: ## Log in to GitHub for HTTPS remotes
+	gh auth login --git-protocol https
+	gh auth setup-git
+
+gh_auth_ssh: ## Log in to GitHub for SSH remotes
+	gh auth login --git-protocol ssh
 
 gh_pr_create: ## Pushes the current branch and creates a non-interactive PR
 	@echo "🚀 Pushing the current branch to origin..."
