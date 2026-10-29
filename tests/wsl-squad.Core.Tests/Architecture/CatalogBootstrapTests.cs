@@ -10,7 +10,7 @@ namespace WslSquad.Core.Tests.Architecture;
 public class CatalogBootstrapTests
 {
     [Fact]
-    public void Ensure_extracts_the_language_catalogue_without_overwriting_it()
+    public void Ensure_extracts_the_language_catalogue_and_preserves_same_version_edits()
     {
         using TemporaryDirectory temp = new();
 
@@ -31,6 +31,30 @@ public class CatalogBootstrapTests
 
         File.ReadAllText(english).Should().Be("custom");
         File.Exists(french).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Ensure_refreshes_embedded_assets_after_a_version_change()
+    {
+        using TemporaryDirectory temp = new();
+
+        CatalogBootstrap.Ensure(temp.Path);
+
+        string english = temp.Combine("languages", "en.json");
+        string original = File.ReadAllText(english);
+        string version = temp.Combine("assets.version");
+        string customPack = temp.Write("packs/my-pack/file.txt", "mine");
+
+        File.WriteAllText(english, "custom");
+        File.WriteAllText(version, "0.0.0.0");
+
+        CatalogBootstrap.Ensure(temp.Path);
+
+        File.ReadAllText(english).Should().Be(original);
+        File.ReadAllText(version).Trim().Should().NotBe("0.0.0.0");
+        File.ReadAllText(temp.Combine("backup-0.0.0.0", "languages", "en.json"))
+            .Should().Be("custom");
+        File.ReadAllText(customPack).Should().Be("mine");
     }
 
     [Fact]
