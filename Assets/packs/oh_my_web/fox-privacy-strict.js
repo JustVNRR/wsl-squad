@@ -1,8 +1,9 @@
 // The oh_my_web pack's STRICT privacy profile - what `pfox` (and gmake
-// fox_tweak_on) puts in place: the light profile, plus anti-fingerprinting
-// (English pages, UTC hours, letterboxing) and WebRTC off. `fox` puts the
-// light one back. Defaults: about:config wins. What each line does:
-// README.md.
+// fox_tweak_on) puts in place: the light profile, plus Firefox's FPP
+// anti-fingerprinting (timezone, language, user-agent, canvas, window
+// rounding...) and WebRTC off. The site colour scheme is left real, so dark
+// sites stay dark; that one bit is the price. `fox` puts the light one back.
+// Defaults: about:config wins. What each line does: README.md.
 
 // --- Tracking protection: the Strict preset, named pref by pref ---
 // (the category line is what the Settings page shows; the engines read the
@@ -45,12 +46,17 @@ pref("datareporting.healthreport.uploadEnabled", false);
 pref("app.shield.optoutstudies.enabled", false);
 pref("privacy.globalprivacycontrol.enabled", true);
 
-// --- Anti-fingerprinting (the big switch: it changes what sites see) ---
-// Time zone UTC, language en-US, a generic user-agent, canvas noise - and the
-// letterboxing, which standardizes the window's size (grey margins around
-// pages until the window matches a standard shape).
-pref("privacy.resistFingerprinting", true);
-pref("privacy.resistFingerprinting.letterboxing", true);
+// --- Anti-fingerprinting (Firefox's FPP: it changes what sites see) ---
+// Every FPP target except the site colour scheme: time zone, language, a
+// generic user-agent, canvas noise and window rounding stay spoofed; the
+// theme is the one real bit, so `prefers-color-scheme: dark` reaches the
+// sites and Google (among others) stays dark. RFP is off: when it is on it
+// ignores this exception and forces light.
+pref("privacy.resistFingerprinting", false);
+pref("privacy.resistFingerprinting.pbmode", false);
+pref("privacy.fingerprintingProtection", true);
+pref("privacy.fingerprintingProtection.pbmode", true);
+pref("privacy.fingerprintingProtection.overrides", "+AllTargets,-CSSPrefersColorScheme");
 
 // --- WebRTC off ---
 // No real-time connections from a page: this instance has no camera, and an
@@ -58,7 +64,7 @@ pref("privacy.resistFingerprinting.letterboxing", true);
 pref("media.peerconnection.enabled", false);
 
 // --- A dark interface, whatever the system prefers ---
-// The browser's own chrome and the colour scheme announced to sites, both
-// dark, whichever theme the machine has.
+// The browser's own chrome is dark; the site colour scheme is real (the
+// exception above), so a site asking for dark gets it.
 pref("ui.systemUsesDarkTheme", 1);
 pref("layout.css.prefers-color-scheme.content-override", 0);
