@@ -15,25 +15,35 @@ installer\
 - Inno Setup 6 installed on the build machine. The installer does not add `iscc` to `PATH` by default; the executable is located according to the installation mode:
   - machine-wide install: `C:\Program Files (x86)\Inno Setup 6\ISCC.exe`;
   - per-user install, typically with `winget` without elevation: `%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe`.
-- Publication outputs present in `artifacts\publish\`:
+- For the scripted build, nothing else: `build-installer.ps1` publishes the
+  framework-dependent build itself. A direct `iscc` run needs the publication
+  outputs in `artifacts\publish\`:
 
 Framework-dependent:
 
 ```powershell
-.\scripts\publish-framework-dependent.ps1
+.\scripts\publish-framework-dependent.ps1 -Version 1.0.0
 ```
 
 Self-contained:
 
 ```powershell
-.\scripts\publish-self-contained.ps1
+.\scripts\publish-self-contained.ps1 -Version 1.0.0
 ```
 
 The release workflow runs both and builds both installers.
 
 ## Build
 
-From the repository root:
+From the repository root, the scripted build publishes the application with
+the requested version and then compiles the setup:
+
+```powershell
+.\scripts\build-installer.ps1 -Version 1.0.0
+```
+
+A direct Inno Setup run compiles whatever is already in
+`artifacts\publish\framework-dependent`:
 
 ```powershell
 iscc installer\wsl-squad.iss
@@ -160,8 +170,9 @@ Run this on a Windows machine, ideally without the .NET SDK for the framework-de
 From the repository root:
 
 ```powershell
-iscc installer\wsl-squad.iss /DSelfContained=0
-iscc installer\wsl-squad.iss /DSelfContained=1
+.\scripts\build-installer.ps1 -Version 1.0.0
+.\scripts\publish-self-contained.ps1 -Version 1.0.0
+iscc installer\wsl-squad.iss /DSelfContained=1 /DAppVersion=1.0.0
 ```
 
 Verify that both files exist:
@@ -250,6 +261,10 @@ The default version is defined in `wsl-squad.iss`:
 ```
 
 The release workflow passes the version with `/DAppVersion=<version>`. When `AppVersion` is not defined on the command line, the default above is used.
+
+`build-installer.ps1 -Version <version>` passes that version both to the
+application publication (`dotnet publish -p:Version=<version>`, which sets the
+assembly and file versions) and to Inno Setup (`/DAppVersion=<version>`).
 
 Keep the same `AppId` between versions so that upgrades replace the existing installation.
 

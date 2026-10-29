@@ -491,9 +491,8 @@ $RECYCLE.BIN/
 # Claude Code
 .claude/
 
-# Local scaffolding and installer scripts
+# Local scaffolding script
 scaffold-sln.ps1
-scripts/build-installer.ps1
 
 # Pack helper scripts are embedded resources, not build output
 !Assets/packs/**/bin/

@@ -1,9 +1,20 @@
 param(
     [string]$Configuration = "Release",
-    [string]$Runtime = "win-x64"
+    [string]$Runtime = "win-x64",
+    [string]$Version = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+$Version = $Version.Trim()
+
+if ($Version.StartsWith("v", [System.StringComparison]::OrdinalIgnoreCase)) {
+    $Version = $Version.Substring(1)
+}
+
+if ($Version -and $Version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$') {
+    throw "Invalid version '$Version'. Expected a value such as 0.1.0 or 0.1.0-beta.1."
+}
 
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $ArtifactsRoot = Join-Path $RepoRoot "artifacts"
@@ -29,6 +40,10 @@ $common = @(
     "-p:PublishReferencesDocumentationFiles=false",
     "-p:PublishReferencesSymbols=false"
 )
+
+if ($Version) {
+    $common += @("-p:Version=$Version")
+}
 
 function Publish-Project {
     param(

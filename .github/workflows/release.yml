@@ -55,9 +55,11 @@ jobs:
 
       - name: Publish application
         shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          ./scripts/publish-framework-dependent.ps1
-          ./scripts/publish-self-contained.ps1
+          ./scripts/publish-framework-dependent.ps1 -Version $env:APP_VERSION
+          ./scripts/publish-self-contained.ps1 -Version $env:APP_VERSION
 
       - name: Prepare signing
         id: signing
